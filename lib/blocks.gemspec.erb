@@ -6,8 +6,8 @@ Gem::Specification.new do |s|
   s.description = %q{Blocks makes it easy to create advanced ERB helpers}
   s.email       = "andrew@captico.com"
   s.extra_rdoc_files = ["LICENSE", "README"]
-  s.files = <%= (Dir["lib/**/**.rb"]+ Dir["app/**/**.rb"] + Dir["app/**/**.erb"] + ['README','LICENSE']).inspect %>
-  s.require_paths = ['lib']
+  s.files = <%= (Dir["lib/**/**.rb"] + Dir["app/**/**.rb"] + Dir["app/**/**.erb"] + ['README','LICENSE']).inspect %>
+  s.require_paths = ['lib', 'app']
   s.rubyforge_project = 'blocks'
   s.homepage = 'http://blocks.rubyforge.org/'
   s.summary = %q{blocks makes erb fun again}
