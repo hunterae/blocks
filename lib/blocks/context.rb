@@ -138,8 +138,8 @@ module Blocks
       if blocks[name]
         block_container = blocks[name]
         ret.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
-      elsif view.request_blocks.blocks[name]
-        block_container = view.request_blocks.blocks[name]
+      elsif view.blocks.blocks[name]
+        block_container = view.blocks.blocks[name]
         ret.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
       else
         begin
@@ -162,8 +162,8 @@ module Blocks
         end
       end
       
-      unless view.request_blocks.blocks[name].nil?
-        view.request_blocks.blocks[name].each do |block_container|
+      unless view.blocks.blocks[name].nil?
+        view.blocks.blocks[name].each do |block_container|
           ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
@@ -181,8 +181,8 @@ module Blocks
         end
       end
       
-      unless view.request_blocks.blocks[name].nil?
-        view.request_blocks.blocks[name].each do |block_container|
+      unless view.blocks.blocks[name].nil?
+        view.blocks.blocks[name].each do |block_container|
           ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end

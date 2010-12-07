@@ -1,0 +1,35 @@
+<%= list.define :list_items do %>
+  <% if records %>
+    <% records.each do |record| %>
+      <%= list.use :item, :record => record %>
+    <% end %>
+  <% else %>
+    <%= list.use :items %>
+  <% end %>
+<% end %>
+
+<%= list.define :item do |options| %>
+  <%= content_tag :li, options[:item_html] do %>
+    <%= options[:field] ? options[:record].send(:field) : options[:record].to_s %>
+  <% end %>
+<% end %>
+
+<%= list.define :items do |options| %>
+  <% list.items.each do |item| %>
+    <%= content_tag :li, options.merge(item.options)[:item_html] do %>
+      <%= list.use item.name %>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% list.items.each do |item| %>
+  <%= list.define item.name, :item => item do |options| %>
+    <%= item.name %>
+  <% end %>
+<% end %>
+
+<%= list.use :list do |options| %>
+  <%= content_tag :ul, options[:list_html] do %>
+    <%= list.use :list_items %>
+  <% end %>
+<% end %>

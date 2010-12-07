@@ -1,17 +1,17 @@
 module Blocks
-  class TableFor < Blocks::Context
-    alias columns block_positions
-    alias column use
+  class ListFor < Blocks::Context
+    alias items block_positions
+    alias item use
     
     def header(name, options={}, &block)
       define("#{name.to_s}_header", options, &block)
     end
     
     def initialize(options)
-      options[:template] = "blocks/table"
-      options[:templates_folder] = "blocks/tables"
+      options[:template] = "blocks/list"
+      options[:templates_folder] = "blocks/lists"
       options[:record_variable] = "records"
-      options[:variable] = "table"
+      options[:variable] = "list"
       super
     end
   end
