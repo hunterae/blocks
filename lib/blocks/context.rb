@@ -8,7 +8,7 @@ module Blocks
     def method_missing(m, options={}, &block) 
       # If the specified block group has already been defined, it is simply returned here for iteration.
       #  It will consist of all the blocks used in this block group that have yet to be rendered,
-      #   as the call for their use occurred before the template was rendered
+      #   as the call for their use occurred before the template was rendered (where their definitions likely occurred)
       return self.block_groups[m] unless self.block_groups[m].nil?
       
       # Allows for nested block groups, store the current block positions array and start a new one
@@ -65,6 +65,7 @@ module Blocks
       block_container.block = block
       
       blocks[name.to_sym] = block_container if blocks[name.to_sym].nil?
+      
       nil
     end
   
@@ -88,6 +89,8 @@ module Blocks
         # Delays rendering this block until the partial has been rendered and all the blocks have had a chance to be defined
         self.block_positions << block_container 
       end
+      
+      nil
     end
     
     def render
@@ -133,61 +136,55 @@ module Blocks
         name = name_or_container.to_sym
       end
       
-      ret = render_before_blocks(name, options)
+      view.concat(render_before_blocks(name, options))
       
       if blocks[name]
         block_container = blocks[name]
-        ret.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
+        view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
       elsif view.blocks.blocks[name]
         block_container = view.blocks.blocks[name]
-        ret.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
+        view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
       else
         begin
-          ret.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
+          view.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
         rescue
           
         end
       end
       
-      ret.concat(render_after_blocks(name, options))
+      view.concat(render_after_blocks(name, options))
     end
     
     def render_before_blocks(name, options={})
       name = "before_#{name.to_s}".to_sym
       
-      ret = ActionView::NonConcattingString.new
       unless blocks[name].nil?
         blocks[name].each do |block_container|
-          ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
       unless view.blocks.blocks[name].nil?
         view.blocks.blocks[name].each do |block_container|
-          ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
-      
-      ret 
     end
     
     def render_after_blocks(name, options={})
       name = "after_#{name.to_s}".to_sym
       
-      ret = ActionView::NonConcattingString.new
       unless blocks[name].nil?
         blocks[name].each do |block_container|
-          ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
       unless view.blocks.blocks[name].nil?
         view.blocks.blocks[name].each do |block_container|
-          ret.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
-      
-      ret
     end
   end
 end

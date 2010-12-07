@@ -56,7 +56,7 @@
 
 <%= table.define :data_columns do |options| %>
   <% table.columns.each do |column| %>
-    <%= content_tag :td, options.merge(column.options)[:data_html] do %>
+    <%= content_tag :td, options.merge(column.options)[:column_html] do %>
       <%= table.use column, options.merge(:column => column) %>
     <% end %>
   <% end %>
