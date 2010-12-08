@@ -1,4 +1,4 @@
-BLOCKS_VERSION="0.5"
+BLOCKS_VERSION="0.6"
 
 desc 'Generate gem specification'
 task :gemspec do
