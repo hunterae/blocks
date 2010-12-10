@@ -1,5 +1,5 @@
 module Blocks
-  class ListFor < Blocks::Context
+  class ListFor < Blocks::Builder
     alias items block_positions
     alias item use
     

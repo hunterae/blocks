@@ -4,14 +4,12 @@ module Blocks
       options = {}
       options[:view] = self
       
-      @blocks ||= Blocks::Context.new(options)
+      @blocks ||= Blocks::Builder.new(options)
     end
     
-    def evaluated_content_options(options={})
-      puts "Checking evaluated_content_options #{options.inspect}"
-      
+    def evaluated_content_options(options={}, parameters={})
       evaluated_options = {}
-      options.each_pair { |k, v| evaluated_options[k] = (v.is_a?(Proc) ? v.call(options) : v)}
+      options.each_pair { |k, v| evaluated_options[k] = (v.is_a?(Proc) ? v.call(parameters) : v)}
       evaluated_options
     end
     
@@ -19,7 +17,7 @@ module Blocks
       options[:view] = self
       options[:records] = records
       options[:block] = block
-      options[:row_html] = {:class => lambda { cycle('odd', 'even')}} if options[:row_html].nil?
+      options[:row_html] = {:class => lambda { |parameters| cycle('odd', 'even')}} if options[:row_html].nil?
       
       Blocks::TableFor.new(options).render
     end

@@ -49,7 +49,7 @@
 <% end %>
 
 <%= table.define :row do |options| %>
-  <%= content_tag :tr, evaluated_content_options(options[:row_html].merge({:record => options[:record]})) do %>
+  <%= content_tag :tr, evaluated_content_options(options[:row_html], options) do %>
     <%= table.use :data_columns, options %>
   <% end %>
 <% end %>

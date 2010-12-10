@@ -1,5 +1,5 @@
 module Blocks
-  class TableFor < Blocks::Context
+  class TableFor < Blocks::Builder
     alias columns block_positions
     alias column use
     
