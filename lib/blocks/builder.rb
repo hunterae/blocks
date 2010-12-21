@@ -19,7 +19,7 @@ module Blocks
       nil
     end
     
-    def replace(name, options, &block)
+    def replace(name, options={}, &block)
       blocks[name.to_sym] = nil
       define(name, options, block)
     end
