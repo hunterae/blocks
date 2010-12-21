@@ -20,8 +20,14 @@ module Blocks
     end
     
     def replace(name, options={}, &block)
-      blocks[name.to_sym] = nil
-      define(name, options, block)
+      block_container = Blocks::Container.new
+      block_container.name = name
+      block_container.options = options
+      block_container.block = block
+      
+      blocks[name.to_sym] = block_container
+      
+      nil
     end
   
     def use(*args, &block)      
