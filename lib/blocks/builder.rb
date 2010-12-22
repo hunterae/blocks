@@ -82,6 +82,7 @@ module Blocks
 
       nil
     end
+    alias prepend before
     
     def after(name, options={}, &block)
       name = "after_#{name.to_s}".to_sym
@@ -99,6 +100,7 @@ module Blocks
 
       nil
     end
+    alias append after
     
     # If a method is missing, we'll assume the user is starting a new block group by that missing method name
     def method_missing(m, options={}, &block) 

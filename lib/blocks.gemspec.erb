@@ -5,10 +5,10 @@ Gem::Specification.new do |s|
   s.date    = '<%= Time.now.strftime("%Y-%m-%d") %>'
   s.description = %q{content_for with parameters, with advanced options such as a table generator (table_for)}
   s.email       = "andrew@captico.com"
-  s.extra_rdoc_files = ["LICENSE", "README"]
-  s.files = <%= (Dir["lib/**/**.rb"] + Dir["app/**/**.rb"] + Dir["app/**/**.erb"] + ['README','LICENSE']).inspect %>
+  s.extra_rdoc_files = ["LICENSE", "README.rdoc"]
+  s.files = <%= (Dir["lib/**/**.rb"] + Dir["app/**/**.rb"] + Dir["app/**/**.erb"] + ['README.rdoc','LICENSE']).inspect %>
   s.require_paths = ['lib', 'app']
   s.rubyforge_project = 'blocks'
-  s.homepage = 'http://blocks.rubyforge.org/'
+  s.homepage = 'https://github.com/hunterae/blocks'
   s.summary = %q{content_for with parameters, with advanced options such as a table generator (table_for)}
 end
