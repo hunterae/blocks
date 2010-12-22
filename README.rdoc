@@ -1,4 +1,4 @@
-= CanCan
+= Blocks
 
 Wiki[http://wiki.github.com/hunterae/blocks]
 
