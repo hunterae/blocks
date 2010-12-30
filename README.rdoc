@@ -114,6 +114,34 @@ What's particularly useful about this is that it doesn't matter if the "before" 
 table_for is a useful example of using blocks in a very practical way. It is built entirely using the core blocks library. It is exposed as a helper method with the following prototype:
 
   table_for(records, options={}, &block)
+
+   For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber]
+
+   <%= table_for @records do|table| %>
+      <%= table :name %>
+      <%= table :email %>
+      <%= table :phonenumber %>
+   <% end %>
+
+   will generate the following table:
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phonenumber</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="odd">
+            <td>The Name</td>
+            <td>The Email</td>
+            <td>A phone number</td>
+          </tr>
+        </tbody>
+      </table>
+
   
 == Special Thanks
 
