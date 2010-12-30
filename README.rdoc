@@ -115,15 +115,19 @@ table_for is a useful example of using blocks in a very practical way. It is bui
 
   table_for(records, options={}, &block)
 
-For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber]
+For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber] e.g. 
+
+  @records = [OpenStruct.new({:name => "the name", :email => "the email", :phonenumber => "the phone number"})]
+
+And using table_for you define each column with the following:
 
    <%= table_for @records do|table| %>
-      <%= table :name %>
-      <%= table :email %>
-      <%= table :phonenumber %>
+      <%= table.column :name %>
+      <%= table.column :email %>
+      <%= table.column :phonenumber %>
    <% end %>
 
-will generate the following table:
+Will generate the following table:
 
       <table>
         <thead>
@@ -142,7 +146,6 @@ will generate the following table:
         </tbody>
       </table>
 
-  
 == Special Thanks
 
 Thanks to Todd Fisher of Captico for implementation help and setup of gem and to Jon Phillips for suggestions and use case help.
