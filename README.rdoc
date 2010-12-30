@@ -115,7 +115,7 @@ table_for is a useful example of using blocks in a very practical way. It is bui
 
   table_for(records, options={}, &block)
 
-   For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber]
+For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber]
 
    <%= table_for @records do|table| %>
       <%= table :name %>
@@ -123,7 +123,7 @@ table_for is a useful example of using blocks in a very practical way. It is bui
       <%= table :phonenumber %>
    <% end %>
 
-   will generate the following table:
+will generate the following table:
 
       <table>
         <thead>
