@@ -117,11 +117,12 @@ table_for is a useful example of using blocks in a very practical way. It is bui
 
 For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber] e.g. 
 
-  @records = [OpenStruct.new({:name => "the name", :email => "the email", :phonenumber => "the phone number"})]
+  @records = [OpenStruct.new({:name => "The Name", :email => "The Email", :phonenumber => "A phone number"}),
+              OpenStruct.new({:name => "The Second Name", :email => "The Second Email", :phonenumber => "A second phone number"})]
 
 And using table_for you define each column with the following:
 
-   <%= table_for @records do|table| %>
+   <%= table_for @records do |table| %>
       <%= table.column :name %>
       <%= table.column :email %>
       <%= table.column :phonenumber %>
@@ -129,22 +130,28 @@ And using table_for you define each column with the following:
 
 Will generate the following table:
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phonenumber</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="odd">
-            <td>The Name</td>
-            <td>The Email</td>
-            <td>A phone number</td>
-          </tr>
-        </tbody>
-      </table>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Phonenumber</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="odd">
+        <td>The Name</td>
+        <td>The Email</td>
+        <td>A phone number</td>
+      </tr>
+      <tr class="even">
+        <td>The Second Name</td>
+        <td>The Second Email</td>
+        <td>A second phone number</td>
+      </tr>
+    </tbody>
+  </table>
+
 
 == Special Thanks
 
