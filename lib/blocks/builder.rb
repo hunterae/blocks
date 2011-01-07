@@ -164,8 +164,8 @@ module Blocks
       else
         begin
           view.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
-        rescue
-          puts "Could not render template #{name} in directory #{shared_options[:templates_folder]}"
+        rescue ActionView::MissingTemplate
+          # This block does not exist and no partial can be found to satify it
         end
       end
       
