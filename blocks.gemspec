@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.name = "blocks"
   s.authors = ["Andrew Hunter", "Todd Fisher"]
-  s.version = "1.0.0"
-  s.date    = '2011-01-07'
+  s.version = "1.0.1"
+  s.date    = '2011-01-09'
   s.description = %q{content_for with parameters, with advanced options such as a table generator (table_for)}
   s.email       = "andrew@captico.com"
   s.extra_rdoc_files = ["LICENSE", "README.rdoc"]
