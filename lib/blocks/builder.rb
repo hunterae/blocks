@@ -58,7 +58,7 @@ module Blocks
       self.start_rendering_blocks = false
       
       if shared_options[:block]
-        view.capture(self, &shared_options[:block])        
+        shared_options[:captured_block] = view.capture(self, &shared_options[:block])
       end
       
       self.start_rendering_blocks = true
@@ -163,7 +163,12 @@ module Blocks
         view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
       else
         begin
-          view.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
+          begin
+            view.concat(view.render "#{name.to_s}", shared_options.merge(render_options))
+          rescue ActionView::MissingTemplate
+            # This partial did not exist in the current controller's view directory; now checking in the default templates folder
+            view.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
+          end
         rescue ActionView::MissingTemplate
           # This block does not exist and no partial can be found to satify it
         end
