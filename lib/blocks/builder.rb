@@ -74,10 +74,10 @@ module Blocks
       block_container.options = options
       block_container.block = block
       
-      if blocks[name].nil?
-        blocks[name] = [block_container]
+      if view.blocks.blocks[name].nil?
+        view.blocks.blocks[name] = [block_container]
       else
-        blocks[name] << block_container
+        view.blocks.blocks[name] << block_container
       end
 
       nil
@@ -92,10 +92,10 @@ module Blocks
       block_container.options = options
       block_container.block = block
       
-      if blocks[name].nil?
-        blocks[name] = [block_container]
+      if view.blocks.blocks[name].nil?
+        view.blocks.blocks[name] = [block_container]
       else
-        blocks[name] << block_container
+        view.blocks.blocks[name] << block_container
       end
 
       nil
@@ -154,8 +154,8 @@ module Blocks
       end
       
       view.concat(render_before_blocks(name, options))
-      
-      if blocks[name]
+       
+      if blocks[name]  
         block_container = blocks[name]
         view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
       elsif view.blocks.blocks[name]
@@ -177,7 +177,7 @@ module Blocks
       view.concat(render_after_blocks(name, options))
     end
     
-    def render_before_blocks(name, options={})
+    def render_before_blocks(name, options={})      
       name = "before_#{name.to_s}".to_sym
       
       unless blocks[name].nil?
