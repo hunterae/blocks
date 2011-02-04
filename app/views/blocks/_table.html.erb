@@ -31,7 +31,7 @@
 <% end %>
 
 <% table.columns.each do |column| %>  
-  <%= table.define "#{column.name.to_s}_header", :column => column do |options| %>
+  <%= table.define "#{column.name.to_s}_header", :column => column do |record, options| %>
     <%= column.options[:label] ? column.options[:label] : column.name.to_s.titleize %>
   <% end %>
  <% end %>
@@ -57,14 +57,14 @@
 <%= table.define :data_columns do |options| %>
   <% table.columns.each do |column| %>
     <%= content_tag :td, options.merge(column.options)[:column_html] do %>
-      <%= table.use column, options.merge(:column => column) %>
+      <%= table.use column, options[:record], options.merge(:column => column) %>
     <% end %>
   <% end %>
 <% end %>
 
 <% table.columns.each do |column| %>
-  <%= table.define column.name, :column => column do |options| %>
-    <%= options[:record].send(options[:column].name) %>
+  <%= table.define column.name, :column => column do |record, options| %>
+    <%= record.send(options[:column].name) %>
   <% end %>
 <% end %>
 

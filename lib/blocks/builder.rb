@@ -30,12 +30,12 @@ module Blocks
       nil
     end
   
-    def use(*args, &block)      
+    def use(*args, &block)
       options = args.extract_options!      
       
       # If the user doesn't specify a block name, we generate an anonymous block name to assure other
       #  anonymous blocks don't override its definition
-      name = args.first ? args.first : self.anonymous_block_name
+      name = args.first ? args.shift : self.anonymous_block_name
       
       block_container = Blocks::Container.new
       block_container.name = name
@@ -45,7 +45,7 @@ module Blocks
       blocks[name.to_sym] = block_container if !name.is_a?(Blocks::Container) and blocks[name.to_sym].nil? and block
       
       if start_rendering_blocks
-        render_block name, options
+        render_block name, args, options
       else
         # Delays rendering this block until the partial has been rendered and all the blocks have had a chance to be defined
         self.block_positions << block_container 
@@ -143,7 +143,7 @@ module Blocks
       "block_#{anonymous_block_number}"
     end
     
-    def render_block(name_or_container, options={})
+    def render_block(name_or_container, args, options={})
       render_options = options
       
       if (name_or_container.is_a?(Blocks::Container))
@@ -157,10 +157,32 @@ module Blocks
        
       if blocks[name]  
         block_container = blocks[name]
-        view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
+        
+        args.push(shared_options.merge(block_container.options).merge(render_options))
+        
+        # If the block is taking more than one parameter, we can use *args
+        if block_container.block.arity > 1
+          view.concat(view.capture *args, &block_container.block)
+          
+        # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
+        #   as an array
+        else
+          view.concat(view.capture args.first, &block_container.block)
+        end
       elsif view.blocks.blocks[name]
         block_container = view.blocks.blocks[name]
-        view.concat(view.capture shared_options.merge(block_container.options).merge(render_options), &block_container.block)
+        
+        args.push(shared_options.merge(block_container.options).merge(render_options))
+        
+        # If the block is taking more than one parameter, we can use *args
+        if block_container.block.arity > 1
+          view.concat(view.capture *args, &block_container.block)
+          
+        # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
+        #   as an array
+        else
+          view.concat(view.capture args.first, &block_container.block)
+        end
       else
         begin
           begin
