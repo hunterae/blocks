@@ -1,0 +1,22 @@
+<%= blocks.define :header do %>
+  <h2>Local Override of Header</h2>
+<% end %>  
+
+<%= blocks.before :header do %>
+  <h2>Code Before the Header</h2>
+<% end %>
+
+<%= blocks.after :header do %>
+  <h2>Code After the Header</h2>
+<% end %>
+
+<p>
+  This page is meant to show that a global block (defined within the "views/blocks" directory) may be overridden with an
+  inline block definition. Here the global "header" block (defined in the file "views/blocks/_header.html.erb") is
+  overridden directly inside this view file. 
+</p>
+
+<p>
+  It also demonstrates that priority is given to a locally defined block over a controller defined block (i.e. a block
+  defined as a file in the "views/controller_name/" directory).
+</p>

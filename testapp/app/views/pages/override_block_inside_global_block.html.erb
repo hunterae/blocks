@@ -1,0 +1,36 @@
+<%# The "javascripts" block overridden here is used within the "includes" block, which is used in the layout file. %>
+<%= blocks.define :javascripts do %>
+  <%= javascript_include_tag 'overridden-includes.js' %>
+<% end %>  
+
+<%= blocks.before :javascripts do %>
+  <%= javascript_include_tag 'first.js' %>
+<% end %>
+
+<%= blocks.after :javascripts do %>
+  <%= javascript_include_tag 'last.js' %>
+<% end %>
+
+<%= blocks.before :stylesheets do %>
+  <%= stylesheet_link_tag 'first.css' %>
+<% end %>
+
+<%= blocks.after :stylesheets do %>
+  <%= stylesheet_link_tag 'last.css' %>
+<% end %>
+
+<%= blocks.before :includes do %>
+  <%= javascript_include_tag 'before-includes.js' %>
+<% end %>
+
+<%= blocks.after :includes do %>
+  <%= javascript_include_tag 'after-includes.js' %>
+<% end %>
+
+<p>
+  This page is meant to show that we can override the definition of a block used within another block. Our application.html.erb
+  layout file uses a block called "includes", which is defined in the global blocks directory (in a file "views/blocks/_includes.html").
+  The definition of this block is simple: it calls "blocks.use :stylesheets" and "blocks.use :javascripts" (as well as outputting
+  the csrf_meta_tag). Here, we are demonstrating that you can override the definition of the "javascripts" block used within
+  the "includes" block.
+</p>

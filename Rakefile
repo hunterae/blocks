@@ -1,4 +1,6 @@
-BLOCKS_VERSION="1.1.0"
+require 'rspec/core/rake_task'
+
+BLOCKS_VERSION="1.1.4"
 
 desc 'Generate gem specification'
 task :gemspec do
@@ -14,3 +16,8 @@ task :package => :gemspec do
   puts "Building version: #{BLOCKS_VERSION.inspect}"
   sh "gem build blocks.gemspec"
 end
+
+RSpec::Core::RakeTask.new('spec')
+
+# If you want to make this the default task
+task :default => :spec

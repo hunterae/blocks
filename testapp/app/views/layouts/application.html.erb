@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      <%= blocks.use :title do %>
+        Default Title
+      <% end %>
+    </title>
+    <%= blocks.use :includes %>
+  </head>
+  <body>
+    <%= blocks.use :header %>
+    <%= yield %>
+    <%= blocks.use :footer %>
+  </body>
+</html>

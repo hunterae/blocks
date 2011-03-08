@@ -57,9 +57,7 @@ module Blocks
     def render
       self.start_rendering_blocks = false
       
-      if shared_options[:block]
-        shared_options[:captured_block] = view.capture(self, &shared_options[:block])
-      end
+      shared_options[:captured_block] = view.capture(self, &shared_options[:block]) if shared_options[:block]
       
       self.start_rendering_blocks = true
 

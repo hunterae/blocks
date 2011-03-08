@@ -1,7 +1,5 @@
 <%= list.define :item do |options| %>
-  <%= content_tag :li, options[:item_html] do %>
-    <%= options[:field] ? options[:record].send(:field) : options[:record].to_s %>
-  <% end %>
+  <%= options[:field] ? options[:record].send(options[:field]) : options[:record].to_s %>
 <% end %>
 
 <%= list.define :items do |options| %>

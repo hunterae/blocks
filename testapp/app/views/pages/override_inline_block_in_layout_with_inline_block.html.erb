@@ -1,0 +1,13 @@
+<%= blocks.define :title do %>
+  Inline Override of Title
+<% end %>
+
+<p>
+  This page is meant to show that the "title" block used in the application.html.erb layout, which is given a default definition
+  in that tempate, can be overridden inline in the view.
+</p>
+
+<p>
+  Instead of the rendered output using the default definition of the "title" block, we expect to see our overridden definition
+  of the "title" block be rendered here.
+</p>

@@ -1,12 +1,12 @@
-<%= table.define :edit do |options| %>
+<%= table.define :edit do |row, options| %>
   <%= link_to "Edit", [:edit, options[:scope], options[:record]].flatten %>
 <% end %>
 
-<%= table.define :show do |options| %>
+<%= table.define :show do |row, options| %>
   <%= link_to "Show", [options[:scope], options[:record]].flatten %>
 <% end %>
 
-<%= table.define :delete do |options| %>
+<%= table.define :delete do |row, options| %>
   <%= link_to "Delete", [options[:scope], options[:record]].flatten, :method => "delete", :confirm => "Are you sure you want to delete this #{options[:record].class.to_s.humanize}?" %>
 <% end %>
 

@@ -1,0 +1,35 @@
+<%= blocks.before :header do %>
+  <h2>Code Before the Header1</h2>
+<% end %>
+
+<%= blocks.before :header do %>
+  <h2>Code Before the Header2</h2>
+<% end %>
+
+<%= blocks.after :header do %>
+  <h2>Code After the Header1</h2>
+<% end %>
+
+<%= blocks.after :header do %>
+  <h2>Code After the Header2</h2>
+<% end %>
+
+<%= blocks.before :footer do %>
+  <h2>Code Before the Footer</h2>
+<% end %>
+
+<%= blocks.after :footer do %>
+  <h2>Code After the Footer</h2>
+<% end %>
+
+<p>
+  This page is meant to show that a block defined globally (i.e. in the views/blocks directory) may be overridden with
+  a local block definition with the controller's view directory (in this case, the views/pages directory). Here, there 
+  is a file "views/blocks/_header.html.erb" which is overridden by the file "views/pages/_header.html.erb" when the "pages"
+  controller is used, as it is here. The same is true for the "footer" block.
+</p>
+
+<p>
+  We may continue using our "before" and "after" block hooks on the "header" block. You'll also notice that we can have
+  as many "before" and "after" blocks as we desire.
+</p>

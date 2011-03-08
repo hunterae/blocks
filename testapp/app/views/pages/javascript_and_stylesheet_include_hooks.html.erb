@@ -1,0 +1,48 @@
+<%= blocks.before :javascripts do %>
+  <%= javascript_include_tag 'first.js' %>
+<% end %>  
+
+<%= blocks.after :javascripts do %>
+  <%= javascript_include_tag 'last.js' %>
+<% end %>
+
+<%= blocks.before :stylesheets do %>
+  <%= stylesheet_link_tag 'first.css' %>
+<% end %>
+
+<%= blocks.after :stylesheets do %>
+  <%= stylesheet_link_tag 'last.css' %>
+<% end %>
+
+<%= blocks.before :includes do %>
+  <%= javascript_include_tag 'before-includes.js' %>
+<% end %>
+
+<%= blocks.after :includes do %>
+  <%= javascript_include_tag 'after-includes.js' %>
+<% end %>
+
+<p>
+  This page is meant to show that the "includes" block in the application.html.erb layout (which uses the blocks "javascripts" 
+  and "stylesheets") may be used to provide hooks to run code before and after the "javascripts" block, and before and after the 
+  "javascripts" and "stylesheets" blocks.
+</p>
+
+<p>
+  If you look at the generated source code, you'll see in the "head" tag of the source code the code output in this order:
+</p>
+<ul>
+  <li>The code generated from "blocks.before :includes"</li>
+  <li>
+    The code generated from "blocks.use :includes"
+    <ul>
+      <li>The code generated from "blocks.before :stylesheets"</li>
+      <li>The code generated from "blocks.use :stylesheets"</li>
+      <li>The code generated from "blocks.after :stylesheets"</li>
+      <li>The code generated from "blocks.before :javascripts"</li>
+      <li>The code generated from "blocks.use :javascripts"</li>
+      <li>The code generated from "blocks.after :javascripts"</li>
+    </ul>
+  </li>
+  <li>The code generated from "blocks.after :includes"</li>
+</ul>

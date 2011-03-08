@@ -1,8 +1,8 @@
 Gem::Specification.new do |s|
   s.name = "blocks"
   s.authors = ["Andrew Hunter", "Todd Fisher"]
-  s.version = "1.1.0"
-  s.date    = '2011-02-03'
+  s.version = "1.1.4"
+  s.date    = '2011-03-08'
   s.description = %q{content_for with parameters, with advanced options such as a table generator (table_for)}
   s.email       = "andrew@captico.com"
   s.extra_rdoc_files = ["LICENSE", "README.rdoc"]
@@ -11,4 +11,6 @@ Gem::Specification.new do |s|
   s.rubyforge_project = 'blocks'
   s.homepage = 'https://github.com/hunterae/blocks'
   s.summary = %q{content_for with parameters, with advanced options such as a table generator (table_for)}
+  #s.add_development_dependency 'rspec-rails', '>= 2.0.0.beta.20'
+  #s.add_development_dependency 'rails', '~> 3.0.0'
 end
