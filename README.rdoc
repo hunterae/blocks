@@ -2,7 +2,7 @@
 
 Wiki[http://wiki.github.com/hunterae/blocks]
 
-Blocks is a replacement / complement to content_for with yield. It allows a user to specify a block capable of taking parameters that may be passed in when using that block. A user may also specify other blocks to be prepended or appended before or after a specific block is rendered. A template may also be specified to blocks that will provide the layout for a specific component and provide default implementations for its blocks. In this way, blocks is able to offer a very simple to use table generator (table_for) and list generator (list_for).
+Blocks is a replacement / complement to content_for with yield. It allows a user to specify a block capable of taking parameters that may be passed in when using that block. A user may also specify other blocks to be prepended or appended before or after a specific block is rendered. A template may also be specified to blocks that will provide the layout for a specific component and provide default implementations for its blocks. In this way, blocks is able to offer a very simple to use table generator ({table_for}[https://github.com/hunterae/blocks/wiki/table_for]) and list generator (list_for).
 
 == Installation
 
@@ -21,7 +21,7 @@ Alternatively, you can install it as a plugin.
 
 == Getting Started
 
-What makes blocks particularly powerful is that they represent a combination of the ruby definition of blocks and partials. A block may be defined inline utilizing syntax similar to that of content_for:
+What makes blocks particularly powerful is that it represent a combination of the ruby definition of blocks and partials. A block may be defined inline utilizing syntax similar to that of content_for:
 
   <%= blocks.define :some_block_name, :some_parameter => 1, :some_parameter2 => 2 do |options| %>
     <%= options[:some_parameter] %>
@@ -35,17 +35,17 @@ or it may be written as a partial, existing in the controller view directory for
   <%= some_parameter2 if defined?(some_parameter2) %>
   <%= some_parameter3 if defined?(some_parameter3) %>
 
-Notice that in the context of a partial, we have direct access to the parameters as local variables. However, since we're not utilizing "blocks.define" to create our block, we can't specify the default parameters :some_parameter and :some_parameter2 as we do in the first example. This has the potential to cause a runtime exception in the context of partials and we will need to ensure that optional parameters are defined using "defined?". 
+Notice that in the context of a partial, we have direct access to the parameters as local variables. However, since we're not utilizing "blocks.define" to create our block, we can't specify the default parameters :some_parameter and :some_parameter2 as we do in the first example. This has the potential to cause a runtime exception in the context of partials and we will need to assure that optional parameters are defined using "defined?". 
 
 In the first example, we specified two parameters that are provided automatically to the block named "some_block_name". They are "some_parameter" and "some_parameter2". In addition, the definition of the block is assuming that the user will be passing in another parameter called "some_parameter3". However, all parameters are passed in in a hash (or local variables for partials), no error will occur if the user fails to specify "some_parameter3".
 
-Now, we may use the above block like follows:
+Now, we may use the above block as follows:
 
   <%= blocks.use :some_block_name %>
   
-The system will first look for a block that's been defined inline by the name :some_block_name. If it cannot find one, it will try and render a partial with the same name within the current controller's view directory. Failing to find that, it will try and render a partial within the global blocks view directory (by default, /views/blocks). If that partial also does not exist, it will give up and render nothing.
+The system will first look for a block that's been defined inline by the name :some_block_name. If it cannot find one, it will try and render a partial with the same name within the current controller's view directory. Failing to find that, it will try and render a partial within the global blocks view directory (by default, /views/blocks). If that partial also does not exist, it will give up and render nothing. (See [[Render Order]])
   
-Here, we will see the output "1 2" in the case of the first example (and "" for the second example). But if we pass in "some_parameter3", as follows:
+Here, we will see the output "1 2" for the first example (and "" for the second example). But if we pass in "some_parameter3", as follows:
 
   <%= blocks.use :some_block_name, :some_parameter3 => 3 %>
 
@@ -57,11 +57,7 @@ In this case, we will see "1 overridden 3" for the first example (and "overridde
 
 == table_for
 
-table_for is a useful example of how blocks may be utilized in an invaluable way. It is built entirely using the core blocks library.
-
-See {table_for}[https://github.com/hunterae/blocks/wiki/table_for] for details.
-
-table_for is exposed as a helper method with the following prototype:
+table_for is a useful example of how blocks may be utilized in an invaluable way. It is built entirely using the core blocks library. It is exposed as a helper method with the following prototype:
 
   table_for(records, options={}, &block)
 
@@ -111,71 +107,22 @@ Will generate the following table:
       </tr>
     </tbody>
   </table>
-
-== Providing a Default Implementation of a Block
-
-We can easily provide a default implementation of a block that will be used wherever it is specified unless that block has been specified elsewhere, in which case that version of the block will be rendered in it place. A perfect example of this would be by placing a default implementation of a block inside of a layout, and optionally specifying a different implementation to be rendered inside of your view. For example, inside one of my layouts (such as "views/layouts/application.html.erb"), I may provide my default page title:
-
-  <title>
-    <%= blocks.use :title do %>
-      My default page title
-    <% end %>
-  </title>
   
-Then, inside of a specific layout (such as "views/home/index.html.erb"), I may provide a specific page title for that particular view:
+See {table_for}[https://github.com/hunterae/blocks/wiki/table_for] for details.  
 
-  <%= blocks.define :title do %>
-    A different page title
-  <% end %>
+== Building Layouts
 
-When the home index page is rendered, it's page title will be "A different page title" (assuming the HomeController uses the default application layout), but any other page that uses the default application layout will show "My default page title" as its page title. This occurs since the view is parsed first, so the definition of the block named "title" will already exist by the time the layout is rendered. However, for any page that does not specify a definition of the block "title", the default implementation provided by the layout (using the command "blocks.use") will be used. 
+Utilizing blocks, we can rethink the way we define our templates. Everywhere where we might be tempted to write "yield :some_block_name", we can replace with "blocks.use :some_block_name". This gives us
+the ability to provide a default implementation for that block if it cannot be found (see {Providing a Default Implementation of a Block}[https://github.com/hunterae/blocks/wiki/Providing-a-Default-Implementation-of-a-Block]), and provides hooks for being able to render blocks before and after :some_block_name, utilizing "blocks.before :some_block_name" and "blocks.after :some_block_name" (See {Before and After Blocks}[https://github.com/hunterae/blocks/wiki/Before-and-After-Blocks]]).
 
-What would happen, though, if no default implementation were provided? In other words, what if the code in the layout looked like this:
-
-  <title>
-    <%= blocks.use :title %>
-  </title>
-  
-Well, in the case where the block if defined in the view (as was the case with "views/home/index.html.erb"), a title will be provided for the page. However, for any other page, since it can't find any implementation of the named block, it will simply return nothing, and you will have a page with no title. 
-
-== Using partials
-
-It's not completely accurate to say that if no block definition is found (as was the case above), "blocks.use :title" will simply return nothing. It will first try and render a partial with that name. By default, it will look for a partial named "_title.html.erb", first in the current controller's view directory, then in the "views/blocks" directory (or "_title.html.haml" if you're using haml). It will attempt to render that partial with all the options passed in as local variables to the partial. 
-
-== Before and After Blocks
-
-Blocks provides a very convenient way to specify blocks that are to be rendered before a specific block or after a specific block. For example:
-
-  <%= blocks.define :some_block do %>
-    Some Block
-  <% end %>
-  
-  <%= blocks.before :some_block do %>
-    Before 1
-  <% end %>
-  
-  <%= blocks.prepend :some_block do %>
-    Before 2
-  <% end %>
-  
-  <%= blocks.after :some_block do %>
-    After 1
-  <% end %>
-  
-  <%= blocks.append :some_block do %>
-    After 2
-  <% end %>
-  
-Here, "blocks.before" is synonymous with "blocks.prepend" and "blocks.after" is synonymous with "blocks.append". Now, if somewhere, we called:
-
-  <%= blocks.use :some_block %>
-  
-We would see: "Before 1 Before 2 Some Block After 1 After 2". 
-
-What's particularly useful about this is that it doesn't matter if the "before" / "prepend" and "after" / "append" some before or after the "block.define" call. The only thing that matters is that the "blocks.define" occurs before the "blocks.use" call.
+See {Building Layouts}[https://github.com/hunterae/blocks/wiki/Building-Layouts] for more details on how to utilize Blocks to build layouts.
 
 == Wiki Docs
 
+* {Building Layouts}[https://github.com/hunterae/blocks/wiki/Building-Layouts]
+* {Render Order}[https://github.com/hunterae/blocks/wiki/Render-Order]
+* {Before and After Blocks}[https://github.com/hunterae/blocks/wiki/Before-and-After-Blocks]
+* {Providing a Default Implementation of a Block}[https://github.com/hunterae/blocks/wiki/Providing-a-Default-Implementation-of-a-Block]
 * {table_for}[https://github.com/hunterae/blocks/wiki/table_for]
 * {Overriding the defaults in table_for}[https://github.com/hunterae/blocks/wiki/Overriding-the-defaults-in-table_for]
 * {Defining your own reusage table_for implementation}[https://github.com/hunterae/blocks/wiki/Defining-your-own-reusage-table_for-implementation]
