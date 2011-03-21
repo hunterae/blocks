@@ -8,41 +8,32 @@ Blocks is a replacement / complement to content_for with yield. It allows a user
 
 In <b>Rails 3</b>, add this to your Gemfile.
 
-```
-gem "blocks"
-```
+  gem "blocks"
 
 In <b>Rails 2</b>, add this to your environment.rb file. (At this time, it is untested in Rails 2)
 
-```
-config.gem "blocks"
-```
+  config.gem "blocks"
 
 Alternatively, you can install it as a plugin.
 
-```
-rails plugin install git://github.com/hunterae/blocks.git
-```
+  rails plugin install git://github.com/hunterae/blocks.git
+
 
 == Getting Started
 
 What makes blocks particularly powerful is that they represent a combination of the ruby definition of blocks and partials. A block may be defined inline utilizing syntax similar to that of content_for:
 
-```
-<%= blocks.define :some_block_name, :some_parameter => 1, :some_parameter2 => 2 do |options| %>
-  <%= options[:some_parameter] %>
-  <%= options[:some_parameter2] %>
-  <%= options[:some_parameter3] %>
-<% end %>
-```
+  <%= blocks.define :some_block_name, :some_parameter => 1, :some_parameter2 => 2 do |options| %>
+    <%= options[:some_parameter] %>
+    <%= options[:some_parameter2] %>
+    <%= options[:some_parameter3] %>
+  <% end %>
 
 or it may be written as a partial, existing in the controller view directory for whatever controller renders the view, or the globally configured blocks directory (/views/blocks by default). The above block definition might then be written in the file /views/blocks/_some_block_name.html.erb:
 
-```
-<%= some_parameter if defined?(some_parameter)%>
-<%= some_parameter2 if defined?(some_parameter2) %>
-<%= some_parameter3 if defined?(some_parameter3) %>
-```
+  <%= some_parameter if defined?(some_parameter)%>
+  <%= some_parameter2 if defined?(some_parameter2) %>
+  <%= some_parameter3 if defined?(some_parameter3) %>
 
 Notice that in the context of a partial, we have direct access to the parameters as local variables. However, since we're not utilizing "blocks.define" to create our block, we can't specify the default parameters :some_parameter and :some_parameter2 as we do in the first example. This has the potential to cause a runtime exception in the context of partials and we will need to ensure that optional parameters are defined using "defined?". 
 
@@ -81,49 +72,45 @@ For example, if you have an Array of objects that respond to the following [:nam
 
 And using table_for you define each column with the following:
 
-```
-<%= table_for @records, 
-            :table_html => {:id => "records"}, 
-            :header_html => {:style => "color:red"},
-            :row_html => {:class => lambda { |parameters| cycle('odd', 'even')}},
-            :column_html => {:style => "color:green"} do |table| %>
-  <%= table.column :name, :column_html => {:style => "color:blue"}, :header_html => {:style => "color:orange"} %>
-  <%= table.column :email %>
-  <%= table.column :phonenumber, :column_html => {:style => "color:orange"}, :header_html => {:style => "color:blue"} %>
-  <%= table.column :label => "???" do %>
-    Some Random Column
+  <%= table_for @records, 
+              :table_html => {:id => "records"}, 
+              :header_html => {:style => "color:red"},
+              :row_html => {:class => lambda { |parameters| cycle('odd', 'even')}},
+              :column_html => {:style => "color:green"} do |table| %>
+    <%= table.column :name, :column_html => {:style => "color:blue"}, :header_html => {:style => "color:orange"} %>
+    <%= table.column :email %>
+    <%= table.column :phonenumber, :column_html => {:style => "color:orange"}, :header_html => {:style => "color:blue"} %>
+    <%= table.column :label => "???" do %>
+      Some Random Column
+    <% end %>
   <% end %>
-<% end %>
-```
 
 Will generate the following table:
 
-```
-<table id="records">
-  <thead>
-    <tr>
-      <th style="color:orange">Name</th>    
-      <th style="color:red">Email</th>    
-      <th style="color:blue">Phonenumber</th>    
-      <th style="color:red">???</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr class="odd">
-      <td style="color:blue">The Name</td>    
-      <td style="color:green">The Email</td>    
-      <td style="color:orange">A phone number</td>    
-      <td style="color:green">Some Random Column</td>
-    </tr>
-    <tr class="even">
-      <td style="color:blue">The Second Name</td>    
-      <td style="color:green">The Second Email</td>    
-      <td style="color:orange">A second phone number</td>   
-      <td style="color:green">Some Random Column</td>
-    </tr>
-  </tbody>
-</table>
-```
+  <table id="records">
+    <thead>
+      <tr>
+        <th style="color:orange">Name</th>    
+        <th style="color:red">Email</th>    
+        <th style="color:blue">Phonenumber</th>    
+        <th style="color:red">???</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="odd">
+        <td style="color:blue">The Name</td>    
+        <td style="color:green">The Email</td>    
+        <td style="color:orange">A phone number</td>    
+        <td style="color:green">Some Random Column</td>
+      </tr>
+      <tr class="even">
+        <td style="color:blue">The Second Name</td>    
+        <td style="color:green">The Second Email</td>    
+        <td style="color:orange">A second phone number</td>   
+        <td style="color:green">Some Random Column</td>
+      </tr>
+    </tbody>
+  </table>
 
 == Providing a Default Implementation of a Block
 
