@@ -8,44 +8,122 @@ Blocks is a replacement / complement to content_for with yield. It allows a user
 
 In <b>Rails 3</b>, add this to your Gemfile.
 
-  gem "blocks"
+```
+gem "blocks"
+```
 
 In <b>Rails 2</b>, add this to your environment.rb file. (At this time, it is untested in Rails 2)
 
-  config.gem "blocks"
+```
+config.gem "blocks"
+```
 
 Alternatively, you can install it as a plugin.
 
-  rails plugin install git://github.com/hunterae/blocks.git
-
+```
+rails plugin install git://github.com/hunterae/blocks.git
+```
 
 == Getting Started
 
-At the very simplest level, blocks may be used in much the same way that content_for and yield are used:
+What makes blocks particularly powerful is that they represent a combination of the ruby definition of blocks and partials. A block may be defined inline utilizing syntax similar to that of content_for:
 
-To define a block:
+```
+<%= blocks.define :some_block_name, :some_parameter => 1, :some_parameter2 => 2 do |options| %>
+  <%= options[:some_parameter] %>
+  <%= options[:some_parameter2] %>
+  <%= options[:some_parameter3] %>
+<% end %>
+```
 
-  <%= blocks.define :some_block_name, :some_parameter => 1, :some_parameter2 => 2 do |options| %>
-    <%= options[:some_parameter] %>
-    <%= options[:some_parameter2] %>
-    <%= options[:some_parameter3] %>
-  <% end %>
+or it may be written as a partial, existing in the controller view directory for whatever controller renders the view, or the globally configured blocks directory (/views/blocks by default). The above block definition might then be written in the file /views/blocks/_some_block_name.html.erb:
 
-Here, we are specifying two parameters that are provided automatically to the block named "some_block_name". They are "some_parameter" and "some_parameter2". In addition, the definition of the block is assuming that the user will be passing in another parameter called "some_parameter3". However, all parameters are passed in in a hash, no error will occur if the user fails to specify "some_parameter3".
+```
+<%= some_parameter if defined?(some_parameter)%>
+<%= some_parameter2 if defined?(some_parameter2) %>
+<%= some_parameter3 if defined?(some_parameter3) %>
+```
+
+Notice that in the context of a partial, we have direct access to the parameters as local variables. However, since we're not utilizing "blocks.define" to create our block, we can't specify the default parameters :some_parameter and :some_parameter2 as we do in the first example. This has the potential to cause a runtime exception in the context of partials and we will need to ensure that optional parameters are defined using "defined?". 
+
+In the first example, we specified two parameters that are provided automatically to the block named "some_block_name". They are "some_parameter" and "some_parameter2". In addition, the definition of the block is assuming that the user will be passing in another parameter called "some_parameter3". However, all parameters are passed in in a hash (or local variables for partials), no error will occur if the user fails to specify "some_parameter3".
 
 Now, we may use the above block like follows:
 
   <%= blocks.use :some_block_name %>
   
-Here, we will see the output "1 2". But if we pass in "some_parameter3", as follows:
+The system will first look for a block that's been defined inline by the name :some_block_name. If it cannot find one, it will try and render a partial with the same name within the current controller's view directory. Failing to find that, it will try and render a partial within the global blocks view directory (by default, /views/blocks). If that partial also does not exist, it will give up and render nothing.
+  
+Here, we will see the output "1 2" in the case of the first example (and "" for the second example). But if we pass in "some_parameter3", as follows:
 
   <%= blocks.use :some_block_name, :some_parameter3 => 3 %>
 
-Then we will see "1 2 3". Additionally, we can override any of the previous parameters when using a block simply by passing in the new value as a parameter:
+Then we will see "1 2 3" for the first example (and "3" for the second example). Additionally, we can override any of the previous parameters when using a block simply by passing in the new value as a parameter:
 
   <%= blocks.use :some_block_name, :some_parameter2 => "overridden", :some_parameter3 => 3 %>
   
-In this case, we will see "1 overridden 3". Thus, we now have content_for but with parameters.
+In this case, we will see "1 overridden 3" for the first example (and "overridden 3" for the second example). Thus, we now have content_for but with parameters, and additional intelligence by utilizing partials.
+
+== table_for
+
+table_for is a useful example of how blocks may be utilized in an invaluable way. It is built entirely using the core blocks library.
+
+See {table_for}[https://github.com/hunterae/blocks/wiki/table_for] for details.
+
+table_for is exposed as a helper method with the following prototype:
+
+  table_for(records, options={}, &block)
+
+For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber] e.g. 
+
+  @records = [OpenStruct.new({:name => "The Name", :email => "The Email", :phonenumber => "A phone number"}),
+              OpenStruct.new({:name => "The Second Name", :email => "The Second Email", :phonenumber => "A second phone number"})]
+
+And using table_for you define each column with the following:
+
+```
+<%= table_for @records, 
+            :table_html => {:id => "records"}, 
+            :header_html => {:style => "color:red"},
+            :row_html => {:class => lambda { |parameters| cycle('odd', 'even')}},
+            :column_html => {:style => "color:green"} do |table| %>
+  <%= table.column :name, :column_html => {:style => "color:blue"}, :header_html => {:style => "color:orange"} %>
+  <%= table.column :email %>
+  <%= table.column :phonenumber, :column_html => {:style => "color:orange"}, :header_html => {:style => "color:blue"} %>
+  <%= table.column :label => "???" do %>
+    Some Random Column
+  <% end %>
+<% end %>
+```
+
+Will generate the following table:
+
+```
+<table id="records">
+  <thead>
+    <tr>
+      <th style="color:orange">Name</th>    
+      <th style="color:red">Email</th>    
+      <th style="color:blue">Phonenumber</th>    
+      <th style="color:red">???</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="odd">
+      <td style="color:blue">The Name</td>    
+      <td style="color:green">The Email</td>    
+      <td style="color:orange">A phone number</td>    
+      <td style="color:green">Some Random Column</td>
+    </tr>
+    <tr class="even">
+      <td style="color:blue">The Second Name</td>    
+      <td style="color:green">The Second Email</td>    
+      <td style="color:orange">A second phone number</td>   
+      <td style="color:green">Some Random Column</td>
+    </tr>
+  </tbody>
+</table>
+```
 
 == Providing a Default Implementation of a Block
 
@@ -75,7 +153,7 @@ Well, in the case where the block if defined in the view (as was the case with "
 
 == Using partials
 
-It's not completely accurate to say that if no block definition is found (as was the case above), "blocks.use :title" will simply return nothing. It will first try and render a partial with that name. By default, it will look for a partial named "_title.html.erb" in the "view/blocks" directory (or "_title.html.haml" if you're using haml). It will attempt to render that partial with all the options passed in as local variables to the partial. 
+It's not completely accurate to say that if no block definition is found (as was the case above), "blocks.use :title" will simply return nothing. It will first try and render a partial with that name. By default, it will look for a partial named "_title.html.erb", first in the current controller's view directory, then in the "views/blocks" directory (or "_title.html.haml" if you're using haml). It will attempt to render that partial with all the options passed in as local variables to the partial. 
 
 == Before and After Blocks
 
@@ -109,49 +187,16 @@ We would see: "Before 1 Before 2 Some Block After 1 After 2".
 
 What's particularly useful about this is that it doesn't matter if the "before" / "prepend" and "after" / "append" some before or after the "block.define" call. The only thing that matters is that the "blocks.define" occurs before the "blocks.use" call.
 
-== table_for
+== Wiki Docs
 
-table_for is a useful example of using blocks in a very practical way. It is built entirely using the core blocks library. It is exposed as a helper method with the following prototype:
+* {table_for}[https://github.com/hunterae/blocks/wiki/table_for]
+* {Overriding the defaults in table_for}[https://github.com/hunterae/blocks/wiki/Overriding-the-defaults-in-table_for]
+* {Defining your own reusage table_for implementation}[https://github.com/hunterae/blocks/wiki/Defining-your-own-reusage-table_for-implementation]
+* {See more}[https://github.com/hunterae/blocks/wiki]
 
-  table_for(records, options={}, &block)
+== Questions or Problems?
 
-For example, if you have an Array of objects that respond to the following [:name, :email, :phonenumber] e.g. 
-
-  @records = [OpenStruct.new({:name => "The Name", :email => "The Email", :phonenumber => "A phone number"}),
-              OpenStruct.new({:name => "The Second Name", :email => "The Second Email", :phonenumber => "A second phone number"})]
-
-And using table_for you define each column with the following:
-
-   <%= table_for @records do |table| %>
-      <%= table.column :name %>
-      <%= table.column :email %>
-      <%= table.column :phonenumber %>
-   <% end %>
-
-Will generate the following table:
-
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Phonenumber</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="odd">
-        <td>The Name</td>
-        <td>The Email</td>
-        <td>A phone number</td>
-      </tr>
-      <tr class="even">
-        <td>The Second Name</td>
-        <td>The Second Email</td>
-        <td>A second phone number</td>
-      </tr>
-    </tbody>
-  </table>
-
+If you have any issues with Blocks which you cannot find the solution to in the documentation[https://github.com/hunterae/blocks/wiki], please add an {issue on GitHub}[https://github.com/hunterae/blocks/issues] or fork the project and send a pull request.
 
 == Special Thanks
 
