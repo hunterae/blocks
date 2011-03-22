@@ -29,7 +29,7 @@ What makes blocks particularly powerful is that it represent a combination of th
     <%= options[:some_parameter3] %>
   <% end %>
 
-or it may be written as a partial, existing in the controller view directory for whatever controller renders the view, or the globally configured blocks directory (/views/blocks by default). The above block definition might then be written in the file /views/blocks/_some_block_name.html.erb:
+or it may be written as a partial, existing in the controller view directory for whatever controller renders the view, or the globally configured blocks directory (views/blocks by default). The above block definition might then be written in the file views/blocks/_some_block_name.html.erb:
 
   <%= some_parameter if defined?(some_parameter)%>
   <%= some_parameter2 if defined?(some_parameter2) %>
@@ -43,7 +43,7 @@ Now, we may use the above block as follows:
 
   <%= blocks.use :some_block_name %>
   
-The system will first look for a block that's been defined inline by the name :some_block_name. If it cannot find one, it will try and render a partial with the same name within the current controller's view directory. Failing to find that, it will try and render a partial within the global blocks view directory (by default, /views/blocks). If that partial also does not exist, it will give up and render nothing. (See [[Render Order]])
+The system will first look for a block that's been defined inline by the name :some_block_name. If it cannot find one, it will try and render a partial with the same name within the current controller's view directory. Failing to find that, it will try and render a partial within the global blocks view directory (by default, views/blocks). If that partial also does not exist, it will give up and render nothing. (See [[Render Order]])
   
 Here, we will see the output "1 2" for the first example (and "" for the second example). But if we pass in "some_parameter3", as follows:
 
@@ -66,7 +66,7 @@ For example, if you have an Array of objects that respond to the following [:nam
   @records = [OpenStruct.new({:name => "The Name", :email => "The Email", :phonenumber => "A phone number"}),
               OpenStruct.new({:name => "The Second Name", :email => "The Second Email", :phonenumber => "A second phone number"})]
 
-And using table_for you define each column with the following:
+And using table_for you can very easily specify intricate details about the table (Note: most of the options in this example are optional):
 
   <%= table_for @records, 
               :table_html => {:id => "records"}, 
@@ -113,12 +113,16 @@ See {table_for}[https://github.com/hunterae/blocks/wiki/table_for] for details.
 == Building Layouts
 
 Utilizing blocks, we can rethink the way we define our templates. Everywhere where we might be tempted to write "yield :some_block_name", we can replace with "blocks.use :some_block_name". This gives us
-the ability to provide a default implementation for that block if it cannot be found (see {Providing a Default Implementation of a Block}[https://github.com/hunterae/blocks/wiki/Providing-a-Default-Implementation-of-a-Block]), and provides hooks for being able to render blocks before and after :some_block_name, utilizing "blocks.before :some_block_name" and "blocks.after :some_block_name" (See {Before and After Blocks}[https://github.com/hunterae/blocks/wiki/Before-and-After-Blocks]]).
+the ability to provide a default implementation for that block if it cannot be found (see {Providing a Default Implementation of a Block}[https://github.com/hunterae/blocks/wiki/Providing-a-Default-Implementation-of-a-Block]), and provides hooks for being able to render code before and after :some_block_name, utilizing "blocks.before :some_block_name" and "blocks.after :some_block_name" (See {Before and After Blocks}[https://github.com/hunterae/blocks/wiki/Before-and-After-Blocks]]).
 
 See {Building Layouts}[https://github.com/hunterae/blocks/wiki/Building-Layouts] for more details on how to utilize Blocks to build layouts.
 
 == Wiki Docs
 
+* {Basics}[https://github.com/hunterae/blocks/wiki/Basics]
+* {Specifying your blocks as controller level partials}[https://github.com/hunterae/blocks/wiki/Specifying-your-blocks-as-controller-level-partials]
+* {Specifying your blocks as global partials}[https://github.com/hunterae/blocks/wiki/Specifying-your-blocks-as-global-partials]
+* {How Inline Blocks, Controller Level Blocks, and Global Blocks Work Together}[https://github.com/hunterae/blocks/wiki/How-Inline-Blocks,-Controller-Level-Blocks,-and-Global-Blocks-Work-Together]
 * {Building Layouts}[https://github.com/hunterae/blocks/wiki/Building-Layouts]
 * {Render Order}[https://github.com/hunterae/blocks/wiki/Render-Order]
 * {Before and After Blocks}[https://github.com/hunterae/blocks/wiki/Before-and-After-Blocks]
