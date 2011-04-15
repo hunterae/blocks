@@ -1,13 +1,13 @@
-<%= table.define :edit do |row, options| %>
-  <%= link_to "Edit", [:edit, options[:scope], options[:record]].flatten %>
+<%= table.define :edit do |record, options| %>
+  <%= link_to "Edit", [:edit, options[:scope], record].flatten %>
 <% end %>
 
-<%= table.define :show do |row, options| %>
-  <%= link_to "Show", [options[:scope], options[:record]].flatten %>
+<%= table.define :show do |record, options| %>
+  <%= link_to "Show", [options[:scope], record].flatten %>
 <% end %>
 
-<%= table.define :delete do |row, options| %>
-  <%= link_to "Delete", [options[:scope], options[:record]].flatten, :method => "delete", :confirm => "Are you sure you want to delete this #{options[:record].class.to_s.humanize}?" %>
+<%= table.define :delete do |record, options| %>
+  <%= link_to "Delete", [options[:scope], record].flatten, :method => "delete", :confirm => "Are you sure you want to delete this #{record.class.to_s.humanize}?" %>
 <% end %>
 
 <%= table.define :thead do %>
@@ -44,20 +44,20 @@
 
 <%= table.define :rows do %>
   <% records.each do |record| %>
-    <%= table.use :row, :record => record %>
+    <%= table.use :row, record %>
   <% end %>
 <% end %>
 
-<%= table.define :row do |options| %>
+<%= table.define :row do |record, options| %>
   <%= content_tag :tr, evaluated_content_options(options[:row_html], options) do %>
-    <%= table.use :data_columns, options %>
+    <%= table.use :data_columns, record, options %>
   <% end %>
 <% end %>
 
-<%= table.define :data_columns do |options| %>
+<%= table.define :data_columns do |record, options| %>
   <% table.columns.each do |column| %>
     <%= content_tag :td, options.merge(column.options)[:column_html] do %>
-      <%= table.use column, options[:record], options.merge(:column => column) %>
+      <%= table.use column, record, options.merge(:column => column) %>
     <% end %>
   <% end %>
 <% end %>
