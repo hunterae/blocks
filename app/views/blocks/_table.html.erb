@@ -25,22 +25,40 @@
 <%= table.define :header_columns do |options| %>
   <% table.columns.each do |column| %>
     <%= content_tag :th, options.merge(column.options)[:header_html] do %>
-      <%= table.use "#{column.name.to_s}_header", options.merge(:column => column) %>
+      <%= table.use "#{column.name.to_s}_header", options.merge(column.options) %>
     <% end %>
   <% end %>
 <% end %>
 
 <% table.columns.each do |column| %>  
-  <%= table.define "#{column.name.to_s}_header", :column => column do |record, options| %>
-    <%= column.options[:label] ? column.options[:label] : column.name.to_s.titleize %>
+  <%= table.define "#{column.name.to_s}_header", :column => column do |options| %>
+    <% if options[:sortable] %>
+      <%= table.use "#{options[:column].name.to_s}_header_sortable_link", options %>
+    <% else %>
+      <%= options[:label] ? options[:label] : options[:column].name.to_s.titleize %>
+    <% end %>
   <% end %>
- <% end %>
+  
+  <%= table.define "#{column.name.to_s}_header_sortable_link", :column => column do |options| %>
+    <%= table.use :header_sortable_link, options %>
+  <% end %>
+<% end %>
+ 
+<%= table.define :header_sortable_link do |options| %>
+  <% label = (options[:label] ? options[:label] : options[:column].name.to_s.titleize) %>
+  <% sort_mode = ((params[:order] != options[:order].to_s or params[:sort_mode] == "desc") ? "asc" : "desc") %>
+  <% ui_icon = sort_mode == "desc" ? "ui-icon-triangle-1-s" : "ui-icon-triangle-1-n" %>
+  <% parameters = params.merge({:order => (options[:order] ? options[:order] : options[:column].name), :sort_mode => sort_mode}) %>
 
- <%= table.define :tbody do %>
+  <%= link_to label, parameters %>
+  <span class="ui-icon <%= ui_icon %>" style="display:<%= params[:order] == options[:order].to_s ? "inline-block" : "none" %>; float:none"></span>
+<% end %>
+
+<%= table.define :tbody do %>
   <tbody>
     <%= table.use :rows %>
   </tbody>
- <% end %>
+<% end %>
 
 <%= table.define :rows do %>
   <% records.each do |record| %>

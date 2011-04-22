@@ -1,6 +1,6 @@
 require 'rspec/core/rake_task'
 
-BLOCKS_VERSION="1.1.5"
+BLOCKS_VERSION="1.2.0"
 
 desc 'Generate gem specification'
 task :gemspec do
