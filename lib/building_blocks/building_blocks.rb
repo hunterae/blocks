@@ -73,9 +73,9 @@ module BuildingBlocks
       block_container.block = block
       
       if view.blocks.blocks[name].nil?
-        view.blocks.blocks[name] = [block_container]
+        blocks[name] = [block_container]
       else
-        view.blocks.blocks[name] << block_container
+        blocks[name] << block_container
       end
 
       nil
@@ -91,9 +91,9 @@ module BuildingBlocks
       block_container.block = block
       
       if view.blocks.blocks[name].nil?
-        view.blocks.blocks[name] = [block_container]
+        blocks[name] = [block_container]
       else
-        view.blocks.blocks[name] << block_container
+        blocks[name] << block_container
       end
 
       nil
