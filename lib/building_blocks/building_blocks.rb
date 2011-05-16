@@ -1,33 +1,80 @@
 module BuildingBlocks
   class Base
+    attr_accessor :view
     
-    attr_accessor :view, :blocks, :block_positions, :anonymous_block_number,
-                  :start_rendering_blocks, :block_groups, :shared_options
+    attr_accessor :blocks 
     
+    attr_accessor :block
+    
+    # Array of BuildingBlocks::Container objects, storing the order of blocks as they were used
+    attr_accessor :block_positions
+    
+    # counter, used to give unnamed blocks a unique name
+    attr_accessor :anonymous_block_number
+    
+    attr_accessor :start_rendering_blocks 
+    
+    attr_accessor :block_groups
+
+    # These are the options that are passed into the initalize method
+    attr_accessor :global_options
+    
+    # Checks if a particular block has been defined within the current block scope.
+    #   <%= blocks.defined? :some_block_name %>
+    # Options:
+    # [+name+]
+    #   The name of the block to check
     def defined?(name)
       !blocks[name.to_sym].nil?
     end
     
+    # Define a block, unless a block by the same name is already defined.
+    #   <%= blocks.define :some_block_name, :parameter1 => "1", :parameter2 => "2" do |options| %>
+    #     <%= options[:parameter1] %> and <%= options[:parameter2] %>
+    #   <% end %>
+    # 
+    # Options:
+    # [+name+]
+    #   The name of the block being defined (either a string or a symbol)
+    # [+options+]
+    #   The default options for the block definition. Any or all of these options may be overrideen by 
+    #   whomever calls "blocks.use" on this block.
+    # [+block+]
+    #   The block that is to be rendered when "blocks.use" is called for this block.
     def define(name, options={}, &block)
-      block_container = BuildingBlocks::Container.new
-      block_container.name = name
-      block_container.options = options
-      block_container.block = block
+      # Check if a block by this name is already defined.
+      if blocks[name.to_sym].nil?
+        # Store the attributes of the defined block in a container for later use
+        block_container = BuildingBlocks::Container.new
+        block_container.name = name
+        block_container.options = options
+        block_container.block = block
       
-      blocks[name.to_sym] = block_container if blocks[name.to_sym].nil?
+        blocks[name.to_sym] = block_container 
+      end
       
       nil
     end
     
+    # Define a block, replacing an existing block by the same name if it is already defined.
+    #   <%= blocks.define :some_block_name, :parameter1 => "1", :parameter2 => "2" do |options| %>
+    #     <%= options[:parameter1] %> and <%= options[:parameter2] %>
+    #   <% end %>
+    # 
+    #   <%= blocks.replace :some_block_name, :parameter3 => "3", :parameter4 => "4" do |options| %>
+    #     <%= options[:parameter3] %> and <%= options[:parameter4] %>
+    #   <% end %>
+    # Options:
+    # [+name+]
+    #   The name of the block being defined (either a string or a symbol)
+    # [+options+]
+    #   The default options for the block definition. Any or all of these options may be overrideen by 
+    #   whomever calls "blocks.use" on this block.
+    # [+block+]
+    #   The block that is to be rendered when "blocks.use" is called for this block.
     def replace(name, options={}, &block)
-      block_container = BuildingBlocks::Container.new
-      block_container.name = name
-      block_container.options = options
-      block_container.block = block
-      
-      blocks[name.to_sym] = block_container
-      
-      nil
+      blocks[name.to_sym] = nil
+      define(name, options, &block)
     end
   
     def use(*args, &block)
@@ -42,26 +89,27 @@ module BuildingBlocks
       block_container.options = options
       block_container.block = block
 
-      blocks[name.to_sym] = block_container if !name.is_a?(BuildingBlocks::Container) and blocks[name.to_sym].nil? and block
+      blocks[name.to_sym] = block_container if !name.is_a?(BuildingBlocks::Container) and blocks[name.to_sym].nil? and block_given?
       
-      if start_rendering_blocks
+      if start_rendering_blocks        
         render_block name, args, options
       else
         # Delays rendering this block until the partial has been rendered and all the blocks have had a chance to be defined
         self.block_positions << block_container 
+        nil
       end
       
-      nil
+      # nil
     end
     
     def render
       self.start_rendering_blocks = false
       
-      shared_options[:captured_block] = view.capture(self, &shared_options[:block]) if shared_options[:block]
+      global_options[:captured_block] = view.capture(self, &self.block) if self.block
       
       self.start_rendering_blocks = true
 
-      view.render shared_options[:template], shared_options
+      view.render global_options[:template], global_options
     end
     
     def before(name, options={}, &block)
@@ -113,7 +161,7 @@ module BuildingBlocks
       self.block_groups[m] = self.block_positions
      
       # Capture the contents of the block group (this will only capture block definitions and block uses)
-      view.capture(shared_options.merge(options), &block) if block_given?
+      view.capture(global_options.merge(options), &block) if block_given?
       
       # restore the original block positions array
       self.block_positions = original_block_positions
@@ -122,13 +170,13 @@ module BuildingBlocks
     
     protected
     
-    def initialize(options)
-      self.view = options[:view]
-      self.shared_options = options
-      
+    def initialize(view, options={}, &block)
       options[options[:variable] ? options[:variable].to_sym : :blocks] = self
       options[:templates_folder] = "blocks" if options[:templates_folder].nil?
       
+      self.view = view
+      self.global_options = options
+      self.block = block
       self.block_positions = []
       self.blocks = {}    
       self.anonymous_block_number = 0
@@ -141,8 +189,10 @@ module BuildingBlocks
       "block_#{anonymous_block_number}"
     end
     
-    def render_block(name_or_container, args, options={})
+    def render_block(name_or_container, args, options={})  
       render_options = options
+      
+      buffer = ActionView::NonConcattingString.new
       
       if (name_or_container.is_a?(BuildingBlocks::Container))
         name = name_or_container.name.to_sym
@@ -151,86 +201,92 @@ module BuildingBlocks
         name = name_or_container.to_sym
       end
       
-      view.concat(render_before_blocks(name, options))
+      buffer << render_before_blocks(name, options)
        
       if blocks[name]  
         block_container = blocks[name]
         
-        args.push(shared_options.merge(block_container.options).merge(render_options))
+        args.push(global_options.merge(block_container.options).merge(render_options))
         
         # If the block is taking more than one parameter, we can use *args
         if block_container.block.arity > 1
-          view.concat(view.capture *args, &block_container.block)
+          buffer << view.capture(*args, &block_container.block)
           
         # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
         #   as an array
         else
-          view.concat(view.capture args.first, &block_container.block)
+          buffer << view.capture(args.first, &block_container.block)
         end
       elsif view.blocks.blocks[name]
         block_container = view.blocks.blocks[name]
         
-        args.push(shared_options.merge(block_container.options).merge(render_options))
+        args.push(global_options.merge(block_container.options).merge(render_options))
         
         # If the block is taking more than one parameter, we can use *args
         if block_container.block.arity > 1
-          view.concat(view.capture *args, &block_container.block)
+          buffer << view.capture(*args, &block_container.block)
           
         # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
         #   as an array
         else
-          view.concat(view.capture args.first, &block_container.block)
+          buffer << view.capture(args.first, &block_container.block)
         end
       else
         begin
-          begin
-            view.concat(view.render "#{name.to_s}", shared_options.merge(render_options))
-          rescue ActionView::MissingTemplate
+          begin            
+            buffer << view.render("#{name.to_s}", global_options.merge(render_options))
+          rescue ActionView::MissingTemplate            
             # This partial did not exist in the current controller's view directory; now checking in the default templates folder
-            view.concat(view.render "#{shared_options[:templates_folder]}/#{name.to_s}", shared_options.merge(render_options))
+            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(render_options))
           end
         rescue ActionView::MissingTemplate
           # This block does not exist and no partial can be found to satify it
         end
       end
       
-      view.concat(render_after_blocks(name, options))
+      buffer << render_after_blocks(name, options)
+      
+      buffer
     end
     
     def render_before_blocks(name, options={})      
       name = "before_#{name.to_s}".to_sym
       
+      buffer = ActionView::NonConcattingString.new
+      
       unless blocks[name].nil?
         blocks[name].each do |block_container|
-          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
       unless view.blocks.blocks[name].nil? || view.blocks.blocks == blocks
         view.blocks.blocks[name].each do |block_container|
-          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
-      nil
+      buffer
     end
     
     def render_after_blocks(name, options={})
       name = "after_#{name.to_s}".to_sym
       
+      buffer = ActionView::NonConcattingString.new
+      
       unless blocks[name].nil?
         blocks[name].each do |block_container|
-          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
       unless view.blocks.blocks[name].nil? || view.blocks.blocks == blocks
         view.blocks.blocks[name].each do |block_container|
-          view.concat(view.capture shared_options.merge(block_container.options).merge(options), &block_container.block)
+          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
         end
       end
       
-      nil
+      buffer
     end
   end
 end

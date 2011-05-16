@@ -1,10 +1,7 @@
 module BuildingBlocks
   module HelperMethods
     def blocks
-      options = {}
-      options[:view] = self
-      
-      @blocks ||= Base.new(options)
+      @blocks ||= BuildingBlocks::Base.new(self)
     end
   end
 end
