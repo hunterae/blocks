@@ -189,24 +189,24 @@ module BuildingBlocks
       "block_#{anonymous_block_number}"
     end
     
-    def render_block(name_or_container, args, options={})  
-      render_options = options
+    def render_block(name_or_container, args, runtime_options={})  
+      # render_options = runtime_options
       
       buffer = ActionView::NonConcattingString.new
       
       if (name_or_container.is_a?(BuildingBlocks::Container))
         name = name_or_container.name.to_sym
-        render_options = render_options.merge(name_or_container.options)
+        # render_options = render_options.merge(name_or_container.options)
       else
         name = name_or_container.to_sym
       end
       
-      buffer << render_before_blocks(name, options)
+      buffer << render_before_blocks(name, runtime_options)
        
       if blocks[name]  
         block_container = blocks[name]
         
-        args.push(global_options.merge(block_container.options).merge(render_options))
+        args.push(global_options.merge(block_container.options).merge(runtime_options))
         
         # If the block is taking more than one parameter, we can use *args
         if block_container.block.arity > 1
@@ -220,7 +220,7 @@ module BuildingBlocks
       elsif view.blocks.blocks[name]
         block_container = view.blocks.blocks[name]
         
-        args.push(global_options.merge(block_container.options).merge(render_options))
+        args.push(global_options.merge(block_container.options).merge(runtime_options))
         
         # If the block is taking more than one parameter, we can use *args
         if block_container.block.arity > 1
@@ -234,55 +234,79 @@ module BuildingBlocks
       else
         begin
           begin            
-            buffer << view.render("#{name.to_s}", global_options.merge(render_options))
+            buffer << view.render("#{name.to_s}", global_options.merge(runtime_options))
           rescue ActionView::MissingTemplate            
             # This partial did not exist in the current controller's view directory; now checking in the default templates folder
-            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(render_options))
+            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(runtime_options))
           end
         rescue ActionView::MissingTemplate
           # This block does not exist and no partial can be found to satify it
         end
       end
       
-      buffer << render_after_blocks(name, options)
+      buffer << render_after_blocks(name, runtime_options)
       
       buffer
     end
     
-    def render_before_blocks(name, options={})      
-      name = "before_#{name.to_s}".to_sym
+    def render_before_blocks(name, runtime_options={})
+      options = global_options
+      
+      before_name = "before_#{name.to_s}".to_sym
+      
+      if blocks[name]  
+        block_container = blocks[name]
+        
+        options = options.merge(block_container.options)
+      elsif view.blocks.blocks[name]
+        block_container = view.blocks.blocks[name]
+        
+        options = options.merge(block_container.options)
+      end      
       
       buffer = ActionView::NonConcattingString.new
       
-      unless blocks[name].nil?
-        blocks[name].each do |block_container|
-          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
+      unless blocks[before_name].nil?
+        blocks[before_name].each do |block_container|
+          buffer << view.capture(options.merge(block_container.options).merge(runtime_options), &block_container.block)
         end
       end
       
-      unless view.blocks.blocks[name].nil? || view.blocks.blocks == blocks
-        view.blocks.blocks[name].each do |block_container|
-          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
+      unless view.blocks.blocks[before_name].nil? || view.blocks.blocks == blocks
+        view.blocks.blocks[before_name].each do |block_container|
+          buffer << view.capture(options.merge(block_container.options).merge(runtime_options), &block_container.block)
         end
       end
       
       buffer
     end
     
-    def render_after_blocks(name, options={})
-      name = "after_#{name.to_s}".to_sym
+    def render_after_blocks(name, runtime_options={})
+      options = global_options
+      
+      after_name = "after_#{name.to_s}".to_sym
+      
+      if blocks[name]  
+        block_container = blocks[name]
+        
+        options = options.merge(block_container.options)
+      elsif view.blocks.blocks[name]
+        block_container = view.blocks.blocks[name]
+        
+        options = options.merge(block_container.options)
+      end      
       
       buffer = ActionView::NonConcattingString.new
       
-      unless blocks[name].nil?
-        blocks[name].each do |block_container|
-          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
+      unless blocks[after_name].nil?
+        blocks[after_name].each do |block_container|
+          buffer << view.capture(options.merge(block_container.options).merge(runtime_options), &block_container.block)
         end
       end
       
-      unless view.blocks.blocks[name].nil? || view.blocks.blocks == blocks
-        view.blocks.blocks[name].each do |block_container|
-          buffer << view.capture(global_options.merge(block_container.options).merge(options), &block_container.block)
+      unless view.blocks.blocks[after_name].nil? || view.blocks.blocks == blocks
+        view.blocks.blocks[after_name].each do |block_container|
+          buffer << view.capture(options.merge(block_container.options).merge(runtime_options), &block_container.block)
         end
       end
       
