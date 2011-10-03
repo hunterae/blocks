@@ -190,7 +190,7 @@ module BuildingBlocks
     end
     
     def render_block(name_or_container, args, runtime_options={})  
-      buffer = ActionView::NonConcattingString.new
+      buffer = ActiveSupport::SafeBuffer.new
       
       block_options = {}
       if (name_or_container.is_a?(BuildingBlocks::Container))
@@ -271,7 +271,7 @@ module BuildingBlocks
         options = options.merge(block_container.options)
       end      
       
-      buffer = ActionView::NonConcattingString.new
+      buffer = ActiveSupport::SafeBuffer.new
       
       unless blocks[before_name].nil?
         blocks[before_name].each do |block_container|
@@ -311,8 +311,8 @@ module BuildingBlocks
         options = options.merge(block_container.options)
       end      
       
-      buffer = ActionView::NonConcattingString.new
-      
+      buffer = ActiveSupport::SafeBuffer.new
+ 
       unless blocks[after_name].nil?
         blocks[after_name].each do |block_container|
           buffer << view.capture(options.merge(block_container.options).merge(block_options).merge(runtime_options), &block_container.block)
