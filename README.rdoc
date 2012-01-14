@@ -1,4 +1,4 @@
-= Blocks
+= BuildingBlocks
 
 BuildingBlocks is an intricate way of rendering blocks of code, while adding several features that go above and beyond what a simple content_for with yield is capable of doing.
 
@@ -21,27 +21,27 @@ The syntax for defining and using blocks is similar to how content_for and yield
     My code to render
   <% end %>
   
-and then elsewhere, you call:
+  <!-- Elsewhere, you can use the block as follows -->
   <%= blocks.use :my_block %>
 
 == Passing parameters to blocks
 
-If you want to do something slightly more complex than the above example, you can pass parameters to your defined block:
+Parameters may also be passed into defined blocks:
 
   <% blocks.define :my_block do |options| %>
     The user of this block passed in "<%= options[:my_parameter] %>" as :my_parameter.
   <% end %>
-
-This block may now be used as:
+  
+  <!-- Elsewhere, you can use the block as follows -->
   <%= blocks.use :my_block, :my_parameter => "The value I'm passing in"  %>
 
-And the user will see: 
+The rendered output will be: 
   The user of this block passed in "The value I'm passing in" as :my_parameter.
 
-If you do not pass in the anticipated parameters:
+If the anticipated parameters are not passed:
   <%= blocks.use :my_block %>
   
-The user will see:
+The rendered output will be: 
   The user of this block passed in "" as :my_parameter.
 
 As you can see, the parameters are not required, but you might get unexpected results if you fail to pass in the "necessary" parameters.
