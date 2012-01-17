@@ -210,6 +210,10 @@ Let's look at each example individually.
   <!-- In /app/views/blocks/_wizard.html.erb: -->
   Global Block <%= step %>.
 
+== Overall Flow of using BuildingBlocks:
+
+link:/hunterae/blocks/raw/master/blocks_render_order.png
+
 == MORE COMING SOON...
 
 == Questions or Problems?
