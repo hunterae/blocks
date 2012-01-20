@@ -213,7 +213,7 @@ Let's look at each example individually, written in the order that BuildingBlock
 == Overall Render Order
 
 Putting all the pieces together from the previous examples, here is what BuildingBlock is doing when a block is rendered:
-link:/hunterae/blocks/raw/master/blocks_render_order.png
+link:/hunterae/building-blocks/raw/master/blocks_render_order.png
 
 == Templating
 
