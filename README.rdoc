@@ -1,0 +1,241 @@
+= BuildingBlocks
+
+BuildingBlocks is an intricate way of rendering blocks of code, while adding several features that go above and beyond what a simple content_for with yield is capable of doing.
+
+1. It provides the ability to pass parameters to a defined block of code (something content_for with yield is incapable of doing). 
+2. It provides "before" and "after" hooks that can render code before and after a specified block of code is rendered (this can be particularly useful when you want to specify a dynamic list of javascript or stylesheet includes after your standard includes).
+3. It allows the developer to define a block of code as a global partial, a controller-specific partial, or an inline block of code, all with the same syntax usage.
+4. (Probably the most powerful aspect) It allows the developer to build complex reusable UI components by essentially providing their own DTD (see the separate project {table-for}[https://github.com/hunterae/table-for] for an example of a nice table builder that was created using minimal code by apply BuildingBlocks).
+
+== Installation
+
+In <b>Rails 3</b>, add this to your Gemfile.
+
+  gem "building-blocks"
+
+== Defining and using blocks
+
+The syntax for defining and using blocks is similar to how content_for and yield are used. At its simplest form:
+
+  <% blocks.define :my_block do %>
+    My code to render
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows -->
+  <%= blocks.use :my_block %>
+
+  <!-- Will render: My code to render -->
+
+== Passing parameters to blocks
+
+Parameters may also be passed into defined blocks:
+
+  <% blocks.define :my_block do |options| %>
+    The user of this block passed in "<%= options[:my_parameter] %>" as :my_parameter.
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows -->
+  <%= blocks.use :my_block, :my_parameter => "The value I'm passing in"  %>
+
+  <!-- Will render: The user of this block passed in "The value I'm passing in" as :my_parameter. -->
+
+  <!-- If the anticipated parameters are not passed: -->
+  <%= blocks.use :my_block %>
+
+  <!-- Will render: The user of this block passed in "" as :my_parameter. -->
+
+The parameters are not required, but unexpected results might occur if the "necessary" parameters are not passed in.
+
+== Passing non-hash parameters into defined blocks:
+
+  <% blocks.define :my_block do |first_parameter, second_parameter, options| %>
+    First parameter: <%= first_parameter %>, Second parameter: <%= second_parameter %>, Third parameter: <%= options[:third_parameter] %>
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows -->
+  <%= blocks.use :my_block, "Value 1", 2, :third_parameter => "Value 3" %>
+
+  <!-- Will render: First parameter: Value 1, Second parameter: 2, Third parameter: Value 3 -->
+
+== Providing default values for parameters to blocks
+
+In the last example, the parameter the block was expecting was not passed in. For this reason, it is possible to specify default values for the parameters when you define a block. If parameters are passed in when the block is used, the values passed in override the default values.
+
+  <% blocks.define :my_block, :parameter1 => "Parameter 1", :parameter2 => "Parameter 2" do |options| %>
+    The values specified are :parameter1 = "<%= options[:parameter1] %>", :parameter2 = "<%= options[:parameter2] %>"
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows (specifying zero, one, or both of the parameters the block uses) -->
+  <%= blocks.use :my_block %><br />
+  <%= blocks.use :my_block, :parameter1 => "New Parameter 1" %><br />
+  <%= blocks.use :my_block, :parameter2 => "New Parameter 2" %><br />
+  <%= blocks.use :my_block, :parameter1 => "New Parameter 1", :parameter2 => "New Parameter 2" %>
+
+  <!--
+  Will render:
+  The values specified are :parameter1 = "Parameter 1", :parameter2 = "Parameter 2"
+  The values specified are :parameter1 = "New Parameter 1", :parameter2 = "Parameter 2"
+  The values specified are :parameter1 = "Parameter 1", :parameter2 = "New Parameter 2"
+  The values specified are :parameter1 = "New Parameter 1", :parameter2 = "New Parameter 2"
+  -->
+
+== Providing a default definition for a block
+
+What happens if you attempt to "use" a block that hasn't been "define"d? Nothing will get rendered.
+
+However, you may want to provide a default definition for a block to "use" if such a block was never "define"d. You can do this as follows:
+
+  <%= blocks.use :my_block, :my_parameter_1 => "Parameter 1" do %>
+    This is my default definition of :my_block.
+  <% end %>
+
+In this case, BuildingBlocks will see if any block by the name :my_block has ever been defined. When it doesn't find one, it will simply render the default definition and you will see:
+  This is my default definition of :my_block.
+
+If however, you have defined :my_block elsewhere, it would have used that definition:
+
+  <% blocks.define :my_block do |options| %>
+    Some other definition of :my_block with :my_parameter_1 set to "<%= options[:my_parameter_1] %>"
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows -->
+  <%= blocks.use :my_block, :my_parameter_1 => "Parameter 1" do %>
+    This is my default definition of :my_block.
+  <% end %>
+
+  <!-- Will render: Some other definition of :my_block with :my_parameter_1 set to "Parameter 1" -->
+  <!-- (since the block was defined, i.e. the default definition is not needed) -->
+
+== Using "before" and "after filters"
+
+"Before" and "After" hooks render code before and after the code produced by a "blocks.use" call. A practical example of this would be adding view-specific javascript and stylesheet includes to a global layout file.
+
+In your application.html layout file, you might use this as follows:
+
+  <html>
+    <head>
+      <%= blocks.use :includes do %>
+        <%= blocks.use :stylesheets do %>
+          <%= stylesheet_link_tag "jquery" %>
+        <% end %>
+        <%= blocks.use :javscripts do %>
+          <%= javascript_include_tag "jquery" %>
+        <% end %>
+      <% end %>
+    </head>
+    <body>
+      <%= yield %>
+    </body>
+  </html>
+
+Then, in a specific view that is rendered using this layout, you can add stylesheets before or after the list of stylesheets includes, before or after the list of javascript includes, or before or after the entire list of stylesheet and javascript includes. For example, index.html.erb might add in more stylesheets and javascripts:
+
+  <% blocks.before :includes do %>
+    <%= stylesheet_link_tag "first_overall_stylesheet" %>
+  <% end %>
+
+  <% blocks.after :includes do %>
+    <%= stylesheet_link_tag "last_overall_stylesheet" %>
+  <% end %>
+
+  <% blocks.before :stylesheets do %>
+    <%= stylesheet_link_tag "stylesheet_before_jquery" %>
+  <% end %>
+
+  <% blocks.after :stylesheets do %>
+    <%= stylesheet_link_tag "stylesheet_after_jquery" %>
+  <% end %>
+
+  <% blocks.before :javascripts do %>
+    <%= javascript_include_tag "javascript_before_jquery" %>
+  <% end %>
+
+  <% blocks.after :javascripts do %>
+    <%= javascript_include_tag "stylesheet_before_jquery" %>
+  <% end %>
+
+  <!--
+  When index.html.erb is rendered, it will output:
+  <html>
+    <head>
+      <link href="/stylesheets/first_overall_stylesheet.css" media="screen" rel="stylesheet" type="text/css" />
+      <link href="/stylesheets/stylesheet_before_jquery.css" media="screen" rel="stylesheet" type="text/css" />
+      <link href="/stylesheets/jquery.css" media="screen" rel="stylesheet" type="text/css" />
+      <link href="/stylesheets/stylesheet_after_jquery.css" media="screen" rel="stylesheet" type="text/css" />
+      <script src="/javascripts/javascript_before_jquery.js" type="text/javascript"></script>
+      <script src="/javascripts/jquery.js" type="text/javascript"></script>
+      <script src="/javascripts/javascript_after_jquery.js" type="text/javascript"></script>
+      <link href="/stylesheets/last_overall_stylesheet.css" media="screen" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+    </body>
+  </html>
+   -->
+(An alternative syntax to "blocks.before" and "blocks.after" would be, respectively, "blocks.prepend" and "blocks.append")
+
+== Blocks as Partials
+
+Using exactly the same syntax for "using" blocks, one can put the code to be rendered in it's own separate file (in a partial). When "blocks.use :some_block" is called, the system will first look for a block defined inline (i.e. one that has been defined using "blocks.define :some_block"). Failing to find that, it will see if a default implementation has been provided for the block and render it if one has been specified. Failing to find that, it will look for a partial by the same name in your current controller's view directory. And failing to find that partial, it will look for a partial in the global blocks' directory (by default, /app/views/blocks). Any parameters passed in as a hash will be initialized in the partial as local variables.
+
+As an example, consider the following code, running in a view for PagesController:
+
+  <%= blocks.use :wizard, :step => @step %>
+
+  <!-- 1) Check and see if there was a block defined called "wizard" somewhere prior to its use... No? then... -->
+  <!-- 2) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.use" call... No? Then... -->
+  <!-- 3) Check and see if there is a controller-specific partial /app/views/pages/wizard.html.erb. No? Then... -->
+  <!-- 4) Check and see if there is a global partial /app/views/blocks/wizard.html.erb. No? Then render nothing. -->
+
+Let's look at each example individually, written in the order that BuildingBlocks attempts to render them:
+
+1. Inline definition of a block:
+  <% blocks.define :wizard do |options| %>
+    Inline Block Step#<%= options[:step] %>.
+  <% end %>
+
+  <!-- Elsewhere, you can use the block as follows -->
+  <%= blocks.use :wizard, :step => @step %>
+2. Default implementation of a block:
+  <%= blocks.use :wizard, :step => @step do |options| do %>
+    Default Implementation Block Step#<%= options %>.
+  <% end %>
+3. Controller-specific partial:
+  <%= blocks.use :wizard, :step => @step %>
+
+  <!-- In /app/views/pages/_wizard.html.erb: -->
+  Controller-specific Block Step# <%= step %>.
+4. Global partial:
+  <%= blocks.use :wizard, :step => @step %>
+
+  <!-- In /app/views/blocks/_wizard.html.erb: -->
+  Global Block Step#<%= step %>.
+
+== Overall Render Order
+
+Putting all the pieces together from the previous examples, here is what BuildingBlock is doing when a block is rendered:
+link:/hunterae/blocks/raw/master/blocks_render_order.png
+
+== Templating
+
+The most advanced feature of BuildingBlocks is the ability to utilize it for templating and writing your own DTD specifications for the components you write.
+
+As an example, consider {table-for}[https://github.com/hunterae/table-for], a library that was written with minimal codes that provides its user with a very nice, easy-to-use table builder. A sample usage might look something like:
+
+  <%= table_for @users do |table| %>
+    <% table.column :name do |user| %>
+      <%= "#{user.first_name} #{user.last_name}" %>
+    <% end %>
+    <% table.column :email %>
+  <% end %>
+
+MORE EXPLANATION TO COME
+
+== MORE COMING SOON...
+
+== Questions or Problems?
+
+If you have any issues with BuildingBlocks which you cannot find the solution to in the documentation, please add an {issue on GitHub}[https://github.com/hunterae/building-blocks/issues] or fork the project and send a pull request.
+
+== Special Thanks
+
+Thanks to {Todd Fisher}[https://github.com/taf2] of LivingSocial for implementation help and setup of gem and {Jon Phillips}[https://github.com/elguapo1611] of LivingSocial for suggestions and use case help.
