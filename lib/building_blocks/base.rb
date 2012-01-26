@@ -73,8 +73,8 @@ module BuildingBlocks
       #  anonymous blocks don't override its definition
       name = args.first ? args.shift : self.anonymous_block_name
 
-      self.define_block_container(name, options, &block) if block_given?
-      self.render_block name, args, options
+      # self.define_block_container(name, options, &block) if block_given?
+      self.render_block name, args, options, &block
     end
 
     def queue(*args, &block)
@@ -176,7 +176,7 @@ module BuildingBlocks
       "block_#{anonymous_block_number}"
     end
 
-    def render_block(name_or_container, args, runtime_options={})
+    def render_block(name_or_container, args, runtime_options={}, &block)
       buffer = ActiveSupport::SafeBuffer.new
 
       block_options = {}
@@ -226,7 +226,13 @@ module BuildingBlocks
             buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(block_options).merge(runtime_options))
           end
         rescue ActionView::MissingTemplate
-          # This block does not exist and no partial can be found to satify it
+          if block_given
+            if block.arity > 1
+              buffer << view.capture(*args, &block)
+            else
+              buffer << view.capture(args.first, &block)
+            end
+          end
         end
       end
 
