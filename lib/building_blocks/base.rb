@@ -73,6 +73,7 @@ module BuildingBlocks
       #  anonymous blocks don't override its definition
       name = args.first ? args.shift : self.anonymous_block_name
 
+      self.define_block_container(name, options, &block) if block_given?
       self.render_block name, args, options
     end
 
@@ -91,8 +92,11 @@ module BuildingBlocks
     def render
       raise "Must specify :template parameter in order to render" unless global_options[:template]
 
-      global_options[:captured_block] = view.capture(self, &self.block) if self.block
-      view.render global_options[:template], global_options
+      render_options = global_options.clone
+      render_options[render_options[:variable] ? render_options[:variable].to_sym : :blocks] = self
+      render_options[:captured_block] = view.capture(self, &self.block) if self.block
+
+      view.render global_options[:template], render_options
     end
 
     def before(name, options={}, &block)
@@ -156,7 +160,6 @@ module BuildingBlocks
     protected
 
     def initialize(view, options={}, &block)
-      options[options[:variable] ? options[:variable].to_sym : :blocks] = self
       options[:templates_folder] = "blocks" if options[:templates_folder].nil?
 
       self.view = view

@@ -116,11 +116,12 @@ In your application.html layout file, you might use this as follows:
     <head>
       <%= blocks.use :includes do %>
         <%= blocks.use :stylesheets do %>
-          <%= stylesheet_link_tag "jquery" %>
+          <%= stylesheet_link_tag "application", :media => "all" %>
         <% end %>
         <%= blocks.use :javscripts do %>
-          <%= javascript_include_tag "jquery" %>
+          <%= javascript_include_tag "application" %>
         <% end %>
+        <%= csrf_meta_tags %>
       <% end %>
     </head>
     <body>
@@ -131,27 +132,27 @@ In your application.html layout file, you might use this as follows:
 Then, in a specific view that is rendered using this layout, you can add stylesheets before or after the list of stylesheets includes, before or after the list of javascript includes, or before or after the entire list of stylesheet and javascript includes. For example, index.html.erb might add in more stylesheets and javascripts:
 
   <% blocks.before :includes do %>
-    <%= stylesheet_link_tag "first_overall_stylesheet" %>
+    <%= stylesheet_link_tag "before_includes" %>
   <% end %>
 
   <% blocks.after :includes do %>
-    <%= stylesheet_link_tag "last_overall_stylesheet" %>
+    <%= stylesheet_link_tag "after_includes" %>
   <% end %>
 
   <% blocks.before :stylesheets do %>
-    <%= stylesheet_link_tag "stylesheet_before_jquery" %>
+    <%= stylesheet_link_tag "before_stylesheets" %>
   <% end %>
 
   <% blocks.after :stylesheets do %>
-    <%= stylesheet_link_tag "stylesheet_after_jquery" %>
+    <%= stylesheet_link_tag "after_stylesheets" %>
   <% end %>
 
   <% blocks.before :javascripts do %>
-    <%= javascript_include_tag "javascript_before_jquery" %>
+    <%= javascript_include_tag "after_javascripts" %>
   <% end %>
 
   <% blocks.after :javascripts do %>
-    <%= javascript_include_tag "stylesheet_before_jquery" %>
+    <%= javascript_include_tag "before_javascripts" %>
   <% end %>
 
   <!--
