@@ -226,7 +226,8 @@ module BuildingBlocks
             buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(block_options).merge(runtime_options))
           end
         rescue ActionView::MissingTemplate
-          if block_given
+          if block_given?
+            args.push(global_options.merge(runtime_options))
             if block.arity > 1
               buffer << view.capture(*args, &block)
             else

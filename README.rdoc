@@ -148,11 +148,11 @@ Then, in a specific view that is rendered using this layout, you can add stylesh
   <% end %>
 
   <% blocks.before :javascripts do %>
-    <%= javascript_include_tag "after_javascripts" %>
+    <%= javascript_include_tag "before_javascripts" %>
   <% end %>
 
   <% blocks.after :javascripts do %>
-    <%= javascript_include_tag "before_javascripts" %>
+    <%= javascript_include_tag "after_javascripts" %>
   <% end %>
 
   <!--
@@ -222,11 +222,16 @@ The most advanced feature of BuildingBlocks is the ability to utilize it for tem
 
 As an example, consider {table-for}[https://github.com/hunterae/table-for], a library that was written with minimal codes that provides its user with a very nice, easy-to-use table builder. A sample usage might look something like:
 
-  <%= table_for @users do |table| %>
-    <% table.column :name do |user| %>
+  <%= table_for @users, :row_html => {:class => lambda { cycle('even', 'odd')},
+                                      :id => lambda {|user| "user-#{user.id}"}},
+                        :sortable => true do |table| %>
+    <% table.column :edit %>
+    <% table.column :show %>
+    <% table.column :email, :label => "Email Address" %>
+    <% table.column :name, :header_html => {:style => "background-color:orange"} do |user| %>
       <%= "#{user.first_name} #{user.last_name}" %>
     <% end %>
-    <% table.column :email %>
+    <% table.column :delete %>
   <% end %>
 
 MORE EXPLANATION TO COME
