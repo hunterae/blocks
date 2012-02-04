@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Hunter"]
-  s.date = %q{2012-01-27}
+  s.date = %q{2012-02-04}
   s.description = %q{}
   s.email = %q{hunterae@gmail.com}
   s.extra_rdoc_files = [
@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
     "lib/building-blocks.rb",
     "lib/building_blocks/base.rb",
     "lib/building_blocks/container.rb",
-    "lib/building_blocks/helper_methods.rb",
+    "lib/building_blocks/view_additions.rb",
     "rails/init.rb",
     "spec/building-blocks/base_spec.rb",
     "spec/spec_helper.rb"
@@ -42,9 +42,11 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
       s.add_dependency(%q<building-blocks>, [">= 0"])
       s.add_dependency(%q<rails>, [">= 3.0.0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
@@ -53,6 +55,7 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<building-blocks>, [">= 0"])
     s.add_dependency(%q<rails>, [">= 3.0.0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
