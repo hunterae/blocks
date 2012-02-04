@@ -176,40 +176,40 @@ Then, in a specific view that is rendered using this layout, you can add stylesh
 
 == Blocks as Partials
 
-Using exactly the same syntax for "using" blocks, one can put the code to be rendered in it's own separate file (in a partial). When "blocks.use :some_block" is called, the system will first look for a block defined inline (i.e. one that has been defined using "blocks.define :some_block"). Failing to find that, it will see if a default implementation has been provided for the block and render it if one has been specified. Failing to find that, it will look for a partial by the same name in your current controller's view directory. And failing to find that partial, it will look for a partial in the global blocks' directory (by default, /app/views/blocks). Any parameters passed in as a hash will be initialized in the partial as local variables.
+Using exactly the same syntax for "using" blocks, one can put the code to be rendered in it's own separate file (in a partial). When "blocks.use :some_block" is called, the system will first look for a block defined inline (i.e. one that has been defined using "blocks.define :some_block"). Failing to find that, it will look for a partial by the same name in your current controller's view directory. Failing to find that partial, it will look for a partial in the global blocks' directory (by default, /app/views/blocks). Any parameters passed in as a hash will be initialized in the partial as local variables. And failing to find that, it will see if a default implementation has been provided for the block and render it if one has been specified.
 
 As an example, consider the following code, running in a view for PagesController:
 
   <%= blocks.use :wizard, :step => @step %>
 
   <!-- 1) Check and see if there was a block defined called "wizard" somewhere prior to its use... No? then... -->
-  <!-- 2) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.use" call... No? Then... -->
-  <!-- 3) Check and see if there is a controller-specific partial /app/views/pages/wizard.html.erb. No? Then... -->
-  <!-- 4) Check and see if there is a global partial /app/views/blocks/wizard.html.erb. No? Then render nothing. -->
+  <!-- 2) Check and see if there is a controller-specific partial /app/views/pages/wizard.html.erb. No? Then... -->
+  <!-- 3) Check and see if there is a global partial /app/views/blocks/wizard.html.erb. No? Then... -->
+  <!-- 4) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.use" call... No? Then render nothing -->
 
 Let's look at each example individually, written in the order that BuildingBlocks attempts to render them:
 
-1. Inline definition of a block:
+1) Inline definition of a block:
   <% blocks.define :wizard do |options| %>
     Inline Block Step#<%= options[:step] %>.
   <% end %>
 
   <!-- Elsewhere, you can use the block as follows -->
   <%= blocks.use :wizard, :step => @step %>
-2. Default implementation of a block:
-  <%= blocks.use :wizard, :step => @step do |options| do %>
-    Default Implementation Block Step#<%= options %>.
-  <% end %>
-3. Controller-specific partial:
+2) Controller-specific partial:
   <%= blocks.use :wizard, :step => @step %>
 
   <!-- In /app/views/pages/_wizard.html.erb: -->
   Controller-specific Block Step# <%= step %>.
-4. Global partial:
+3) Global partial:
   <%= blocks.use :wizard, :step => @step %>
 
   <!-- In /app/views/blocks/_wizard.html.erb: -->
   Global Block Step#<%= step %>.
+4) Default implementation of a block:
+  <%= blocks.use :wizard, :step => @step do |options| do %>
+    Default Implementation Block Step#<%= options %>.
+  <% end %>
 
 == Overall Render Order
 
@@ -218,23 +218,24 @@ link:/hunterae/building-blocks/raw/master/blocks_render_order.png
 
 == Templating
 
-The most advanced feature of BuildingBlocks is the ability to utilize it for templating and writing your own DTD specifications for the components you write.
+The most advanced feature of BuildingBlocks is the ability to utilize it for templating and creating your own DTD specifications for the components you write.
 
-As an example, consider {table-for}[https://github.com/hunterae/table-for], a library that was written with minimal codes that provides its user with a very nice, easy-to-use table builder. A sample usage might look something like:
+As an example, consider {table-for}[https://github.com/hunterae/table-for], a gem that was written with minimal codes that provides its user with a very nice, easy-to-use table builder. A sample usage might look something like:
 
-  <%= table_for @users, :row_html => {:class => lambda { cycle('even', 'odd')},
-                                      :id => lambda {|user| "user-#{user.id}"}},
-                        :sortable => true do |table| %>
-    <% table.column :edit %>
-    <% table.column :show %>
-    <% table.column :email, :label => "Email Address" %>
-    <% table.column :name, :header_html => {:style => "background-color:orange"} do |user| %>
+  <%= table_for @users, :table_html => {:style => "border: 1px solid black"},
+                        :sortable => true,
+                        :row_html => {:class => lambda { cycle('even', 'odd')},
+                                      :id => lambda {|user| "user-#{user.id}"}} do |table| %>
+    <%= table.column :edit %>
+    <%= table.column :show %>
+    <%= table.column :email, :label => "Email Address" %>
+    <%= table.column :label => "Full Name", :sortable => false, :header_html => {:style => "color:orange"} do |user| %>
       <%= "#{user.first_name} #{user.last_name}" %>
     <% end %>
-    <% table.column :delete %>
+    <%= table.column :delete %>
   <% end %>
 
-MORE EXPLANATION TO COME
+VIDEO TUTORIAL TO COME
 
 == MORE COMING SOON...
 

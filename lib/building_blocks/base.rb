@@ -1,4 +1,6 @@
 module BuildingBlocks
+  BUILDING_BLOCKS_TEMPLATE_FOLDER = "blocks"
+
   class Base
     attr_accessor :view
 
@@ -6,7 +8,7 @@ module BuildingBlocks
 
     attr_accessor :block
 
-    # Array of BuildingBlocks::Container objects, storing the order of blocks as they were used
+    # Array of BuildingBlocks::Container objects, storing the order of blocks as they were queued
     attr_accessor :queued_blocks
 
     # counter, used to give unnamed blocks a unique name
@@ -67,25 +69,16 @@ module BuildingBlocks
     end
 
     def use(*args, &block)
-      options = args.extract_options!
-
-      # If the user doesn't specify a block name, we generate an anonymous block name to assure other
-      #  anonymous blocks don't override its definition
-      name = args.first ? args.shift : self.anonymous_block_name
-
-      # self.define_block_container(name, options, &block) if block_given?
-      self.render_block name, args, options, &block
+      name_or_container = args.first ? args.shift : self.anonymous_block_name
+      buffer = ActiveSupport::SafeBuffer.new
+      buffer << render_before_blocks(name_or_container, *args)
+      buffer << render_block(name_or_container, *args, &block)
+      buffer << render_after_blocks(name_or_container, *args)
+      buffer
     end
 
     def queue(*args, &block)
-      options = args.extract_options!
-
-      # If the user doesn't specify a block name, we generate an anonymous block name to assure other
-      #  anonymous blocks don't override its definition
-      name = args.first ? args.shift : self.anonymous_block_name
-
-      # Delays rendering this block until the partial has been rendered and all the blocks have had a chance to be defined
-      self.queued_blocks << self.define_block_container(name, options, &block)
+      self.queued_blocks << self.define_block_container(*args, &block)
       nil
     end
 
@@ -100,37 +93,13 @@ module BuildingBlocks
     end
 
     def before(name, options={}, &block)
-      name = "before_#{name.to_s}".to_sym
-
-      block_container = BuildingBlocks::Container.new
-      block_container.name = name
-      block_container.options = options
-      block_container.block = block
-
-      if view.blocks.blocks[name].nil?
-        blocks[name] = [block_container]
-      else
-        blocks[name] << block_container
-      end
-
+      self.queue_block_container("before_#{name.to_s}", options, &block)
       nil
     end
     alias prepend before
 
     def after(name, options={}, &block)
-      name = "after_#{name.to_s}".to_sym
-
-      block_container = BuildingBlocks::Container.new
-      block_container.name = name
-      block_container.options = options
-      block_container.block = block
-
-      if view.blocks.blocks[name].nil?
-        blocks[name] = [block_container]
-      else
-        blocks[name] << block_container
-      end
-
+      self.queue_block_container("after_#{name.to_s}", options, &block)
       nil
     end
     alias append after
@@ -160,7 +129,7 @@ module BuildingBlocks
     protected
 
     def initialize(view, options={}, &block)
-      options[:templates_folder] = "blocks" if options[:templates_folder].nil?
+      options[:templates_folder] = BuildingBlocks::BUILDING_BLOCKS_TEMPLATE_FOLDER if options[:templates_folder].nil?
 
       self.view = view
       self.global_options = options
@@ -172,11 +141,13 @@ module BuildingBlocks
     end
 
     def anonymous_block_name
-      self.anonymous_block_number = self.anonymous_block_number + 1
+      self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
     end
 
-    def render_block(name_or_container, args, runtime_options={}, &block)
+    def render_block(name_or_container, *args, &block)
+      options = args.extract_options!
+
       buffer = ActiveSupport::SafeBuffer.new
 
       block_options = {}
@@ -187,63 +158,28 @@ module BuildingBlocks
         name = name_or_container.to_sym
       end
 
-      buffer << render_before_blocks(name_or_container, runtime_options)
-
       if blocks[name]
         block_container = blocks[name]
-
-        args.push(global_options.merge(block_container.options).merge(block_options).merge(runtime_options))
-
-        # If the block is taking more than one parameter, we can use *args
-        if block_container.block.arity > 1
-          buffer << view.capture(*args, &block_container.block)
-
-        # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
-        #   as an array
-        else
-          buffer << view.capture(args.first, &block_container.block)
-        end
-      elsif view.blocks.blocks[name]
-        block_container = view.blocks.blocks[name]
-
-        args.push(global_options.merge(block_container.options).merge(block_options).merge(runtime_options))
-
-        # If the block is taking more than one parameter, we can use *args
-        if block_container.block.arity > 1
-          buffer << view.capture(*args, &block_container.block)
-
-        # However, if the block only takes a single parameter, we do not want ruby to try to cram the args list into that parameter
-        #   as an array
-        else
-          buffer << view.capture(args.first, &block_container.block)
-        end
+        args.push(global_options.merge(block_container.options).merge(block_options).merge(options))
+        buffer << view.capture(*(args[0, block_container.block.arity]), &block_container.block)
       else
         begin
-          begin            
-            buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(runtime_options))
-          rescue ActionView::MissingTemplate            
-            # This partial did not exist in the current controller's view directory; now checking in the default templates folder
-            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(block_options).merge(runtime_options))
+          begin
+            buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(options))
+          rescue ActionView::MissingTemplate
+            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
-          if block_given?
-            args.push(global_options.merge(runtime_options))
-            if block.arity > 1
-              buffer << view.capture(*args, &block)
-            else
-              buffer << view.capture(args.first, &block)
-            end
-          end
+          args.push(global_options.merge(options))
+          buffer << view.capture(*(args[0, block.arity]), &block) if block_given?
         end
       end
-
-      buffer << render_after_blocks(name_or_container, runtime_options)
 
       buffer
     end
 
-    def render_before_blocks(name_or_container, runtime_options={})
-      options = global_options
+    def render_before_blocks(name_or_container, *args)
+      options = args.extract_options!
 
       block_options = {}
       if (name_or_container.is_a?(BuildingBlocks::Container))
@@ -251,37 +187,34 @@ module BuildingBlocks
         block_options = name_or_container.options
       else
         name = name_or_container.to_sym
+        block_options = blocks[name].options if blocks[name]
       end
 
       before_name = "before_#{name.to_s}".to_sym
-
-      if blocks[name]
-        block_container = blocks[name]
-        options = options.merge(block_container.options)
-      elsif view.blocks.blocks[name]
-        block_container = view.blocks.blocks[name]
-        options = options.merge(block_container.options)
-      end
-
       buffer = ActiveSupport::SafeBuffer.new
 
-      unless blocks[before_name].nil?
+      if blocks[before_name].present?
         blocks[before_name].each do |block_container|
-          buffer << view.capture(options.merge(block_container.options).merge(block_options).merge(runtime_options), &block_container.block)
+          args_clone = args.clone
+          args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
+          buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
         end
-      end
-
-      unless view.blocks.blocks[before_name].nil? || view.blocks.blocks == blocks
-        view.blocks.blocks[before_name].each do |block_container|
-          buffer << view.capture(options.merge(block_container.options).merge(block_options).merge(runtime_options), &block_container.block)
+      else
+        begin
+          begin
+            buffer << view.render("before_#{name.to_s}", global_options.merge(block_options).merge(options))
+          rescue ActionView::MissingTemplate
+            buffer << view.render("#{self.global_options[:templates_folder]}/before_#{name.to_s}", global_options.merge(block_options).merge(options))
+          end
+        rescue ActionView::MissingTemplate
         end
       end
 
       buffer
     end
 
-    def render_after_blocks(name_or_container, runtime_options={})
-      options = global_options
+    def render_after_blocks(name_or_container, *args)
+      options = args.extract_options!
 
       block_options = {}
       if (name_or_container.is_a?(BuildingBlocks::Container))
@@ -289,43 +222,54 @@ module BuildingBlocks
         block_options = name_or_container.options
       else
         name = name_or_container.to_sym
+        block_options = blocks[name].options if blocks[name]
       end
 
       after_name = "after_#{name.to_s}".to_sym
-
-      if blocks[name]
-        block_container = blocks[name]
-
-        options = options.merge(block_container.options)
-      elsif view.blocks.blocks[name]
-        block_container = view.blocks.blocks[name]
-
-        options = options.merge(block_container.options)
-      end
-
       buffer = ActiveSupport::SafeBuffer.new
 
-      unless blocks[after_name].nil?
+      if blocks[after_name].present?
         blocks[after_name].each do |block_container|
-          buffer << view.capture(options.merge(block_container.options).merge(block_options).merge(runtime_options), &block_container.block)
+          args_clone = args.clone
+          args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
+          buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
         end
-      end
-
-      unless view.blocks.blocks[after_name].nil? || view.blocks.blocks == blocks
-        view.blocks.blocks[after_name].each do |block_container|
-          buffer << view.capture(options.merge(block_container.options).merge(block_options).merge(runtime_options), &block_container.block)
+      else
+        begin
+          begin
+            buffer << view.render("after_#{name.to_s}", global_options.merge(block_options).merge(options))
+          rescue ActionView::MissingTemplate
+            buffer << view.render("#{self.global_options[:templates_folder]}/after_#{name.to_s}", global_options.merge(block_options).merge(options))
+          end
+        rescue ActionView::MissingTemplate
         end
       end
 
       buffer
     end
 
-    def define_block_container(name, options, &block)
+    def build_block_container(*args, &block)
+      options = args.extract_options!
+      name = args.first ? args.shift : self.anonymous_block_name
       block_container = BuildingBlocks::Container.new
-      block_container.name = name
+      block_container.name = name.to_sym
       block_container.options = options
       block_container.block = block
-      blocks[name.to_sym] = block_container if blocks[name.to_sym].nil? && block_given?
+      block_container
+    end
+
+    def queue_block_container(*args, &block)
+      block_container = self.build_block_container(*args, &block)
+      if blocks[block_container.name].nil?
+        blocks[block_container.name] = [block_container]
+      else
+        blocks[block_container.name] << block_container
+      end
+    end
+
+    def define_block_container(*args, &block)
+      block_container = self.build_block_container(*args, &block)
+      blocks[block_container.name] = block_container if blocks[block_container.name].nil? && block_given?
       block_container
     end
   end
