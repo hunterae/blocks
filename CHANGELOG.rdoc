@@ -1,4 +1,4 @@
-1.0.1 (February 4, 2012)
+1.1.0 (February 4, 2012)
 
 * Ability to disable use of partials when rendering a block
 * Ability to disable use of partials for before and after hooks
