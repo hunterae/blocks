@@ -1,11 +1,16 @@
 module BuildingBlocks
-  BUILDING_BLOCKS_TEMPLATE_FOLDER = "blocks"
+  TEMPLATE_FOLDER = "blocks"
+  USE_PARTIALS = true
+  USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS = true
 
   class Base
+    # a pointer to the ActionView that called BuildingBlocks
     attr_accessor :view
 
+    # Hash of block names to BuildingBlocks::Container objects
     attr_accessor :blocks
 
+    # the block that is passed in for the templating feature
     attr_accessor :block
 
     # Array of BuildingBlocks::Container objects, storing the order of blocks as they were queued
@@ -14,10 +19,17 @@ module BuildingBlocks
     # counter, used to give unnamed blocks a unique name
     attr_accessor :anonymous_block_number
 
+    # A Hash of queued_blocks arrays; a new array is started when method_missing is invoked
     attr_accessor :block_groups
 
     # These are the options that are passed into the initalize method
     attr_accessor :global_options
+
+    # The default folder to look in for global partials
+    attr_accessor :templates_folder
+
+    # The variable to use when rendering the partial for the templating feature (by default, "blocks")
+    attr_accessor :variable
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -86,7 +98,7 @@ module BuildingBlocks
       raise "Must specify :template parameter in order to render" unless global_options[:template]
 
       render_options = global_options.clone
-      render_options[render_options[:variable] ? render_options[:variable].to_sym : :blocks] = self
+      render_options[self.variable] = self
       render_options[:captured_block] = view.capture(self, &self.block) if self.block
 
       view.render global_options[:template], render_options
@@ -129,8 +141,8 @@ module BuildingBlocks
     protected
 
     def initialize(view, options={}, &block)
-      options[:templates_folder] = BuildingBlocks::BUILDING_BLOCKS_TEMPLATE_FOLDER if options[:templates_folder].nil?
-
+      self.templates_folder = options[:templates_folder] ? options.delete(:templates_folder) : BuildingBlocks::TEMPLATE_FOLDER
+      self.variable = (options[:variable] ? options.delete(:variable) : :blocks).to_sym
       self.view = view
       self.global_options = options
       self.block = block
@@ -162,17 +174,20 @@ module BuildingBlocks
         block_container = blocks[name]
         args.push(global_options.merge(block_container.options).merge(block_options).merge(options))
         buffer << view.capture(*(args[0, block_container.block.arity]), &block_container.block)
-      else
+      elsif BuildingBlocks::USE_PARTIALS
         begin
           begin
             buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(options))
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.global_options[:templates_folder]}/#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{self.templates_folder}/#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
           args.push(global_options.merge(options))
           buffer << view.capture(*(args[0, block.arity]), &block) if block_given?
         end
+      else
+        args.push(global_options.merge(options))
+        buffer << view.capture(*(args[0, block.arity]), &block) if block_given?
       end
 
       buffer
@@ -199,12 +214,12 @@ module BuildingBlocks
           args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
           buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
         end
-      else
+      elsif BuildingBlocks::USE_PARTIALS && BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
         begin
           begin
             buffer << view.render("before_#{name.to_s}", global_options.merge(block_options).merge(options))
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.global_options[:templates_folder]}/before_#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{self.templates_folder}/before_#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
         end
@@ -234,12 +249,12 @@ module BuildingBlocks
           args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
           buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
         end
-      else
+      elsif BuildingBlocks::USE_PARTIALS && BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
         begin
           begin
             buffer << view.render("after_#{name.to_s}", global_options.merge(block_options).merge(options))
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.global_options[:templates_folder]}/after_#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{self.templates_folder}/after_#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
         end

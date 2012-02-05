@@ -6,6 +6,20 @@ describe BuildingBlocks::Base do
     @builder = BuildingBlocks::Base.new(@view)
   end
 
+  it "should be able change the default global partials directory" do
+    BuildingBlocks.send(:remove_const, "TEMPLATE_FOLDER")
+    BuildingBlocks.const_set("TEMPLATE_FOLDER", "shared")
+    @builder = BuildingBlocks::Base.new(@view)
+    @builder.expects(:render_before_blocks).at_least_once
+    @builder.expects(:render_after_blocks).at_least_once
+    @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
+    @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+    @view.expects(:render).with("shared/some_block", :value1 => 1, :value2 => 2).once
+    @builder.use :some_block, :value1 => 1, :value2 => 2
+    BuildingBlocks.send(:remove_const, "TEMPLATE_FOLDER")
+    BuildingBlocks.const_set("TEMPLATE_FOLDER", "blocks")
+  end
+
   describe "defined? method" do
     it "should be able to determine if a block by a specific name is already defined" do
       @builder.defined?(:test_block).should be_false
@@ -150,7 +164,7 @@ describe BuildingBlocks::Base do
     it "should set all of the global options as local variables to the partial it renders" do
       view = mock()
       builder = BuildingBlocks::Base.new(view, :template => "some_template")
-      view.expects(:render).with { |template, options| options.should eql :templates_folder => 'blocks', :template => 'some_template', :blocks => builder }
+      view.expects(:render).with { |template, options| options.should eql :template => 'some_template', :blocks => builder }
       builder.render
     end
 
@@ -283,9 +297,9 @@ describe BuildingBlocks::Base do
     end
 
     it "should automatically pass in an options hash to a defined block that takes one paramter when that block is used" do
-      block = Proc.new {|options| "Templates folder is #{options[:templates_folder]}"}
+      block = Proc.new {|options| "Options are #{options.inspect}"}
       @builder.define :some_block, &block
-      @builder.use(:some_block).should eql "Templates folder is blocks"
+      @builder.use(:some_block).should eql "Options are {}"
     end
 
     it "should be able to use a defined block by its name and pass in runtime arguments as a hash" do
@@ -293,7 +307,7 @@ describe BuildingBlocks::Base do
         print_hash(options)
       end
       @builder.define :some_block, &block
-      @builder.use(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:templates_folder => 'blocks', :param1 => 1, :param2 => "value2")
+      @builder.use(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:param1 => 1, :param2 => "value2")
     end
 
     it "should be able to use a defined block by its name and pass in runtime arguments one by one" do
@@ -301,7 +315,7 @@ describe BuildingBlocks::Base do
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.define :some_block, &block
-      @builder.use(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:templates_folder => 'blocks', :param1 => 1, :param2 => "value2")}")
+      @builder.use(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:param1 => 1, :param2 => "value2")}")
     end
 
     it "should match up the number of arguments to a defined block with the parameters passed when a block is used" do
@@ -317,45 +331,57 @@ describe BuildingBlocks::Base do
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.replace :some_block, &block
-      @builder.use(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:templates_folder => 'blocks', :param1 => 1, :param2 => "value2")}")
+      @builder.use(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:param1 => 1, :param2 => "value2")}")
     end
 
     it "should not render anything if using a block that has been defined" do
       @view.expects(:capture).never
-      @view.expects(:render).with("some_block", :templates_folder => 'blocks').raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", :templates_folder => 'blocks').raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @builder.use :some_block
     end
 
     it "should first attempt to capture a block's contents when blocks.use is called" do
       block = Proc.new {|options|}
-      @view.expects(:capture).with(:templates_folder => 'blocks', :value1 => 1, :value2 => 2)
-      @view.expects(:render).with("some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
+      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
+      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
       @builder.define :some_block, &block
       @builder.use :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should second attempt to render a local partial by the block's name when blocks.use is called" do
-      @view.expects(:capture).with(:templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
+      @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).once
+      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
       @builder.use :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should third attempt to render a global partial by the block's name when blocks.use is called" do
-      @view.expects(:capture).with(:templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
+      @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).once
       @builder.use :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should fourth attempt to render a default block when blocks.use is called" do
       block = Proc.new {|options|}
-      @view.expects(:render).with("some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:capture).with(:templates_folder => 'blocks', :value1 => 1, :value2 => 2)
+      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
       @builder.use :some_block, :value1 => 1, :value2 => 2, &block
+    end
+
+    it "should not attempt to render a partial if BuildingBlocks::USE_PARTIALS is set to false" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", false)
+      block = Proc.new {|options|}
+      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
+      @builder.use :some_block, :value1 => 1, :value2 => 2, &block
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", true)
     end
 
     it "should override hash options for a block by merging the runtime options the define default options into the queue level options into the global options" do
@@ -364,7 +390,7 @@ describe BuildingBlocks::Base do
       @builder.queue(:my_before_block, :param1 => "queue level", :param2 => "queue level")
       @builder.define(:my_before_block, :param1 => "define level", :param2 => "define level", :param3 => "define level", &block)
       block_container = @builder.queued_blocks.first
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'use level', :templates_folder => 'blocks', :param2 => 'queue level', :param3 => 'define level')
+      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'use level', :param2 => 'queue level', :param3 => 'define level')
       @builder.use block_container, :param1 => "use level"
     end
 
@@ -386,24 +412,48 @@ describe BuildingBlocks::Base do
     it "should render before blocks when using a block" do
       block = Proc.new {|value1, value2, options|}
       @builder.before("my_before_block", &block)
-      @view.expects(:capture).with(1, 2, :templates_folder => 'blocks', :value3 => 3, :value4 => 4)
+      @view.expects(:capture).with(1, 2, :value3 => 3, :value4 => 4)
       @builder.use :my_before_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
     it "should try and render a before block as a local partial if no before blocks are specified" do
       block = Proc.new {}
       @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/before_my_before_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).once
+      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
       @builder.use :my_before_block, :value1 => 1, :value2 => 2
     end
 
     it "should try and render a before block as a global partial if no after blocks are specified and the local partial does not exist" do
       block = Proc.new {}
       @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/before_my_before_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
+      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).once
       @builder.use :my_before_block, :value1 => 1, :value2 => 2
+    end
+
+    it "should not attempt to render a before block as a partial if BuildingBlocks::USE_PARTIALS is set to false" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", false)
+      block = Proc.new {}
+      @view.expects(:capture).never
+      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
+      @builder.use :my_before_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", true)
+    end
+
+    it "should not attempt to render a before block as a partial if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to false" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
+      block = Proc.new {}
+      @view.expects(:capture).never
+      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
+      @builder.use :my_before_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
     end
 
     it "should override hash options for before blocks by merging the runtime options into the before block options into the block options into the global options" do
@@ -411,7 +461,7 @@ describe BuildingBlocks::Base do
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
       @builder.define(:my_before_block, :param1 => "block level", :param2 => "block level", :param3 => "block level", &block)
       @builder.before(:my_before_block, :param1 => "before block level", :param2 => "before block level", &block)
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :templates_folder => 'blocks', :param2 => 'before block level', :param3 => 'block level')
+      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :param2 => 'before block level', :param3 => 'block level')
       @builder.use :my_before_block, :param1 => "top level"
     end
   end
@@ -425,24 +475,48 @@ describe BuildingBlocks::Base do
     it "should render after blocks when using a block" do
       block = Proc.new {|value1, value2, options|}
       @builder.after("my_after_block", &block)
-      @view.expects(:capture).with(1, 2, :templates_folder => 'blocks', :value3 => 3, :value4 => 4)
+      @view.expects(:capture).with(1, 2, :value3 => 3, :value4 => 4)
       @builder.use :my_after_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
     it "should try and render a after block as a local partial if no after blocks are specified" do
       block = Proc.new {}
       @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/after_my_after_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).once
+      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
       @builder.use :my_after_block, :value1 => 1, :value2 => 2
     end
 
     it "should try and render a after block as a global partial if no after blocks are specified and the local partial does not exist" do
       block = Proc.new {}
       @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/after_my_after_block", :templates_folder => 'blocks', :value1 => 1, :value2 => 2).once
+      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).once
       @builder.use :my_after_block, :value1 => 1, :value2 => 2
+    end
+
+    it "should not attempt to render a after block as a partial if BuildingBlocks::USE_PARTIALS is set to false" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", false)
+      block = Proc.new {}
+      @view.expects(:capture).never
+      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
+      @builder.use :my_after_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS")
+      BuildingBlocks.const_set("USE_PARTIALS", true)
+    end
+
+    it "should not attempt to render a after block as a partial if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to false" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
+      block = Proc.new {}
+      @view.expects(:capture).never
+      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
+      @builder.use :my_after_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
     end
 
     it "should override hash options for after blocks by merging the runtime options into the after block options into the block options into the global options" do
@@ -450,7 +524,7 @@ describe BuildingBlocks::Base do
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
       @builder.define(:my_after_block, :param1 => "block level", :param2 => "block level", :param3 => "block level", &block)
       @builder.after(:my_after_block, :param1 => "after block level", :param2 => "after block level", &block)
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :templates_folder => 'blocks', :param2 => 'after block level', :param3 => 'block level')
+      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :param2 => 'after block level', :param3 => 'block level')
       @builder.use :my_after_block, :param1 => "top level"
     end
   end

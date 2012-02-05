@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
     "README.rdoc"
   ]
   s.files = [
+    "CHANGELOG.rdoc",
     "README.rdoc",
     "Rakefile",
     "VERSION",
@@ -25,6 +26,7 @@ Gem::Specification.new do |s|
     "lib/building_blocks/view_additions.rb",
     "rails/init.rb",
     "spec/building-blocks/base_spec.rb",
+    "spec/building-blocks/view_additions_spec.rb",
     "spec/spec_helper.rb"
   ]
   s.homepage = %q{http://github.com/hunterae/building-blocks}
@@ -44,9 +46,11 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
       s.add_dependency(%q<building-blocks>, [">= 0"])
       s.add_dependency(%q<rails>, [">= 3.0.0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
@@ -57,6 +61,7 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<building-blocks>, [">= 0"])
     s.add_dependency(%q<rails>, [">= 3.0.0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])

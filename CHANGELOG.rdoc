@@ -1,0 +1,6 @@
+1.0.1 (February 4, 2012)
+
+* Ability to disable use of partials when rendering a block
+* Ability to disable use of partials for before and after hooks
+* Complete test coverage
+* :template_folder and :variable options are no longer being passed in as part of the options hash to defined blocks and partials
