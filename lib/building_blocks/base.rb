@@ -10,9 +10,6 @@ module BuildingBlocks
     # Hash of block names to BuildingBlocks::Container objects
     attr_accessor :blocks
 
-    # the block that is passed in for the templating feature
-    attr_accessor :block
-
     # Array of BuildingBlocks::Container objects, storing the order of blocks as they were queued
     attr_accessor :queued_blocks
 
@@ -50,9 +47,9 @@ module BuildingBlocks
     #   The name of the block being defined (either a string or a symbol)
     # [+options+]
     #   The default options for the block definition. Any or all of these options may be overrideen by
-    #   whomever calls "blocks.use" on this block.
+    #   whomever calls "blocks.render" on this block.
     # [+block+]
-    #   The block that is to be rendered when "blocks.use" is called for this block.
+    #   The block that is to be rendered when "blocks.render" is called for this block.
     def define(name, options={}, &block)
       self.define_block_container(name, options, &block)
       nil
@@ -71,37 +68,101 @@ module BuildingBlocks
     #   The name of the block being defined (either a string or a symbol)
     # [+options+]
     #   The default options for the block definition. Any or all of these options may be overrideen by
-    #   whomever calls "blocks.use" on this block.
+    #   whomever calls "blocks.render" on this block.
     # [+block+]
-    #   The block that is to be rendered when "blocks.use" is called for this block.
+    #   The block that is to be rendered when "blocks.render" is called for this block.
     def replace(name, options={}, &block)
       blocks[name.to_sym] = nil
       self.define_block_container(name, options, &block)
       nil
     end
 
-    def use(*args, &block)
-      name_or_container = args.first ? args.shift : self.anonymous_block_name
+    # Render a block, first rendering any "before" blocks, then rendering the block itself, then rendering
+    # any "after" blocks. BuildingBlocks will make four different attempts to render block:
+    #   1) Look for a block that has been defined inline elsewhere, using the blocks.define method:
+    #      <% blocks.define :wizard do |options| %>
+    #        Inline Block Step#<%= options[:step] %>.
+    #      <% end %>
+    #
+    #      <%= blocks.render :wizard, :step => @step %>
+    #   2) Look for a partial within the current controller's view directory:
+    #      <%= blocks.render :wizard, :step => @step %>
+    #
+    #      <!-- In /app/views/pages/_wizard.html.erb (assuming it is the pages controller running): -->
+    #      Controller-specific Block Step# <%= step %>.
+    #   3) Look for a partial with the global blocks view directory (by default /app/views/blocks/):
+    #      <%= blocks.render :wizard, :step => @step %>
+    #
+    #      <!-- In /app/views/blocks/_wizard.html.erb: -->
+    #      Global Block Step#<%= step %>.
+    #   4) Render the default implementation for the block if provided to the blocks.render call:
+    #      <%= blocks.render :wizard, :step => @step do |options| do %>
+    #        Default Implementation Block Step#<%= options %>.
+    #      <% end %>
+    # Options:
+    # [+name+]
+    #   The name of the block to render (either a string or a symbol)
+    # [+*args+]
+    #   Any arguments to pass to the block to be rendered (and also to be passed to any "before" and "after" blocks).
+    # [+block+]
+    #   The default block to render if no such block block that is to be rendered when "blocks.render" is called for this block.
+    def render(name_or_container, *args, &block)
       buffer = ActiveSupport::SafeBuffer.new
       buffer << render_before_blocks(name_or_container, *args)
       buffer << render_block(name_or_container, *args, &block)
       buffer << render_after_blocks(name_or_container, *args)
       buffer
     end
+    alias use render
 
+    # Queue a block for later rendering, such as within a template.
+    #   <%= BuildingBlocks::Base.new(self).render_template("shared/wizard") do |blocks| %>
+    #     <% blocks.queue :step1 %>
+    #     <% blocks.queue :step2 do %>
+    #       My overridden Step 2 |
+    #     <% end %>
+    #     <% blocks.queue :step3 %>
+    #     <% blocks.queue do %>
+    #       | Anonymous Step 4
+    #     <% end %>
+    #   <% end %>
+    #
+    #   <!-- In /app/views/shared/wizard -->
+    #   <% blocks.define :step1 do %>
+    #     Step 1 |
+    #   <% end %>
+    #
+    #   <% blocks.define :step2 do %>
+    #     Step 2 |
+    #   <% end %>
+    #
+    #   <% blocks.define :step3 do %>
+    #     Step 3
+    #   <% end %>
+    #
+    #   <% blocks.queued_blocks.each do |block| %>
+    #     <%= blocks.render block %>
+    #   <% end %>
+    #
+    #   <!-- Will render: Step 1 | My overridden Step 2 | Step 3 | Anonymous Step 4-->
+    # Options:
+    # [+*args+]
+    #   The options to pass in when this block is rendered. These will override any options provided to the actual block
+    #   definition. Any or all of these options may be overriden by whoever calls "blocks.render" on this block.
+    #   Usually the first of these args will be the name of the block being queued (either a string or a symbol)
+    # [+block+]
+    #   The optional block definition to render when the queued block is rendered
     def queue(*args, &block)
       self.queued_blocks << self.define_block_container(*args, &block)
       nil
     end
 
-    def render
-      raise "Must specify :template parameter in order to render" unless global_options[:template]
-
+    def render_template(partial, &block)
       render_options = global_options.clone
       render_options[self.variable] = self
-      render_options[:captured_block] = view.capture(self, &self.block) if self.block
+      render_options[:captured_block] = view.capture(self, &block) if block_given?
 
-      view.render global_options[:template], render_options
+      view.render partial, render_options
     end
 
     def before(name, options={}, &block)
@@ -115,6 +176,8 @@ module BuildingBlocks
       nil
     end
     alias append after
+
+    protected
 
     # If a method is missing, we'll assume the user is starting a new block group by that missing method name
     def method_missing(m, *args, &block)
@@ -130,7 +193,7 @@ module BuildingBlocks
       self.queued_blocks = []
       self.block_groups[m] = self.queued_blocks
 
-      # Capture the contents of the block group (this will only capture block definitions and block uses)
+      # Capture the contents of the block group (this will only capture block definitions and block renders; it will ignore anything else)
       view.capture(global_options.merge(options), &block) if block_given?
 
       # restore the original block positions array
@@ -138,14 +201,11 @@ module BuildingBlocks
       nil
     end
 
-    protected
-
-    def initialize(view, options={}, &block)
+    def initialize(view, options={})
       self.templates_folder = options[:templates_folder] ? options.delete(:templates_folder) : BuildingBlocks::TEMPLATE_FOLDER
       self.variable = (options[:variable] ? options.delete(:variable) : :blocks).to_sym
       self.view = view
       self.global_options = options
-      self.block = block
       self.queued_blocks = []
       self.blocks = {}
       self.anonymous_block_number = 0
@@ -194,6 +254,14 @@ module BuildingBlocks
     end
 
     def render_before_blocks(name_or_container, *args)
+      render_before_or_after_blocks(name_or_container, "before", *args)
+    end
+
+    def render_after_blocks(name_or_container, *args)
+      render_before_or_after_blocks(name_or_container, "after", *args)
+    end
+
+    def render_before_or_after_blocks(name_or_container, before_or_after, *args)
       options = args.extract_options!
 
       block_options = {}
@@ -205,7 +273,7 @@ module BuildingBlocks
         block_options = blocks[name].options if blocks[name]
       end
 
-      before_name = "before_#{name.to_s}".to_sym
+      before_name = "#{before_or_after}_#{name.to_s}".to_sym
       buffer = ActiveSupport::SafeBuffer.new
 
       if blocks[before_name].present?
@@ -217,44 +285,9 @@ module BuildingBlocks
       elsif BuildingBlocks::USE_PARTIALS && BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
         begin
           begin
-            buffer << view.render("before_#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{before_or_after}_#{name.to_s}", global_options.merge(block_options).merge(options))
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.templates_folder}/before_#{name.to_s}", global_options.merge(block_options).merge(options))
-          end
-        rescue ActionView::MissingTemplate
-        end
-      end
-
-      buffer
-    end
-
-    def render_after_blocks(name_or_container, *args)
-      options = args.extract_options!
-
-      block_options = {}
-      if (name_or_container.is_a?(BuildingBlocks::Container))
-        name = name_or_container.name.to_sym
-        block_options = name_or_container.options
-      else
-        name = name_or_container.to_sym
-        block_options = blocks[name].options if blocks[name]
-      end
-
-      after_name = "after_#{name.to_s}".to_sym
-      buffer = ActiveSupport::SafeBuffer.new
-
-      if blocks[after_name].present?
-        blocks[after_name].each do |block_container|
-          args_clone = args.clone
-          args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
-          buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
-        end
-      elsif BuildingBlocks::USE_PARTIALS && BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
-        begin
-          begin
-            buffer << view.render("after_#{name.to_s}", global_options.merge(block_options).merge(options))
-          rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.templates_folder}/after_#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{self.templates_folder}/#{before_or_after}_#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
         end
