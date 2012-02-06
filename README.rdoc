@@ -21,8 +21,8 @@ The syntax for defining and using blocks is similar to how content_for and yield
     My code to render
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows -->
-  <%= blocks.use :my_block %>
+  <!-- Elsewhere, you can render the block as follows -->
+  <%= blocks.render :my_block %>
 
   <!-- Will render: My code to render -->
 
@@ -34,13 +34,13 @@ Parameters may also be passed into defined blocks:
     The user of this block passed in "<%= options[:my_parameter] %>" as :my_parameter.
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows -->
-  <%= blocks.use :my_block, :my_parameter => "The value I'm passing in"  %>
+  <!-- Elsewhere, you can render the block as follows -->
+  <%= blocks.render :my_block, :my_parameter => "The value I'm passing in"  %>
 
   <!-- Will render: The user of this block passed in "The value I'm passing in" as :my_parameter. -->
 
   <!-- If the anticipated parameters are not passed: -->
-  <%= blocks.use :my_block %>
+  <%= blocks.render :my_block %>
 
   <!-- Will render: The user of this block passed in "" as :my_parameter. -->
 
@@ -52,24 +52,24 @@ The parameters are not required, but unexpected results might occur if the "nece
     First parameter: <%= first_parameter %>, Second parameter: <%= second_parameter %>, Third parameter: <%= options[:third_parameter] %>
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows -->
-  <%= blocks.use :my_block, "Value 1", 2, :third_parameter => "Value 3" %>
+  <!-- Elsewhere, you can render the block as follows -->
+  <%= blocks.render :my_block, "Value 1", 2, :third_parameter => "Value 3" %>
 
   <!-- Will render: First parameter: Value 1, Second parameter: 2, Third parameter: Value 3 -->
 
 == Providing default values for parameters to blocks
 
-In the last example, the parameter the block was expecting was not passed in. For this reason, it is possible to specify default values for the parameters when you define a block. If parameters are passed in when the block is used, the values passed in override the default values.
+In the last example, the parameter the block was expecting was not passed in. For this reason, it is possible to specify default values for the parameters when you define a block. If parameters are passed in when the block is rendered, the values passed in override the default values.
 
   <% blocks.define :my_block, :parameter1 => "Parameter 1", :parameter2 => "Parameter 2" do |options| %>
     The values specified are :parameter1 = "<%= options[:parameter1] %>", :parameter2 = "<%= options[:parameter2] %>"
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows (specifying zero, one, or both of the parameters the block uses) -->
-  <%= blocks.use :my_block %><br />
-  <%= blocks.use :my_block, :parameter1 => "New Parameter 1" %><br />
-  <%= blocks.use :my_block, :parameter2 => "New Parameter 2" %><br />
-  <%= blocks.use :my_block, :parameter1 => "New Parameter 1", :parameter2 => "New Parameter 2" %>
+  <!-- Elsewhere, you can render the block as follows (specifying zero, one, or both of the parameters the block uses) -->
+  <%= blocks.render :my_block %><br />
+  <%= blocks.render :my_block, :parameter1 => "New Parameter 1" %><br />
+  <%= blocks.render :my_block, :parameter2 => "New Parameter 2" %><br />
+  <%= blocks.render :my_block, :parameter1 => "New Parameter 1", :parameter2 => "New Parameter 2" %>
 
   <!--
   Will render:
@@ -81,11 +81,11 @@ In the last example, the parameter the block was expecting was not passed in. Fo
 
 == Providing a default definition for a block
 
-What happens if you attempt to "use" a block that hasn't been "define"d? Nothing will get rendered.
+What happens if you attempt to render a block that hasn't been "define"d? Nothing will get rendered.
 
-However, you may want to provide a default definition for a block to "use" if such a block was never "define"d. You can do this as follows:
+However, you may want to provide a default definition for a block to render if such a block was never "define"d. You can do this as follows:
 
-  <%= blocks.use :my_block, :my_parameter_1 => "Parameter 1" do %>
+  <%= blocks.render :my_block, :my_parameter_1 => "Parameter 1" do %>
     This is my default definition of :my_block.
   <% end %>
 
@@ -98,8 +98,8 @@ If however, you have defined :my_block elsewhere, it would have used that defini
     Some other definition of :my_block with :my_parameter_1 set to "<%= options[:my_parameter_1] %>"
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows -->
-  <%= blocks.use :my_block, :my_parameter_1 => "Parameter 1" do %>
+  <!-- Elsewhere, you can render the block as follows -->
+  <%= blocks.render :my_block, :my_parameter_1 => "Parameter 1" do %>
     This is my default definition of :my_block.
   <% end %>
 
@@ -108,17 +108,17 @@ If however, you have defined :my_block elsewhere, it would have used that defini
 
 == Using "before" and "after filters"
 
-"Before" and "After" hooks render code before and after the code produced by a "blocks.use" call. A practical example of this would be adding view-specific javascript and stylesheet includes to a global layout file.
+"Before" and "After" hooks render code before and after the code produced by a "blocks.render" call. A practical example of this would be adding view-specific javascript and stylesheet includes to a global layout file.
 
 In your application.html layout file, you might use this as follows:
 
   <html>
     <head>
-      <%= blocks.use :includes do %>
-        <%= blocks.use :stylesheets do %>
+      <%= blocks.render :includes do %>
+        <%= blocks.render :stylesheets do %>
           <%= stylesheet_link_tag "application", :media => "all" %>
         <% end %>
-        <%= blocks.use :javscripts do %>
+        <%= blocks.render :javscripts do %>
           <%= javascript_include_tag "application" %>
         <% end %>
         <%= csrf_meta_tags %>
@@ -176,16 +176,16 @@ Then, in a specific view that is rendered using this layout, you can add stylesh
 
 == Blocks as Partials
 
-Using exactly the same syntax for "using" blocks, one can put the code to be rendered in it's own separate file (in a partial). When "blocks.use :some_block" is called, the system will first look for a block defined inline (i.e. one that has been defined using "blocks.define :some_block"). Failing to find that, it will look for a partial by the same name in your current controller's view directory. Failing to find that partial, it will look for a partial in the global blocks' directory (by default, /app/views/blocks). Any parameters passed in as a hash will be initialized in the partial as local variables. And failing to find that, it will see if a default implementation has been provided for the block and render it if one has been specified.
+Using exactly the same syntax for "using" blocks, one can put the code to be rendered in it's own separate file (in a partial). When "blocks.render :some_block" is called, the system will first look for a block defined inline (i.e. one that has been defined using "blocks.define :some_block"). Failing to find that, it will look for a partial by the same name in your current controller's view directory. Failing to find that partial, it will look for a partial in the global blocks' directory (by default, /app/views/blocks). Any parameters passed in as a hash will be initialized in the partial as local variables. And failing to find that, it will see if a default implementation has been provided for the block and render it if one has been specified.
 
 As an example, consider the following code, running in a view for PagesController:
 
-  <%= blocks.use :wizard, :step => @step %>
+  <%= blocks.render :wizard, :step => @step %>
 
-  <!-- 1) Check and see if there was a block defined called "wizard" somewhere prior to its use... No? then... -->
+  <!-- 1) Check and see if there was a block defined called "wizard" somewhere prior to its render... No? then... -->
   <!-- 2) Check and see if there is a controller-specific partial /app/views/pages/wizard.html.erb. No? Then... -->
   <!-- 3) Check and see if there is a global partial /app/views/blocks/wizard.html.erb. No? Then... -->
-  <!-- 4) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.use" call... No? Then render nothing -->
+  <!-- 4) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.render" call... No? Then render nothing -->
 
 Let's look at each example individually, written in the order that BuildingBlocks attempts to render them:
 
@@ -194,20 +194,20 @@ Let's look at each example individually, written in the order that BuildingBlock
     Inline Block Step#<%= options[:step] %>.
   <% end %>
 
-  <!-- Elsewhere, you can use the block as follows -->
-  <%= blocks.use :wizard, :step => @step %>
+  <!-- Elsewhere, you can render the block as follows -->
+  <%= blocks.render :wizard, :step => @step %>
 2) Controller-specific partial:
-  <%= blocks.use :wizard, :step => @step %>
+  <%= blocks.render :wizard, :step => @step %>
 
   <!-- In /app/views/pages/_wizard.html.erb: -->
   Controller-specific Block Step# <%= step %>.
 3) Global partial:
-  <%= blocks.use :wizard, :step => @step %>
+  <%= blocks.render :wizard, :step => @step %>
 
   <!-- In /app/views/blocks/_wizard.html.erb: -->
   Global Block Step#<%= step %>.
 4) Default implementation of a block:
-  <%= blocks.use :wizard, :step => @step do |options| do %>
+  <%= blocks.render :wizard, :step => @step do |options| do %>
     Default Implementation Block Step#<%= options %>.
   <% end %>
 
@@ -235,9 +235,79 @@ As an example, consider {table-for}[https://github.com/hunterae/table-for], a ge
     <%= table.column :delete %>
   <% end %>
 
-VIDEO TUTORIAL TO COME
+Templating allows the code to render a partial, but dynamically change how that partial is rendered from outside its rendering. So in the above example,
+there is a table_for partial that gets rendered, but before it is rendered, the block provided to the table_for call will be parsed so that the table_for
+template (partial) knows what to render, and occasionally, how to render to render it.
 
-== MORE COMING SOON...
+As an easier example, consider the following call in a view file:
+  <%= BuildingBlocks::Base.new(self).render_template("blocks/wizard") do |blocks| %>
+    <% blocks.queue :step1 %>
+    <% blocks.queue :step2 do %>
+      My Overridden Step 2 |
+    <% end %>
+    <% blocks.queue :step3 %>
+    <% blocks.queue do %>
+      | Anonymous Step 4
+      <% end %>
+  <% end %>
+
+Here, a template is provided ("/app/views/blocks/_wizard.html.erb") and four blocks are queued (step1, step2, step3, and an anonymous step). Now, let's look at
+the template:
+  <!-- /app/views/blocks/_wizard.html.erb -->
+  <% blocks.define :step1 do %>
+    Step 1 |
+  <% end %>
+
+  <% blocks.define :step2 do %>
+    Step 2 |
+  <% end %>
+
+  <% blocks.define :step3 do %>
+    Step 3
+  <% end %>
+
+  <% blocks.queued_blocks.each do |block| %>
+    <%= blocks.render block %>
+  <% end %>
+
+Step1, Step2, and Step3 are all provided default definitions. Step2's definition is overridden from the outside (i.e. from the view that renders the template).
+Since all of the queued blocks are rendered, the anonymous block (Step4) will also get rendered. The resulting output will be:
+
+  Step 1 | My Overridden Step 2 | Step 3 | Anonymous Step4
+
+Notice the order of the queued blocks was preserved, Step2's definition was successfully overridden, and the anonymous definition for Step4 was also rendered.
+
+This technique could also very easily be used to do something like wrapping content in some complicated markup, such is wrapping code in html tags to display as
+a header container:
+  <%= BuildingBlocks::Base.new(self).render_template("blocks/header_container") do |blocks| %>
+    My code to wrap
+  <% end %>
+  
+  <!-- In /app/views/blocks/_header_container.html.erb -->
+  <div class="header">
+    <div class="wrapper">
+      <%= captured_block %>
+    </div>
+  </div>
+
+What will get rendered will be the following:
+  <div class="header">
+    <div class="wrapper">
+      My code to wrap
+    </div>
+  </div>
+
+The code called from the view could easily be extracted in a helper method as follows:
+  def header_container(options={}, &block)
+    BuildingBlocks::Base.new(self, options).render_template("blocks/header_container", &block) 
+  end
+
+Then it could be called from the view as follows:
+  <%= header_container do %>
+    My code to wrap
+  <% end %>
+
+VIDEO TUTORIAL TO COME SHOWING HOW TABLE_FOR CAN BE BUILT FROM SCRATCH
 
 == Questions or Problems?
 
