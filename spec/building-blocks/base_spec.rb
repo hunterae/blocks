@@ -278,7 +278,7 @@ describe BuildingBlocks::Base do
     end
   end
 
-  describe "use method" do
+  describe "render method" do
     before :each do
       @builder.expects(:render_before_blocks).at_least_once
       @builder.expects(:render_after_blocks).at_least_once
@@ -397,7 +397,7 @@ describe BuildingBlocks::Base do
     end
   end
 
-  describe "use method - before blocks" do
+  describe "render method - before blocks" do
     before :each do
       @builder.expects(:render_block).at_least_once
       @builder.expects(:render_after_blocks).at_least_once
@@ -410,25 +410,35 @@ describe BuildingBlocks::Base do
       @builder.render :my_before_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
-    it "should try and render a before block as a local partial if no before blocks are specified" do
+    it "should try and render a before block as a local partial if no before blocks are specified and BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to true" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).once
       @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
       @builder.render :my_before_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
     end
 
-    it "should try and render a before block as a global partial if no after blocks are specified and the local partial does not exist" do
+    it "should try and render a before block as a global partial if no after blocks are specified and the local partial does not exist and BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to true" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).once
       @builder.render :my_before_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
     end
 
-    it "should not attempt to render a before block as a partial if BuildingBlocks::USE_PARTIALS is set to false" do
+    it "should not attempt to render a before block as a partial if BuildingBlocks::USE_PARTIALS is set to false even if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to true" do
       BuildingBlocks.send(:remove_const, "USE_PARTIALS")
       BuildingBlocks.const_set("USE_PARTIALS", false)
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
@@ -436,18 +446,16 @@ describe BuildingBlocks::Base do
       @builder.render :my_before_block, :value1 => 1, :value2 => 2
       BuildingBlocks.send(:remove_const, "USE_PARTIALS")
       BuildingBlocks.const_set("USE_PARTIALS", true)
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
     end
 
     it "should not attempt to render a before block as a partial if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to false" do
-      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
-      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
       @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
       @builder.render :my_before_block, :value1 => 1, :value2 => 2
-      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
-      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
     end
 
     it "should override hash options for before blocks by merging the runtime options into the before block options into the block options into the global options" do
@@ -460,7 +468,7 @@ describe BuildingBlocks::Base do
     end
   end
   
-  describe "use method - after blocks" do
+  describe "render method - after blocks" do
     before :each do
       @builder.expects(:render_block).at_least_once
       @builder.expects(:render_before_blocks).at_least_once
@@ -473,25 +481,35 @@ describe BuildingBlocks::Base do
       @builder.render :my_after_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
-    it "should try and render a after block as a local partial if no after blocks are specified" do
+    it "should try and render a after block as a local partial if no after blocks are specified and BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to true" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).once
       @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
       @builder.render :my_after_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
     end
 
-    it "should try and render a after block as a global partial if no after blocks are specified and the local partial does not exist" do
+    it "should try and render a after block as a global partial if no after blocks are specified and the local partial does not exist and BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to true" do
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).once
       @builder.render :my_after_block, :value1 => 1, :value2 => 2
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
     end
 
-    it "should not attempt to render a after block as a partial if BuildingBlocks::USE_PARTIALS is set to false" do
+    it "should not attempt to render a after block as a partial if BuildingBlocks::USE_PARTIALS is set to false even if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to false" do
       BuildingBlocks.send(:remove_const, "USE_PARTIALS")
       BuildingBlocks.const_set("USE_PARTIALS", false)
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
@@ -499,18 +517,16 @@ describe BuildingBlocks::Base do
       @builder.render :my_after_block, :value1 => 1, :value2 => 2
       BuildingBlocks.send(:remove_const, "USE_PARTIALS")
       BuildingBlocks.const_set("USE_PARTIALS", true)
+      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
+      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
     end
 
     it "should not attempt to render a after block as a partial if BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is set to false" do
-      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
-      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", false)
       block = Proc.new {}
       @view.expects(:capture).never
       @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
       @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
       @builder.render :my_after_block, :value1 => 1, :value2 => 2
-      BuildingBlocks.send(:remove_const, "USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS")
-      BuildingBlocks.const_set("USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS", true)
     end
 
     it "should override hash options for after blocks by merging the runtime options into the after block options into the block options into the global options" do

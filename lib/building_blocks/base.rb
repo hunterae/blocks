@@ -1,7 +1,7 @@
 module BuildingBlocks
   TEMPLATE_FOLDER = "blocks"
   USE_PARTIALS = true
-  USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS = true
+  USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS = false
 
   class Base
     # a pointer to the ActionView that called BuildingBlocks
