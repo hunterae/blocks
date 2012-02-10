@@ -19,3 +19,7 @@
 1.2.2 (February 9, 2012)
 
 * Allow :use_partials and :use_partials_for_before_and_after_hooks to be passed in as initialization options to BuildingBlocks::Base to control whether BuildingBlocks attempts to render partials when "blocks.render" is called.
+
+1.2.3 (February 9, 2012)
+
+* Created two new utility methods: evaluated_procs and evaluated_proc that allow parameters for blocks to be Proc objects so long as these methods are called to evaluate them. (These methods have been carried over and renamed from the table-for gem where they were used to be able to dynamically specify table css classes, styles, and ids at runtime).

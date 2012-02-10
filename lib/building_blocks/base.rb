@@ -284,6 +284,17 @@ module BuildingBlocks
     end
     alias append after
 
+    def evaluated_procs(*args)
+      options = args.extract_options!
+      options.inject({}) { |hash, (k, v)| hash[k] = (v.is_a?(Proc) ? v.call(*args) : v); hash} unless options.nil?
+    end
+
+    def evaluated_proc(*args)
+      return nil unless args.present?
+      v = args.pop
+      v.is_a?(Proc) ? v.call(*args) : v
+    end
+
     protected
 
     # If a method is missing, we'll assume the user is starting a new block group by that missing method name

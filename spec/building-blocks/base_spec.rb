@@ -549,4 +549,45 @@ describe BuildingBlocks::Base do
       @builder.queued_blocks.should eql []
     end
   end
+
+  describe "evaluated_procs method" do
+    it "should evaluate any proc options" do
+      proc1 = lambda {@view.cycle("even", "odd")}
+      proc2 = lambda {@view.cycle("one", "two")}
+      evaluated_procs = @builder.evaluated_procs(:class => proc1, :id => proc2, :style => "color:red")
+      evaluated_procs[:class].should eql "even"
+      evaluated_procs[:id].should eql "one"
+      evaluated_procs[:style].should eql "color:red"
+    end
+
+    it "should pass any additional arguments to evaluated procs" do
+      proc1 = lambda { |param1, param2| "user_#{param1}_#{param2}"}
+      evaluated_procs = @builder.evaluated_procs(1, 2, :class => proc1)
+      evaluated_procs[:class].should eql "user_1_2"
+    end
+
+    describe "evaluated_proc method" do
+      it "should evaluate a proc" do
+        proc = lambda {@view.cycle("even", "odd")}
+        @builder.evaluated_proc(proc).should eql "even"
+      end
+
+      it "should just return the value if it is not a proc" do
+        @builder.evaluated_proc("1234").should eql "1234"
+      end
+
+      it "should return nil if no arguments are specified" do
+        @builder.evaluated_proc.should be_nil
+      end
+
+      it "should treat the last argument as the potential proc to evaluate" do
+        @builder.evaluated_proc(1, 2, 3).should eql 3
+      end
+
+      it "should pass any additional arguments to the evaluated proc" do
+        proc1 = lambda { |param1, param2| "user_#{param1}_#{param2}"}
+        @builder.evaluated_proc(1, 2, proc1).should eql "user_1_2"
+      end
+    end
+  end
 end
