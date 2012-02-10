@@ -15,3 +15,7 @@
 1.2.1 (February 7, 2012)
 
 * Only try to render "before" and "after" blocks as partials if that BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is globally set to true (set to false now by default)
+
+1.2.2 (February 9, 2012)
+
+* Allow :use_partials and :use_partials_for_before_and_after_hooks to be passed in as initialization options to BuildingBlocks::Base to control whether BuildingBlocks attempts to render partials when "blocks.render" is called.
