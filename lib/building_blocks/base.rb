@@ -28,6 +28,12 @@ module BuildingBlocks
     # The variable to use when rendering the partial for the templating feature (by default, "blocks")
     attr_accessor :variable
 
+    # Boolean variable for whether BuildingBlocks should attempt to render blocks as partials if a defined block cannot be found
+    attr_accessor :use_partials
+
+    # Boolean variable for whether BuildingBlocks should attempt to render blocks before and after blocks as partials if no before or after blocks exist
+    attr_accessor :use_partials_for_before_and_after_hooks
+
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
     # Options:
@@ -157,6 +163,41 @@ module BuildingBlocks
       nil
     end
 
+    # Render a partial, treating it as a template, and any code in the block argument will impact how the template renders
+    #   <%= BuildingBlocks::Base.new(self).render_template("shared/wizard") do |blocks| %>
+    #     <% blocks.queue :step1 %>
+    #     <% blocks.queue :step2 do %>
+    #       My overridden Step 2 |
+    #     <% end %>
+    #     <% blocks.queue :step3 %>
+    #     <% blocks.queue do %>
+    #       | Anonymous Step 4
+    #     <% end %>
+    #   <% end %>
+    #
+    #   <!-- In /app/views/shared/wizard -->
+    #   <% blocks.define :step1 do %>
+    #     Step 1 |
+    #   <% end %>
+    #
+    #   <% blocks.define :step2 do %>
+    #     Step 2 |
+    #   <% end %>
+    #
+    #   <% blocks.define :step3 do %>
+    #     Step 3
+    #   <% end %>
+    #
+    #   <% blocks.queued_blocks.each do |block| %>
+    #     <%= blocks.render block %>
+    #   <% end %>
+    #
+    #   <!-- Will render: Step 1 | My overridden Step 2 | Step 3 | Anonymous Step 4-->
+    # Options:
+    # [+partial+]
+    #   The partial to render as a template
+    # [+block+]
+    #   An optional block with code that affects how the template renders
     def render_template(partial, &block)
       render_options = global_options.clone
       render_options[self.variable] = self
@@ -165,12 +206,78 @@ module BuildingBlocks
       view.render partial, render_options
     end
 
+    # Add a block to render before another block. This before block will be put into an array so that multiple
+    #  before blocks may be queued. They will render in the order in which they are declared when the
+    #  "blocks#render" method is called. Any options specified to the before block will override any options
+    #  specified in the block definition.
+    #   <% blocks.define :wizard, :option1 => 1, :option2 => 2 do |options| %>
+    #     Step 2 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <% blocks.before :wizard, :option1 => 3 do
+    #     Step 0 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <% blocks.before :wizard, :option2 => 4 do
+    #     Step 1 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <%= blocks.use :wizard %>
+    #
+    #   <!-- Will render:
+    #     Step 0 (:option1 => 3, :option2 => 2)<br />
+    #     Step 1 (:option1 => 1, :option2 => 4)<br />
+    #     Step 2 (:option1 => 1, :option2 => 2)<br />
+    #   -->
+    #
+    #   <%= blocks.render :wizard, :step => @step %>
+    # Options:
+    # [+name+]
+    #   The name of the block to render this code before when that block is rendered
+    # [+options+]
+    #   Any options to specify to the before block when it renders. These will override any options
+    #   specified when the block was defined.
+    # [+block+]
+    #   The block of code to render before another block
     def before(name, options={}, &block)
       self.queue_block_container("before_#{name.to_s}", options, &block)
       nil
     end
     alias prepend before
 
+    # Add a block to render after another block. This after block will be put into an array so that multiple
+    #  after blocks may be queued. They will render in the order in which they are declared when the
+    #  "blocks#render" method is called. Any options specified to the after block will override any options
+    #  specified in the block definition.
+    #   <% blocks.define :wizard, :option1 => 1, :option2 => 2 do |options| %>
+    #     Step 2 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <% blocks.after :wizard, :option1 => 3 do
+    #     Step 3 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <% blocks.after :wizard, :option2 => 4 do
+    #     Step 4 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
+    #   <% end %>
+    #
+    #   <%= blocks.use :wizard %>
+    #
+    #   <!-- Will render:
+    #     Step 2 (:option1 => 1, :option2 => 2)<br />
+    #     Step 3 (:option1 => 3, :option2 => 2)<br />
+    #     Step 4 (:option1 => 1, :option2 => 4)<br />
+    #   -->
+    #
+    #   <%= blocks.render :wizard, :step => @step %>
+    # Options:
+    # [+name+]
+    #   The name of the block to render this code after when that block is rendered
+    # [+options+]
+    #   Any options to specify to the after block when it renders. These will override any options
+    #   specified when the block was defined.
+    # [+block+]
+    #   The block of code to render after another block
     def after(name, options={}, &block)
       self.queue_block_container("after_#{name.to_s}", options, &block)
       nil
@@ -210,13 +317,18 @@ module BuildingBlocks
       self.blocks = {}
       self.anonymous_block_number = 0
       self.block_groups = {}
+      self.use_partials = options[:use_partials].nil? ? BuildingBlocks::USE_PARTIALS : options.delete(:use_partials)
+      self.use_partials_for_before_and_after_hooks =
+        options[:use_partials_for_before_and_after_hooks] ? options.delete(:use_partials_for_before_and_after_hooks) : BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
     end
 
+    # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
     def anonymous_block_name
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
     end
 
+    # Render a block, first trying to find a previously defined block with the same name
     def render_block(name_or_container, *args, &block)
       options = args.extract_options!
 
@@ -234,7 +346,7 @@ module BuildingBlocks
         block_container = blocks[name]
         args.push(global_options.merge(block_container.options).merge(block_options).merge(options))
         buffer << view.capture(*(args[0, block_container.block.arity]), &block_container.block)
-      elsif BuildingBlocks::USE_PARTIALS
+      elsif use_partials
         begin
           begin
             buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(options))
@@ -253,14 +365,17 @@ module BuildingBlocks
       buffer
     end
 
+    # Render all the before blocks for a partial block
     def render_before_blocks(name_or_container, *args)
       render_before_or_after_blocks(name_or_container, "before", *args)
     end
 
+    # Render all the after blocks for a partial block
     def render_after_blocks(name_or_container, *args)
       render_before_or_after_blocks(name_or_container, "after", *args)
     end
 
+    # Utility method to render either the before or after blocks for a partial block
     def render_before_or_after_blocks(name_or_container, before_or_after, *args)
       options = args.extract_options!
 
@@ -282,7 +397,7 @@ module BuildingBlocks
           args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
           buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
         end
-      elsif BuildingBlocks::USE_PARTIALS && BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
+      elsif use_partials && use_partials_for_before_and_after_hooks
         begin
           begin
             buffer << view.render("#{before_or_after}_#{name.to_s}", global_options.merge(block_options).merge(options))
@@ -296,6 +411,7 @@ module BuildingBlocks
       buffer
     end
 
+    # Build a BuildingBlocks::Container object given the passed in arguments
     def build_block_container(*args, &block)
       options = args.extract_options!
       name = args.first ? args.shift : self.anonymous_block_name
@@ -306,6 +422,8 @@ module BuildingBlocks
       block_container
     end
 
+    # Build a BuildingBlocks::Container object and add it to an array of containers matching it's block name
+    #  (used only for queuing a collection of before and after blocks for a particular block name)
     def queue_block_container(*args, &block)
       block_container = self.build_block_container(*args, &block)
       if blocks[block_container.name].nil?
@@ -315,6 +433,8 @@ module BuildingBlocks
       end
     end
 
+    # Build a BuildingBlocks::Container object and add it to the global hash of blocks if a block by the same
+    #  name is not already defined
     def define_block_container(*args, &block)
       block_container = self.build_block_container(*args, &block)
       blocks[block_container.name] = block_container if blocks[block_container.name].nil? && block_given?

@@ -11,3 +11,7 @@
 * Documented BuildingBlocks::Base more thoroughly
 * Changed the blocks.use method to blocks.render (blocks.use is still available for legacy purposes)
 * Removed the original render method and replaced with render_template that takes the partial and block to render as arguments.
+
+1.2.1 (February 7, 2012)
+
+* Only try to render "before" and "after" blocks as partials if that BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is globally set to true (set to false now by default)
