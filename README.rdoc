@@ -1,6 +1,6 @@
 = BuildingBlocks
 
-RDocs[http://rdoc.info/projects/hunterae/building-blocks] | Screencast Part 1[https://vimeo.com/36674545]
+RDocs[http://rdoc.info/projects/hunterae/building-blocks] | {Screencast Part 1}[https://vimeo.com/36674545]
 
 BuildingBlocks is an intricate way of rendering blocks of code, while adding several features that go above and beyond what a simple content_for with yield is capable of doing.
 
