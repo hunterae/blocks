@@ -311,6 +311,39 @@ Then it could be called from the view as follows:
 
 VIDEO TUTORIAL TO COME SHOWING HOW TABLE_FOR CAN BE BUILT FROM SCRATCH
 
+== Block Groups
+
+Another advanced feature of BuildingBlocks is the ability to queue up multiple different sets of blocks in different queues, called block groups. It will most often be used in conjunction with the templating feature described above and is best demonstrated with an example:
+
+  <%= BuildingBlocks::Base.new(self).render_template("blocks/my_layout") do |blocks| %>
+    <% blocks.left_column do %>
+      <%= blocks.queue :left_column_block1 %>
+      <%= blocks.queue :left_column_block2 do %>
+        Some random content on the left
+      <% end %>
+    <% end %>
+    <% blocks.right_column do %>
+      <%= blocks.queue :right_column_block1 %>
+      <%= blocks.queue :right_column_block2 do %>
+        Some random content on the right
+      <% end %>
+    <% end %>
+  <% end %>
+
+In this example, two separate block groups are created, one for the left column on the page, one for the right, both of which will contain an ordered list (queue) of blocks. You start a new block group by invoking a method on "blocks" that does not exist, such as :left_column / :right_column. Then, in the template that renders the content, the queue of left and right column blocks can be iterated over and rendered as follows:
+
+  <!-- In /app/views/blocks/_my_layout.html.erb -->
+  <div style="float:left; width: 50%">
+    <% blocks.left_column.each do |block| %>
+      <%= blocks.render block %>
+    <% end %>
+  </div>
+  <div style="float:left; width: 50%">
+    <% blocks.right_column.each do |block| %>
+      <%= blocks.render block %>
+    <% end %>
+  </div>
+
 == Questions or Problems?
 
 If you have any issues with BuildingBlocks which you cannot find the solution to in the documentation, please add an {issue on GitHub}[https://github.com/hunterae/building-blocks/issues] or fork the project and send a pull request.
