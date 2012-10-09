@@ -2,12 +2,17 @@
 
 RDocs[http://rdoc.info/projects/hunterae/building-blocks] | {Screencast Part 1}[https://vimeo.com/36674545]
 
-BuildingBlocks is an intricate way of rendering blocks of code, while adding several features that go above and beyond what a simple content_for with yield is capable of doing.
+BuildingBlocks is an intricate way of rendering blocks of code, while combining some of the best features of content blocks and partials, and adding several new features that go above and beyond what a simple content_for with yield or a render :partial is capable of doing.
 
-1. It provides the ability to pass parameters to a defined block of code (something content_for with yield is incapable of doing). 
-2. It provides "before" and "after" hooks that can render code before and after a specified block of code is rendered (this can be particularly useful when you want to specify a dynamic list of javascript or stylesheet includes after your standard includes).
-3. It allows the developer to define a block of code as a global partial, a controller-specific partial, or an inline block of code, all with the same syntax usage.
-4. (Probably the most powerful aspect) It allows the developer to build complex reusable UI components by essentially providing their own DTD (see the separate project {table-for}[https://github.com/hunterae/table-for] for an example of a nice table builder that was created using minimal code by apply BuildingBlocks).
+1. Automatically determines whether you're rendering a content block (i.e. a block of code that you have defined using similar syntax to content_for) or a partial, with exactly the same syntax
+2. Pass parameters into your blocks of code, regardless of whether your block of code is a content block or a partial (something content_for with yield is incapable of doing)
+3. Use "before" and "after" hooks to designate code that should be rendered before and after a block of code that is to be rendered
+4. Define your blocks of code as either a global partial, a controller-specific partial, or an inline block of code
+5. Provides four different ways to define your block of code: as a global partial, a controller-specific partial, or an inline block of code, all with the same syntax usage.
+6. Provides a very powerful way of defining templates to build reusable UI components with minimal code, as was done with {table-for}[https://github.com/hunterae/table-for]
+
+== Author's Note
+To fully appreciate how powerful BuildingBlocks can be, i highly recommend checking out the project {table-for}[https://github.com/hunterae/table-for] first. This is a gem that was built using BuildingBlocks with very few lines of code, and illustrates how easily the templating feature of BuildingBlocks can be used to build extremely useful reusable UI components.
 
 == Installation
 
@@ -242,7 +247,7 @@ there is a table_for partial that gets rendered, but before it is rendered, the 
 template (partial) knows what to render, and occasionally, how to render to render it.
 
 As an easier example, consider the following call in a view file:
-  <%= BuildingBlocks::Base.new(self).render_template("blocks/wizard") do |blocks| %>
+  <%= BuildingBlocks.render_template(self, "blocks/wizard") do |blocks| %>
     <% blocks.queue :step1 %>
     <% blocks.queue :step2 do %>
       My Overridden Step 2 |
@@ -281,7 +286,7 @@ Notice the order of the queued blocks was preserved, Step2's definition was succ
 
 This technique could also very easily be used to do something like wrapping content in some complicated markup, such is wrapping code in html tags to display as
 a header container:
-  <%= BuildingBlocks::Base.new(self).render_template("blocks/header_container") do |blocks| %>
+  <%= BuildingBlocks.render_template(self, "blocks/header_container") do |blocks| %>
     My code to wrap
   <% end %>
   
@@ -301,7 +306,7 @@ What will get rendered will be the following:
 
 The code called from the view could easily be extracted in a helper method as follows:
   def header_container(options={}, &block)
-    BuildingBlocks::Base.new(self, options).render_template("blocks/header_container", &block) 
+    BuildingBlocks.render_template(self, "blocks/header_container", options, &block) 
   end
 
 Then it could be called from the view as follows:

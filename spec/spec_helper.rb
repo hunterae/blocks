@@ -9,7 +9,10 @@ end
 
 RSpec.configure do |config|
   config.mock_with :mocha
-  # config.mock_with :flexmock
-  # config.mock_with :rr
-  # config.mock_with :rspec
+  
+  config.before :each do
+    BuildingBlocks.template_folder = "blocks"
+    BuildingBlocks.surrounding_tag_surrounds_before_and_after_blocks = true
+  end
 end
+

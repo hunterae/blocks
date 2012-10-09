@@ -18,5 +18,16 @@ describe BuildingBlocks::ViewAdditions do
       @view.blocks.should eql "something"
       @view.blocks.should eql "something"
     end
+
+    it "should be aliased as bb, buildingblocks, and building_blocks" do
+      BuildingBlocks::Base.expects(:new).with {|view| view == @view}
+      @view.bb
+
+      BuildingBlocks::Base.expects(:new).with {|view| view == @view}
+      @view.buildingblocks
+
+      BuildingBlocks::Base.expects(:new).with {|view| view == @view}
+      @view.building_blocks
+    end
   end
 end

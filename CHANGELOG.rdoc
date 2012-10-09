@@ -1,9 +1,32 @@
-1.1.0 (February 4, 2012)
+2.0.0 (October 18, 2012)
 
-* Ability to disable use of partials when rendering a block
-* Ability to disable use of partials for before and after hooks
-* Complete test coverage
-* :template_folder and :variable options are no longer being passed in as part of the options hash to defined blocks and partials
+* Added ability to render a collection of objects and specify the surrounding elements and the html to apply to those surrounding elements
+  For example: blocks.render :test, :collection => @cuisine_types, :as => :cuisine_type, :surrounding_tag => "div", :surrounding_tag_html => {:class => Proc.new {cycle("even", "odd")}}
+* Added ability to specify "around" blocks, i.e. blocks of view code that render around another block of code, such as:
+  <% blocks.around :test_block do |content_block| %>
+    <h1>
+      <%= content_block.call %>
+    </h1>
+  <% end %> %>
+* Added a util method BuildingBlocks.render_template(self, partial, options={}, &block) that makes the templating feature easier to use
+  (as opposed to calling the long way: BuildingBlocks::Base.new(self, options={}).render_template(partial, &block))
+* Aliased "#blocks" method that is available to views as "#buildingblocks", "#bb", and "#building_blocks"
+* Aliased "#after" method to "#for", so that you can now call <%= blocks.for :block_name %> (should be slightly more familiar to users of content_for with yield)
+* Added a "#setup" method to initialize BuildingBlocks globally (for example: BuildingBlocks.setup do |config| config.template_folder = "shared" end)
+* Cleaned up the organization of the code base and not using autoload instead of require
+* Removed :use_partials_for_before_and_after_hooks option from 1.2.2
+
+1.2.3 (February 9, 2012)
+
+* Created two new utility methods: evaluated_procs and evaluated_proc that allow parameters for blocks to be Proc objects so long as these methods are called to evaluate them. (These methods have been carried over and renamed from the table-for gem where they were used to be able to dynamically specify table css classes, styles, and ids at runtime).
+
+1.2.2 (February 9, 2012)
+
+* Allow :use_partials and :use_partials_for_before_and_after_hooks to be passed in as initialization options to BuildingBlocks::Base to control whether BuildingBlocks attempts to render partials when "blocks.render" is called.
+
+1.2.1 (February 7, 2012)
+
+* Only try to render "before" and "after" blocks as partials if that BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is globally set to true (set to false now by default)
 
 1.2.0 (February 5, 2012)
 
@@ -12,14 +35,9 @@
 * Changed the blocks.use method to blocks.render (blocks.use is still available for legacy purposes)
 * Removed the original render method and replaced with render_template that takes the partial and block to render as arguments.
 
-1.2.1 (February 7, 2012)
+1.1.0 (February 4, 2012)
 
-* Only try to render "before" and "after" blocks as partials if that BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS is globally set to true (set to false now by default)
-
-1.2.2 (February 9, 2012)
-
-* Allow :use_partials and :use_partials_for_before_and_after_hooks to be passed in as initialization options to BuildingBlocks::Base to control whether BuildingBlocks attempts to render partials when "blocks.render" is called.
-
-1.2.3 (February 9, 2012)
-
-* Created two new utility methods: evaluated_procs and evaluated_proc that allow parameters for blocks to be Proc objects so long as these methods are called to evaluate them. (These methods have been carried over and renamed from the table-for gem where they were used to be able to dynamically specify table css classes, styles, and ids at runtime).
+* Ability to disable use of partials when rendering a block
+* Ability to disable use of partials for before and after hooks
+* Complete test coverage
+* :template_folder and :variable options are no longer being passed in as part of the options hash to defined blocks and partials

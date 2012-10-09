@@ -4,10 +4,9 @@ module BuildingBlocks
       def blocks
         @blocks ||= BuildingBlocks::Base.new(self)
       end
+      alias bb blocks
+      alias buildingblocks blocks
+      alias building_blocks blocks
     end
   end
-end
-
-if defined?(ActionView::Base)
-  ActionView::Base.send :include, BuildingBlocks::ViewAdditions::ClassMethods
 end

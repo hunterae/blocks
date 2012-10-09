@@ -7,8 +7,7 @@ describe BuildingBlocks::Base do
   end
 
   it "should be able change the default global partials directory" do
-    BuildingBlocks.send(:remove_const, "TEMPLATE_FOLDER")
-    BuildingBlocks.const_set("TEMPLATE_FOLDER", "shared")
+    BuildingBlocks.template_folder = "shared"
     @builder = BuildingBlocks::Base.new(@view)
     @builder.expects(:render_before_blocks).at_least_once
     @builder.expects(:render_after_blocks).at_least_once
@@ -16,8 +15,6 @@ describe BuildingBlocks::Base do
     @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
     @view.expects(:render).with("shared/some_block", :value1 => 1, :value2 => 2).once
     @builder.render :some_block, :value1 => 1, :value2 => 2
-    BuildingBlocks.send(:remove_const, "TEMPLATE_FOLDER")
-    BuildingBlocks.const_set("TEMPLATE_FOLDER", "blocks")
   end
 
   describe "defined? method" do
@@ -185,6 +182,12 @@ describe BuildingBlocks::Base do
   end
 
   describe "before method" do
+    it "should be aliased with prepend" do
+      block = Proc.new { |options| }
+      @builder.prepend :some_block, &block
+      @builder.blocks[:before_some_block].should be_present
+    end
+
     it "should defined before blocks as the block name with the word 'before_' prepended to it" do
       block = Proc.new { |options| }
       @builder.before :some_block, &block
@@ -232,6 +235,16 @@ describe BuildingBlocks::Base do
   end
 
   describe "after method" do
+    it "should be aliased with append and for" do
+      block = Proc.new { |options| }
+      @builder.append :some_block, &block
+      @builder.blocks[:after_some_block].should be_present
+
+      block = Proc.new { |options| }
+      @builder.for :some_block, &block
+      @builder.blocks[:after_some_block].should be_present
+    end
+
     it "should defined after blocks as the block name with the word 'after_' prepended to it" do
       block = Proc.new { |options| }
       @builder.after :some_block, &block
@@ -279,9 +292,10 @@ describe BuildingBlocks::Base do
   end
 
   describe "render method" do
-    before :each do
-      @builder.expects(:render_before_blocks).at_least_once
-      @builder.expects(:render_after_blocks).at_least_once
+    it "should alias the render method as use" do
+      block = Proc.new {"output"}
+      @builder.define :some_block, &block
+      @builder.use(:some_block).should eql "output"
     end
 
     it "should be able to use a defined block by its name" do
@@ -404,6 +418,101 @@ describe BuildingBlocks::Base do
       buffer = @builder.render :some_block
       buffer.should eql "rendered content"
     end
+
+    describe "with a collection passed in" do
+      it "should render a block for each element of the collection with the name of the block used as the name of the element passed into the block" do
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3]).should eql "output1 output2 output3 "
+      end
+
+      it "should render a block for each element of the collection with the 'as' option specifying the name of the element passed into the block" do
+        block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :as => "my_block_name").should eql "output1 output2 output3 "
+      end
+
+      it "should render a block for each element of the collection with a surrounding element if that option is specified" do
+        block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "<div>output </div><div>output </div><div>output </div>"
+      end
+
+      it "should render a block for each element of the collection with a surrounding element and specified html options if those options are specified" do
+        block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div", :surrounding_tag_html => {:class => lambda { @view.cycle("even", "odd")}, :style => "color:red"}).should eql "<div class=\"even\" style=\"color:red\">output </div><div class=\"odd\" style=\"color:red\">output </div><div class=\"even\" style=\"color:red\">output </div>"
+      end
+
+      it "should be able to render before blocks before each element of a collection" do
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3]).should eql "before1 output1 before2 output2 before3 output3 "
+      end
+
+      it "should be able to render after blocks before each element of a collection" do
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3]).should eql "output1 after1 output2 after2 output3 after3 "
+      end
+
+      it "should be able to render before and after blocks before each element of a collection" do
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3]).should eql "before1 output1 after1 before2 output2 after2 before3 output3 after3 "
+      end
+
+      it "should by default put surrounding elements around before and after blocks" do
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "<div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div>"
+      end
+
+      it "should allow the global option to be set to render before and after blocks outside of surrounding elements" do
+        BuildingBlocks.surrounding_tag_surrounds_before_and_after_blocks = false
+        @builder = BuildingBlocks::Base.new(@view)
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+      end
+
+      it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when BuildingBlocks is initialized" do
+        @builder = BuildingBlocks::Base.new(@view, :surrounding_tag_surrounds_before_and_after_blocks => false)
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+      end
+    end
   end
 
   describe "render method - before blocks" do
@@ -419,42 +528,6 @@ describe BuildingBlocks::Base do
       @builder.render :my_before_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
-    it "should try and render a before block as a local partial if no before blocks are specified and use_partials_for_before_and_after_hooks is set to true" do
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_before_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should try and render a before block as a global partial if no after blocks are specified and the local partial does not exist and use_partials_for_before_and_after_hooks is set to true" do
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).once
-      @builder.render :my_before_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should not attempt to render a before block as a partial if use_partials is set to false even if use_partials_for_before_and_after_hooks is set to true" do
-      @builder.use_partials = false
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_before_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should not attempt to render a before block as a partial if use_partials_for_before_and_after_hooks is set to false" do
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("before_my_before_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/before_my_before_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_before_block, :value1 => 1, :value2 => 2
-    end
-
     it "should override hash options for before blocks by merging the runtime options into the before block options into the block options into the global options" do
       block = Proc.new {|options|}
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
@@ -464,7 +537,29 @@ describe BuildingBlocks::Base do
       @builder.render :my_before_block, :param1 => "top level"
     end
   end
-  
+
+  describe "render method - around blocks" do
+    it "should be able to render code around another block" do
+      my_block = Proc.new { "test" }
+      around_block = Proc.new { |content_block| "<span>#{content_block.call}</span>" }
+      @builder.define(:my_block, &my_block)
+      @builder.around(:my_block, &around_block)
+      @builder.render(:my_block).should eql("&lt;span&gt;test&lt;/span&gt;")
+    end
+
+    it "should be able to nest multiple around blocks with the last defined around block on the outside" do
+      my_block = Proc.new { "test" }
+      around_block1 = Proc.new { |content_block| "<h1>#{content_block.call}</h1>" }
+      around_block2 = Proc.new { |content_block| "<span style='font-size: 100px'>#{content_block.call}</span>" }
+      around_block3 = Proc.new { |content_block| "<span style='color:red'>#{content_block.call}</span>" }
+      @builder.define(:my_block, &my_block)
+      @builder.around(:my_block, &around_block1)
+      @builder.around(:my_block, &around_block2)
+      @builder.around(:my_block, &around_block3)
+      @builder.render(:my_block).should eql("&lt;h1&gt;&amp;lt;span style='font-size: 100px'&amp;gt;&amp;amp;lt;span style='color:red'&amp;amp;gt;test&amp;amp;lt;/span&amp;amp;gt;&amp;lt;/span&amp;gt;&lt;/h1&gt;")
+    end
+  end
+
   describe "render method - after blocks" do
     before :each do
       @builder.expects(:render_block).at_least_once
@@ -476,42 +571,6 @@ describe BuildingBlocks::Base do
       @builder.after("my_after_block", &block)
       @view.expects(:capture).with(1, 2, :value3 => 3, :value4 => 4)
       @builder.render :my_after_block, 1, 2, :value3 => 3, :value4 => 4
-    end
-
-    it "should try and render a after block as a local partial if no after blocks are specified and use_partials_for_before_and_after_hooks is set to true" do
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_after_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should try and render a after block as a global partial if no after blocks are specified and the local partial does not exist and use_partials_for_before_and_after_hooks is set to true" do
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).once
-      @builder.render :my_after_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should not attempt to render a after block as a partial if use_partials is set to false even if use_partials_for_before_and_after_hooks is set to false" do
-      @builder.use_partials = false
-      @builder.use_partials_for_before_and_after_hooks = true
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_after_block, :value1 => 1, :value2 => 2
-    end
-
-    it "should not attempt to render a after block as a partial if use_partials_for_before_and_after_hooks is set to false" do
-      block = Proc.new {}
-      @view.expects(:capture).never
-      @view.expects(:render).with("after_my_after_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/after_my_after_block", :value1 => 1, :value2 => 2).never
-      @builder.render :my_after_block, :value1 => 1, :value2 => 2
     end
 
     it "should override hash options for after blocks by merging the runtime options into the after block options into the block options into the global options" do
@@ -562,32 +621,34 @@ describe BuildingBlocks::Base do
 
     it "should pass any additional arguments to evaluated procs" do
       proc1 = lambda { |param1, param2| "user_#{param1}_#{param2}"}
-      evaluated_procs = @builder.evaluated_procs(1, 2, :class => proc1)
+      evaluated_procs = @builder.evaluated_procs({:class => proc1}, 1, 2)
       evaluated_procs[:class].should eql "user_1_2"
     end
+  end
 
-    describe "evaluated_proc method" do
-      it "should evaluate a proc" do
-        proc = lambda {@view.cycle("even", "odd")}
-        @builder.evaluated_proc(proc).should eql "even"
-      end
+  describe "evaluated_proc method" do
+    it "should evaluate a proc" do
+      proc = lambda {@view.cycle("even", "odd")}
+      @builder.evaluated_proc(proc).should eql "even"
+      @builder.evaluated_proc(proc).should eql "odd"
+      @builder.evaluated_proc(proc).should eql "even"
+    end
 
-      it "should just return the value if it is not a proc" do
-        @builder.evaluated_proc("1234").should eql "1234"
-      end
+    it "should just return the value if it is not a proc" do
+      @builder.evaluated_proc("1234").should eql "1234"
+    end
 
-      it "should return nil if no arguments are specified" do
-        @builder.evaluated_proc.should be_nil
-      end
+    it "should return nil if no arguments are specified" do
+      @builder.evaluated_proc.should be_nil
+    end
 
-      it "should treat the last argument as the potential proc to evaluate" do
-        @builder.evaluated_proc(1, 2, 3).should eql 3
-      end
+    it "should treat the first argument as the potential proc to evaluate" do
+      @builder.evaluated_proc(1, 2, 3).should eql 1
+    end
 
-      it "should pass any additional arguments to the evaluated proc" do
-        proc1 = lambda { |param1, param2| "user_#{param1}_#{param2}"}
-        @builder.evaluated_proc(1, 2, proc1).should eql "user_1_2"
-      end
+    it "should pass any additional arguments to the evaluated proc" do
+      proc1 = lambda { |param1, param2| "user_#{param1}_#{param2}"}
+      @builder.evaluated_proc(proc1, 1, 2).should eql "user_1_2"
     end
   end
 end

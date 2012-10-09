@@ -1,8 +1,4 @@
 module BuildingBlocks
-  TEMPLATE_FOLDER = "blocks"
-  USE_PARTIALS = true
-  USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS = false
-
   class Base
     # a pointer to the ActionView that called BuildingBlocks
     attr_accessor :view
@@ -23,7 +19,7 @@ module BuildingBlocks
     attr_accessor :global_options
 
     # The default folder to look in for global partials
-    attr_accessor :templates_folder
+    attr_accessor :template_folder
 
     # The variable to use when rendering the partial for the templating feature (by default, "blocks")
     attr_accessor :variable
@@ -31,8 +27,8 @@ module BuildingBlocks
     # Boolean variable for whether BuildingBlocks should attempt to render blocks as partials if a defined block cannot be found
     attr_accessor :use_partials
 
-    # Boolean variable for whether BuildingBlocks should attempt to render blocks before and after blocks as partials if no before or after blocks exist
-    attr_accessor :use_partials_for_before_and_after_hooks
+    # Boolean variable for whether BuildingBlocks should render before and after blocks inside or outside of a collections' elements' surrounding tags
+    attr_accessor :surrounding_tag_surrounds_before_and_after_blocks
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -57,7 +53,16 @@ module BuildingBlocks
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def define(name, options={}, &block)
-      self.define_block_container(name, options, &block)
+      collection = options.delete(:collection)
+
+      if collection
+        collection.each do |object|
+          define(evaluated_proc(name, object, options), options, &block)
+        end
+      else
+        self.define_block_container(name, options, &block)
+      end
+
       nil
     end
 
@@ -84,7 +89,9 @@ module BuildingBlocks
     end
 
     # Render a block, first rendering any "before" blocks, then rendering the block itself, then rendering
-    # any "after" blocks. BuildingBlocks will make four different attempts to render block:
+    # any "after" blocks. Additionally, a collection may also be passed in, and BuildingBlocks will render
+    # an the block, along with corresponding before and after blocks for each element of the collection.
+    # BuildingBlocks will make four different attempts to render block:
     #   1) Look for a block that has been defined inline elsewhere, using the blocks.define method:
     #      <% blocks.define :wizard do |options| %>
     #        Inline Block Step#<%= options[:step] %>.
@@ -110,13 +117,63 @@ module BuildingBlocks
     #   The name of the block to render (either a string or a symbol)
     # [+*args+]
     #   Any arguments to pass to the block to be rendered (and also to be passed to any "before" and "after" blocks).
+    #   The last argument in the list can be a hash and can include the following special options:
+    #     [:collection]
+    #       The collection of elements to render blocks for
+    #     [:as]
+    #       The variable name to assign the current element in the collection being rendered over
+    #     [:surrounding_tag]
+    #       The content tag to render around a block, which might be particularly useful when rendering a collection of blocks,
+    #       such as for a list or table
+    #     [:surrounding_tag_html]
+    #       The attributes to be applied to the HTML content tag, such as styling or special properties. Please note, any Procs passed
+    #       in will automatically be evaluated (For example: :class => lambda { cycle("even", "odd") })
     # [+block+]
     #   The default block to render if no such block block that is to be rendered when "blocks.render" is called for this block.
     def render(name_or_container, *args, &block)
+      options = args.extract_options!
+      collection = options.delete(:collection)
+
       buffer = ActiveSupport::SafeBuffer.new
-      buffer << render_before_blocks(name_or_container, *args)
-      buffer << render_block(name_or_container, *args, &block)
-      buffer << render_after_blocks(name_or_container, *args)
+
+      if collection
+        as = options.delete(:as)
+
+        collection.each do |object|
+          cloned_args = args.clone
+          cloned_args.unshift(object)
+          cloned_options = options.clone
+          cloned_options = cloned_options.merge(object.options) if object.is_a?(BuildingBlocks::Container)
+          cloned_args.push(cloned_options)
+
+          block_name = evaluated_proc(name_or_container, *cloned_args)
+          as_name = (as.presence || block_name).to_sym
+          cloned_options[as_name] = object
+
+          buffer << render(block_name, *cloned_args, &block)
+        end
+      else
+        surrounding_tag = options.delete(:surrounding_tag)
+        surrounding_tag_html = options.delete(:surrounding_tag_html)
+
+        args.push(options)
+
+        if surrounding_tag_surrounds_before_and_after_blocks
+          buffer << content_tag(surrounding_tag, surrounding_tag_html, *args) do
+            temp_buffer = ActiveSupport::SafeBuffer.new
+            temp_buffer << render_before_blocks(name_or_container, *args)
+            temp_buffer << render_block_with_around_blocks(name_or_container, *args, &block)
+            temp_buffer << render_after_blocks(name_or_container, *args)
+          end
+        else
+          buffer << render_before_blocks(name_or_container, *args)
+          buffer << content_tag(surrounding_tag, surrounding_tag_html, *args) do
+            render_block_with_around_blocks(name_or_container, *args, &block)
+          end
+          buffer << render_after_blocks(name_or_container, *args)
+        end
+      end
+
       buffer
     end
     alias use render
@@ -222,7 +279,7 @@ module BuildingBlocks
     #     Step 1 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
     #   <% end %>
     #
-    #   <%= blocks.use :wizard %>
+    #   <%= blocks.render :wizard %>
     #
     #   <!-- Will render:
     #     Step 0 (:option1 => 3, :option2 => 2)<br />
@@ -261,7 +318,7 @@ module BuildingBlocks
     #     Step 4 (:option1 => <%= options[option1] %>, :option2 => <%= options[option2] %>)<br />
     #   <% end %>
     #
-    #   <%= blocks.use :wizard %>
+    #   <%= blocks.render :wizard %>
     #
     #   <!-- Will render:
     #     Step 2 (:option1 => 1, :option2 => 2)<br />
@@ -283,16 +340,66 @@ module BuildingBlocks
       nil
     end
     alias append after
+    alias for after
+
+    # Add a block to render around another block. This around block will be put into an array so that multiple
+    #  around blocks may be queued. They will render in the order in which they are declared when the
+    #  "blocks#render" method is called, with the last declared around block being rendered as the outer-most code, and
+    #  the first declared around block rendered as the inner-most code. Any options specified to the after block will override any options
+    #  specified in the block definition. The user of an around block must declare a block with at least one parameter and
+    #  should invoke the #call method on that argument.
+    #
+    #   <% blocks.define :my_block do %>
+    #     test
+    #   <% end %>
+    #
+    #   <% blocks.around :my_block do |content_block| %>
+    #     <h1>
+    #       <%= content_block.call %>
+    #     </h1>
+    #   <% end %>
+    #
+    #   <% blocks.around :my_block do |content_block| %>
+    #     <span style="color:red">
+    #       <%= content_block.call %>
+    #     </span>
+    #   <% end %>
+    #
+    #   <%= blocks.render :my_block %>
+    #
+    #   <!-- Will render:
+    #   <h1>
+    #     <span style="color:red">
+    #       test
+    #     </span>
+    #   </h1>
+    #
+    # Options:
+    # [+name+]
+    #   The name of the block to render this code around when that block is rendered
+    # [+options+]
+    #   Any options to specify to the around block when it renders. These will override any options
+    #   specified when the block was defined.
+    # [+block+]
+    #   The block of code to render after another block
+    def around(name, options={}, &block)
+      self.queue_block_container("around_#{name.to_s}", options, &block)
+      nil
+    end
 
     def evaluated_procs(*args)
-      options = args.extract_options!
-      options.inject({}) { |hash, (k, v)| hash[k] = (v.is_a?(Proc) ? v.call(*args) : v); hash} unless options.nil?
+      options = args.shift.presence || {}
+      if options.is_a?(Proc)
+        evaluated_proc(options, *args)
+      else
+        options.inject({}) { |hash, (k, v)| hash[k] = evaluated_proc(v, *args); hash}
+      end
     end
 
     def evaluated_proc(*args)
       return nil unless args.present?
-      v = args.pop
-      v.is_a?(Proc) ? v.call(*args) : v
+      v = args.shift
+      v.is_a?(Proc) ? v.call(*(args[0, v.arity])) : v
     end
 
     protected
@@ -320,7 +427,7 @@ module BuildingBlocks
     end
 
     def initialize(view, options={})
-      self.templates_folder = options[:templates_folder] ? options.delete(:templates_folder) : BuildingBlocks::TEMPLATE_FOLDER
+      self.template_folder = options[:template_folder] ? options.delete(:template_folder) : BuildingBlocks.template_folder
       self.variable = (options[:variable] ? options.delete(:variable) : :blocks).to_sym
       self.view = view
       self.global_options = options
@@ -328,15 +435,31 @@ module BuildingBlocks
       self.blocks = {}
       self.anonymous_block_number = 0
       self.block_groups = {}
-      self.use_partials = options[:use_partials].nil? ? BuildingBlocks::USE_PARTIALS : options.delete(:use_partials)
-      self.use_partials_for_before_and_after_hooks =
-        options[:use_partials_for_before_and_after_hooks] ? options.delete(:use_partials_for_before_and_after_hooks) : BuildingBlocks::USE_PARTIALS_FOR_BEFORE_AND_AFTER_HOOKS
+      self.use_partials = options[:use_partials].nil? ? BuildingBlocks.use_partials : options.delete(:use_partials)
+      self.surrounding_tag_surrounds_before_and_after_blocks = options[:surrounding_tag_surrounds_before_and_after_blocks].nil? ? BuildingBlocks.surrounding_tag_surrounds_before_and_after_blocks : options.delete(:surrounding_tag_surrounds_before_and_after_blocks)
     end
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
     def anonymous_block_name
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
+    end
+
+    def render_block_with_around_blocks(name_or_container, *args, &block)
+      name = name_or_container.is_a?(BuildingBlocks::Container) ? name_or_container.name.to_sym : name_or_container.to_sym
+      around_name = "around_#{name.to_s}".to_sym
+
+      around_blocks = blocks[around_name].present? ? blocks[around_name].clone : []
+
+      content_block = Proc.new do
+        block_container = around_blocks.shift
+        if block_container
+          view.capture(content_block, *(args[0, block_container.block.arity - 1]), &block_container.block)
+        else
+          render_block(name_or_container, *args, &block)
+        end
+      end
+      content_block.call
     end
 
     # Render a block, first trying to find a previously defined block with the same name
@@ -362,7 +485,7 @@ module BuildingBlocks
           begin
             buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(options))
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.templates_folder}/#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{self.template_folder}/#{name.to_s}", global_options.merge(block_options).merge(options))
           end
         rescue ActionView::MissingTemplate
           args.push(global_options.merge(options))
@@ -402,22 +525,11 @@ module BuildingBlocks
       before_name = "#{before_or_after}_#{name.to_s}".to_sym
       buffer = ActiveSupport::SafeBuffer.new
 
-      if blocks[before_name].present?
-        blocks[before_name].each do |block_container|
-          args_clone = args.clone
-          args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
-          buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
-        end
-      elsif use_partials && use_partials_for_before_and_after_hooks
-        begin
-          begin
-            buffer << view.render("#{before_or_after}_#{name.to_s}", global_options.merge(block_options).merge(options))
-          rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.templates_folder}/#{before_or_after}_#{name.to_s}", global_options.merge(block_options).merge(options))
-          end
-        rescue ActionView::MissingTemplate
-        end
-      end
+      blocks[before_name].each do |block_container|
+        args_clone = args.clone
+        args_clone.push(global_options.merge(block_options).merge(block_container.options).merge(options))
+        buffer << view.capture(*(args_clone[0, block_container.block.arity]), &block_container.block)
+      end if blocks[before_name].present?
 
       buffer
     end
@@ -450,6 +562,14 @@ module BuildingBlocks
       block_container = self.build_block_container(*args, &block)
       blocks[block_container.name] = block_container if blocks[block_container.name].nil? && block_given?
       block_container
+    end
+
+    def content_tag(tag, tag_html, *args, &block)
+      if tag
+        view.content_tag(tag, block.call, evaluated_procs(tag_html, *args))
+      else
+        block.call
+      end
     end
   end
 end
