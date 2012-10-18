@@ -4,14 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{building-blocks}
-  s.version = "1.2.3"
+  s.name = "building-blocks"
+  s.version = "2.0.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Hunter"]
-  s.date = %q{2012-02-09}
-  s.description = %q{}
-  s.email = %q{hunterae@gmail.com}
+  s.date = "2012-10-18"
+  s.description = "BuildingBlocks goes beyond blocks and partials"
+  s.email = "hunterae@gmail.com"
   s.extra_rdoc_files = [
     "README.rdoc"
   ]
@@ -21,18 +21,20 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "lib/building-blocks.rb",
+    "lib/building_blocks.rb",
     "lib/building_blocks/base.rb",
     "lib/building_blocks/container.rb",
     "lib/building_blocks/view_additions.rb",
     "rails/init.rb",
     "spec/building-blocks/base_spec.rb",
+    "spec/building-blocks/building_blocks_spec.rb",
     "spec/building-blocks/view_additions_spec.rb",
     "spec/spec_helper.rb"
   ]
-  s.homepage = %q{http://github.com/hunterae/building-blocks}
+  s.homepage = "http://github.com/hunterae/building-blocks"
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.5.2}
-  s.summary = %q{}
+  s.rubygems_version = "1.8.24"
+  s.summary = "BuildingBlocks is an intricate way of rendering blocks of code, while combining some of the best features of content blocks and partials, and adding several new features that go above and beyond what a simple content_for with yield or a render :partial is capable of doing."
 
   if s.respond_to? :specification_version then
     s.specification_version = 3
@@ -40,6 +42,7 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<building-blocks>, [">= 0"])
       s.add_runtime_dependency(%q<rails>, [">= 3.0.0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
@@ -71,10 +74,12 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
     end
   else
     s.add_dependency(%q<building-blocks>, [">= 0"])
     s.add_dependency(%q<rails>, [">= 3.0.0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
