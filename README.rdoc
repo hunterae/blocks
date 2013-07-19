@@ -1,8 +1,8 @@
-= BuildingBlocks
+= Blocks
 
-RDocs[http://rdoc.info/projects/hunterae/building-blocks] | {Screencast Part 1}[https://vimeo.com/36674545]
+RDocs[http://rdoc.info/projects/hunterae/blocks] | {Screencast Part 1}[https://vimeo.com/36674545]
 
-BuildingBlocks is an intricate way of rendering blocks of code, while combining some of the best features of content blocks and partials, and adding several new features that go above and beyond what a simple content_for with yield or a render :partial is capable of doing.
+Blocks is an intricate way of rendering blocks of code, while combining some of the best features of content blocks and partials, and adding several new features that go above and beyond what a simple content_for with yield or a render :partial is capable of doing.
 
 1. Automatically determines whether you're rendering a content block (i.e. a block of code that you have defined using similar syntax to content_for) or a partial, with exactly the same syntax
 2. Pass parameters into your blocks of code, regardless of whether your block of code is a content block or a partial (something content_for with yield is incapable of doing)
@@ -12,13 +12,13 @@ BuildingBlocks is an intricate way of rendering blocks of code, while combining 
 6. Provides a very powerful way of defining templates to build reusable UI components with minimal code, as was done with {table-for}[https://github.com/hunterae/table-for]
 
 == Author's Note
-To fully appreciate how powerful BuildingBlocks can be, i highly recommend checking out the project {table-for}[https://github.com/hunterae/table-for] first. This is a gem that was built using BuildingBlocks with very few lines of code, and illustrates how easily the templating feature of BuildingBlocks can be used to build extremely useful reusable UI components.
+To fully appreciate how powerful Blocks can be, i highly recommend checking out the project {table-for}[https://github.com/hunterae/table-for] first. This is a gem that was built using Blocks with very few lines of code, and illustrates how easily the templating feature of Blocks can be used to build extremely useful reusable UI components.
 
 == Installation
 
 In <b>Rails 3</b>, add this to your Gemfile.
 
-  gem "building-blocks"
+  gem "blocks"
 
 == Defining and using blocks
 
@@ -96,7 +96,7 @@ However, you may want to provide a default definition for a block to render if s
     This is my default definition of :my_block.
   <% end %>
 
-In this case, BuildingBlocks will see if any block by the name :my_block has ever been defined. When it doesn't find one, it will simply render the default definition and you will see:
+In this case, Blocks will see if any block by the name :my_block has ever been defined. When it doesn't find one, it will simply render the default definition and you will see:
   This is my default definition of :my_block.
 
 If however, you have defined :my_block elsewhere, it would have used that definition:
@@ -194,7 +194,7 @@ As an example, consider the following code, running in a view for PagesControlle
   <!-- 3) Check and see if there is a global partial /app/views/blocks/wizard.html.erb. No? Then... -->
   <!-- 4) Check and see if there is a default definition provided for "wizard", i.e. specified in the "blocks.render" call... No? Then render nothing -->
 
-Let's look at each example individually, written in the order that BuildingBlocks attempts to render them:
+Let's look at each example individually, written in the order that Blocks attempts to render them:
 
 1) Inline definition of a block:
   <% blocks.define :wizard do |options| %>
@@ -220,12 +220,12 @@ Let's look at each example individually, written in the order that BuildingBlock
 
 == Overall Render Order
 
-Putting all the pieces together from the previous examples, here is what BuildingBlock is doing when a block is rendered:
-link:/hunterae/building-blocks/raw/master/blocks_render_order.png
+Putting all the pieces together from the previous examples, here is what Block is doing when a block is rendered:
+link:/hunterae/blocks/raw/master/blocks_render_order.png
 
 == Templating
 
-The most advanced feature of BuildingBlocks is the ability to utilize it for templating and creating your own DTD specifications for the components you write.
+The most advanced feature of Blocks is the ability to utilize it for templating and creating your own DTD specifications for the components you write.
 
 As an example, consider {table-for}[https://github.com/hunterae/table-for], a gem that was written with minimal codes that provides its user with a very nice, easy-to-use table builder. A sample usage might look something like:
 
@@ -247,7 +247,7 @@ there is a table_for partial that gets rendered, but before it is rendered, the 
 template (partial) knows what to render, and occasionally, how to render to render it.
 
 As an easier example, consider the following call in a view file:
-  <%= BuildingBlocks.render_template(self, "blocks/wizard") do |blocks| %>
+  <%= Blocks.render_template(self, "blocks/wizard") do |blocks| %>
     <% blocks.queue :step1 %>
     <% blocks.queue :step2 do %>
       My Overridden Step 2 |
@@ -286,7 +286,7 @@ Notice the order of the queued blocks was preserved, Step2's definition was succ
 
 This technique could also very easily be used to do something like wrapping content in some complicated markup, such is wrapping code in html tags to display as
 a header container:
-  <%= BuildingBlocks.render_template(self, "blocks/header_container") do |blocks| %>
+  <%= Blocks.render_template(self, "blocks/header_container") do |blocks| %>
     My code to wrap
   <% end %>
   
@@ -306,7 +306,7 @@ What will get rendered will be the following:
 
 The code called from the view could easily be extracted in a helper method as follows:
   def header_container(options={}, &block)
-    BuildingBlocks.render_template(self, "blocks/header_container", options, &block) 
+    Blocks.render_template(self, "blocks/header_container", options, &block) 
   end
 
 Then it could be called from the view as follows:
@@ -318,9 +318,9 @@ VIDEO TUTORIAL TO COME SHOWING HOW TABLE_FOR CAN BE BUILT FROM SCRATCH
 
 == Block Groups
 
-Another advanced feature of BuildingBlocks is the ability to queue up multiple different sets of blocks in different queues, called block groups. It will most often be used in conjunction with the templating feature described above and is best demonstrated with an example:
+Another advanced feature of Blocks is the ability to queue up multiple different sets of blocks in different queues, called block groups. It will most often be used in conjunction with the templating feature described above and is best demonstrated with an example:
 
-  <%= BuildingBlocks::Base.new(self).render_template("blocks/my_layout") do |blocks| %>
+  <%= Blocks::Base.new(self).render_template("blocks/my_layout") do |blocks| %>
     <% blocks.left_column do %>
       <%= blocks.queue :left_column_block1 %>
       <%= blocks.queue :left_column_block2 do %>
@@ -351,7 +351,7 @@ In this example, two separate block groups are created, one for the left column 
 
 == Questions or Problems?
 
-If you have any issues with BuildingBlocks which you cannot find the solution to in the documentation, please add an {issue on GitHub}[https://github.com/hunterae/building-blocks/issues] or fork the project and send a pull request.
+If you have any issues with Blocks which you cannot find the solution to in the documentation, please add an {issue on GitHub}[https://github.com/hunterae/blocks/issues] or fork the project and send a pull request.
 
 == Special Thanks
 

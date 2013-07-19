@@ -1,3 +1,8 @@
+2.1.0 (July 3, 2013)
+* Biggest change is that this gem was moved back to the blocks repo and renamed from building-blocks to blocks, it's original name.
+* surrounding_tag_surrounds_before_and_after_blocks is now false, by default, meaning that if a block has a surrounding_tag, it will only render the block's contents inside that tag, and any before and after blocks will render outside that tag.
+* allows render options to be skipped or provider new helper methods, building blocks from the controller, got rid of aliases for "blocks", specify render order?
+
 2.0.0 (October 18, 2012)
 
 * Added ability to render a collection of objects and specify the surrounding elements and the html to apply to those surrounding elements
@@ -13,7 +18,7 @@
 * Aliased "#blocks" method that is available to views as "#buildingblocks", "#bb", and "#building_blocks"
 * Aliased "#after" method to "#for", so that you can now call <%= blocks.for :block_name %> (should be slightly more familiar to users of content_for with yield)
 * Added a "#setup" method to initialize BuildingBlocks globally (for example: BuildingBlocks.setup do |config| config.template_folder = "shared" end)
-* Cleaned up the organization of the code base and not using autoload instead of require
+* Cleaned up the organization of the code base and now using autoload instead of require
 * Removed :use_partials_for_before_and_after_hooks option from 1.2.2
 
 1.2.3 (February 9, 2012)

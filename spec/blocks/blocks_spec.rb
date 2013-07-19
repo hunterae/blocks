@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe BuildingBlocks do
+describe Blocks do
   it "should provide a util method to render a template" do
     view = stub
     options = stub
@@ -8,17 +8,17 @@ describe BuildingBlocks do
     block = Proc.new { |options| }
     base_mock = mock
     base_mock.expects(:render_template).with(partial)
-    BuildingBlocks::Base.expects(:new).with(view, options).returns(base_mock)
+    Blocks::Base.expects(:new).with(view, options).returns(base_mock)
 
-    BuildingBlocks.render_template(view, partial, options, &block)
+    Blocks.render_template(view, partial, options, &block)
   end
 
   it "should provide a setup method that can be called from an initializer" do
-    BuildingBlocks.template_folder.should eql("blocks")
-    BuildingBlocks.setup do |config|
-      config.should eql(BuildingBlocks)
+    Blocks.template_folder.should eql("blocks")
+    Blocks.setup do |config|
+      config.should eql(Blocks)
       config.template_folder = "shared"
     end
-    BuildingBlocks.template_folder.should eql("shared")
+    Blocks.template_folder.should eql("shared")
   end
 end

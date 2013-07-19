@@ -1,14 +1,15 @@
 require "spec_helper"
 
-describe BuildingBlocks::Base do
+describe Blocks::Base do
   before :each do
     @view = ActionView::Base.new
-    @builder = BuildingBlocks::Base.new(@view)
+    @builder = Blocks::Base.new(@view)
   end
 
   it "should be able change the default global partials directory" do
-    BuildingBlocks.template_folder = "shared"
-    @builder = BuildingBlocks::Base.new(@view)
+    Blocks.template_folder = "shared"
+    Blocks.use_partials = true
+    @builder = Blocks::Base.new(@view)
     @builder.expects(:render_before_blocks).at_least_once
     @builder.expects(:render_after_blocks).at_least_once
     @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
@@ -102,10 +103,10 @@ describe BuildingBlocks::Base do
       @builder.queued_blocks.map(&:name).first.should eql(:test_block)
     end
 
-    it "should queue blocks as BuildingBlocks::Container objects" do
+    it "should queue blocks as Blocks::Container objects" do
       @builder.queue :test_block, :a => 1, :b => 2, :c => 3
       container = @builder.queued_blocks.first
-      container.should be_a(BuildingBlocks::Container)
+      container.should be_a(Blocks::Container)
       container.name.should eql(:test_block)
       container.options.should eql(:a => 1, :b => 2, :c => 3)
     end
@@ -147,35 +148,35 @@ describe BuildingBlocks::Base do
   describe "render_template method" do
     it "should attempt to render a partial specified as the :template parameter" do
       view = mock()
-      builder = BuildingBlocks::Base.new(view)
+      builder = Blocks::Base.new(view)
       view.expects(:render).with{ |template, options| template == "my_template"}
       builder.render_template("my_template")
     end
 
     it "should set all of the global options as local variables to the partial it renders" do
       view = mock()
-      builder = BuildingBlocks::Base.new(view)
+      builder = Blocks::Base.new(view)
       view.expects(:render).with { |template, options| template == 'some_template' && options[:blocks] == builder }
       builder.render_template("some_template")
     end
 
     it "should capture the data of a block if a block has been specified" do
       block = Proc.new { |options| "my captured block" }
-      builder = BuildingBlocks::Base.new(@view)
+      builder = Blocks::Base.new(@view)
       @view.expects(:render).with { |tempate, options| options[:captured_block] == "my captured block" }
       builder.render_template("template", &block)
     end
 
-    it "should by default add a variable to the partial called 'blocks' as a pointer to the BuildingBlocks::Base instance" do
+    it "should by default add a variable to the partial called 'blocks' as a pointer to the Blocks::Base instance" do
       view = mock()
-      builder = BuildingBlocks::Base.new(view)
+      builder = Blocks::Base.new(view)
       view.expects(:render).with { |template, options| options[:blocks] == builder }
       builder.render_template("some_template")
     end
 
-    it "should allow the user to override the local variable passed to the partial as a pointer to the BuildingBlocks::Base instance" do
+    it "should allow the user to override the local variable passed to the partial as a pointer to the Blocks::Base instance" do
       view = mock()
-      builder = BuildingBlocks::Base.new(view, :variable => "my_variable")
+      builder = Blocks::Base.new(view, :variable => "my_variable")
       view.expects(:render).with { |template, options| options[:blocks].should be_nil }
       builder.render_template("some_template")
     end
@@ -201,12 +202,12 @@ describe BuildingBlocks::Base do
       before_blocks.should be_a(Array)
     end
 
-    it "should store a before block as a BuildingBlocks::Container" do
+    it "should store a before block as a Blocks::Container" do
       block = Proc.new { |options| }
       @builder.before :some_block, :option1 => "some option", &block
       before_blocks = @builder.blocks[:before_some_block]
       block_container = before_blocks.first
-      block_container.should be_a(BuildingBlocks::Container)
+      block_container.should be_a(Blocks::Container)
       block_container.options.should eql :option1 => "some option"
       block_container.block.should eql block
     end
@@ -258,12 +259,12 @@ describe BuildingBlocks::Base do
       after_blocks.should be_a(Array)
     end
 
-    it "should store a after block as a BuildingBlocks::Container" do
+    it "should store a after block as a Blocks::Container" do
       block = Proc.new { |options| }
       @builder.after :some_block, :option1 => "some option", &block
       after_blocks = @builder.blocks[:after_some_block]
       block_container = after_blocks.first
-      block_container.should be_a(BuildingBlocks::Container)
+      block_container.should be_a(Blocks::Container)
       block_container.options.should eql :option1 => "some option"
       block_container.block.should eql block
     end
@@ -343,6 +344,7 @@ describe BuildingBlocks::Base do
     end
 
     it "should not render anything if using a block that has been defined" do
+      @builder.use_partials = true
       @view.expects(:capture).never
       @view.expects(:render).with("some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:render).with("blocks/some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
@@ -359,6 +361,7 @@ describe BuildingBlocks::Base do
     end
 
     it "should second attempt to render a local partial by the block's name when blocks.render is called" do
+      @builder.use_partials = true
       @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
       @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).once
       @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
@@ -366,6 +369,7 @@ describe BuildingBlocks::Base do
     end
 
     it "should third attempt to render a global partial by the block's name when blocks.render is called" do
+      @builder.use_partials = true
       @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
       @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).once
@@ -374,6 +378,7 @@ describe BuildingBlocks::Base do
 
     it "should fourth attempt to render a default block when blocks.render is called" do
       block = Proc.new {|options|}
+      @builder.use_partials = true
       @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @view.expects(:capture).with(:value1 => 1, :value2 => 2)
@@ -389,9 +394,9 @@ describe BuildingBlocks::Base do
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
-    it "should not attempt to render a partial if use_partials is passed in as false as an option to BuildingBlocks::Base.new" do
+    it "should not attempt to render a partial if use_partials is passed in as false as an option to Blocks::Base.new" do
       mocha_teardown
-      @builder = BuildingBlocks::Base.new(@view, :use_partials => false)
+      @builder = Blocks::Base.new(@view, :use_partials => false)
       @builder.expects(:render_before_blocks).at_least_once
       @builder.expects(:render_after_blocks).at_least_once
       block = Proc.new {|options|}
@@ -487,8 +492,8 @@ describe BuildingBlocks::Base do
       end
 
       it "should allow the global option to be set to render before and after blocks outside of surrounding elements" do
-        BuildingBlocks.surrounding_tag_surrounds_before_and_after_blocks = false
-        @builder = BuildingBlocks::Base.new(@view)
+        Blocks.surrounding_tag_surrounds_before_and_after_blocks = false
+        @builder = Blocks::Base.new(@view)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
 
@@ -500,8 +505,8 @@ describe BuildingBlocks::Base do
         @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
       end
 
-      it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when BuildingBlocks is initialized" do
-        @builder = BuildingBlocks::Base.new(@view, :surrounding_tag_surrounds_before_and_after_blocks => false)
+      it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when Blocks is initialized" do
+        @builder = Blocks::Base.new(@view, :surrounding_tag_surrounds_before_and_after_blocks => false)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
 

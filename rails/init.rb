@@ -1,1 +1,1 @@
-require 'building-blocks'
+require 'blocks'
