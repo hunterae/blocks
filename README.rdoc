@@ -1,8 +1,8 @@
 = Blocks
 
-RDocs[http://rdoc.info/projects/hunterae/blocks] | {Screencast Part 1}[https://vimeo.com/36674545]
+The idea of this gem is simple (yet difficult to see the practical application for): blocks of code, regardless of code, whether they are a ruby block or a rails partial, are, or should be, completely interchangable.
 
-Blocks is an intricate way of rendering blocks of code, while combining some of the best features of content blocks and partials, and adding several new features that go above and beyond what a simple content_for with yield or a render :partial is capable of doing.
+This gem seeks to set an order of precedence for how rails determines how to render a block of code.
 
 1. Automatically determines whether you're rendering a content block (i.e. a block of code that you have defined using similar syntax to content_for) or a partial, with exactly the same syntax
 2. Pass parameters into your blocks of code, regardless of whether your block of code is a content block or a partial (something content_for with yield is incapable of doing)
