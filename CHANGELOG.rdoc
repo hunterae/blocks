@@ -1,5 +1,6 @@
 2.1.0 (July 3, 2013)
 * Biggest change is that this gem was moved back to the blocks repo and renamed from building-blocks to blocks, it's original name.
+* changed rendering so that partials are no longer rendered by default
 * surrounding_tag_surrounds_before_and_after_blocks is now false, by default, meaning that if a block has a surrounding_tag, it will only render the block's contents inside that tag, and any before and after blocks will render outside that tag.
 * allows render options to be skipped or provider new helper methods, building blocks from the controller, got rid of aliases for "blocks", specify render order?
 
