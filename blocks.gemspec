@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "blocks"
-  s.version = "2.0.0"
+  s.version = "2.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Hunter"]
-  s.date = "2012-10-18"
+  s.date = "2013-08-06"
   s.description = "Blocks goes beyond blocks and partials"
   s.email = "hunterae@gmail.com"
   s.extra_rdoc_files = [
@@ -21,9 +21,9 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "lib/blocks.rb",
-    "lib/blocks.rb",
     "lib/blocks/base.rb",
     "lib/blocks/container.rb",
+    "lib/blocks/controller_additions.rb",
     "lib/blocks/view_additions.rb",
     "rails/init.rb",
     "spec/blocks/base_spec.rb",
@@ -57,9 +57,11 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
       s.add_development_dependency(%q<jeweler>, [">= 0"])
+      s.add_development_dependency(%q<jeweler>, [">= 0"])
     else
       s.add_dependency(%q<blocks>, [">= 0"])
       s.add_dependency(%q<rails>, [">= 3.0.0"])
+      s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
       s.add_dependency(%q<jeweler>, [">= 0"])
@@ -79,6 +81,7 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<blocks>, [">= 0"])
     s.add_dependency(%q<rails>, [">= 3.0.0"])
+    s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
