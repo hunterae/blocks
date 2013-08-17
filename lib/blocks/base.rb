@@ -57,7 +57,7 @@ module Blocks
 
       if collection
         collection.each do |object|
-          define(evaluated_proc(name, object, options), options, &block)
+          define(view.call_if_proc(name, object, options), options, &block)
         end
       else
         self.define_block_container(name, options, &block)
@@ -155,7 +155,7 @@ module Blocks
           cloned_options = cloned_options.merge(object.options) if object.is_a?(Blocks::Container)
           cloned_args.push(cloned_options)
 
-          block_name = evaluated_proc(name_or_container, *cloned_args)
+          block_name = view.call_if_proc(name_or_container, *cloned_args)
           as_name = (as.presence || block_name).to_sym
           cloned_options[as_name] = object
 
@@ -484,21 +484,6 @@ module Blocks
       nil
     end
 
-    def evaluated_procs(*args)
-      options = args.shift.presence || {}
-      if options.is_a?(Proc)
-        evaluated_proc(options, *args)
-      else
-        options.inject({}) { |hash, (k, v)| hash[k] = evaluated_proc(v, *args); hash}
-      end
-    end
-
-    def evaluated_proc(*args)
-      return nil unless args.present?
-      v = args.shift
-      v.is_a?(Proc) ? v.call(*(args[0, v.arity])) : v
-    end
-
     protected
 
     # If a method is missing, we'll assume the user is starting a new block group by that missing method name
@@ -663,7 +648,7 @@ module Blocks
 
     def content_tag(tag, tag_html, *args, &block)
       if tag
-        view.content_tag(tag, block.call, evaluated_procs(tag_html, *args))
+        view.content_tag(tag, block.call, view.call_each_hash_value_if_proc(tag_html, *args))
       else
         block.call
       end

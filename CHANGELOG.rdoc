@@ -1,8 +1,12 @@
+2.2.0 (August 16, 2013)
+* Moved evaluated_procs and evaulated_proc into their own class and renamed to call_each_hash_value and call and created view helpers called call_each_hash_value_if_proc and call_if_proc
+
 2.1.0 (July 3, 2013)
 * Biggest change is that this gem was moved back to the blocks repo and renamed from building-blocks to blocks, it's original name.
 * changed rendering so that partials are no longer rendered by default
 * surrounding_tag_surrounds_before_and_after_blocks is now false, by default, meaning that if a block has a surrounding_tag, it will only render the block's contents inside that tag, and any before and after blocks will render outside that tag.
 * allows render options to be skipped or provider new helper methods, building blocks from the controller, got rid of aliases for "blocks", specify render order?
+* allows blocks to be defined from a controller action using the same syntax
 
 2.0.0 (October 18, 2012)
 
