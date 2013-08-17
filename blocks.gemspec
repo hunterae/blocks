@@ -29,10 +29,12 @@ Gem::Specification.new do |s|
     "lib/blocks/base.rb",
     "lib/blocks/container.rb",
     "lib/blocks/controller_additions.rb",
+    "lib/blocks/proc_with_args.rb",
     "lib/blocks/view_additions.rb",
     "rails/init.rb",
     "spec/blocks/base_spec.rb",
     "spec/blocks/blocks_spec.rb",
+    "spec/blocks/proc_with_args_spec.rb",
     "spec/blocks/view_additions_spec.rb",
     "spec/spec_helper.rb"
   ]
@@ -54,9 +56,15 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<bundler>, ["~> 1.1.5"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<rcov>, [">= 0"])
+      s.add_development_dependency(%q<bundler>, ["~> 1.1.5"])
+      s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_development_dependency(%q<rcov>, [">= 0"])
     else
       s.add_dependency(%q<blocks>, [">= 0"])
       s.add_dependency(%q<rails>, [">= 3.0.0"])
+      s.add_dependency(%q<bundler>, ["~> 1.1.5"])
+      s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+      s.add_dependency(%q<rcov>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.1.5"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<rcov>, [">= 0"])
@@ -67,6 +75,9 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<blocks>, [">= 0"])
     s.add_dependency(%q<rails>, [">= 3.0.0"])
+    s.add_dependency(%q<bundler>, ["~> 1.1.5"])
+    s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
+    s.add_dependency(%q<rcov>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.1.5"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<rcov>, [">= 0"])
