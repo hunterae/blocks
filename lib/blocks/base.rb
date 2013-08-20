@@ -619,11 +619,20 @@ module Blocks
     # Build a Blocks::Container object given the passed in arguments
     def build_block_container(*args, &block)
       options = args.extract_options!
-      name = args.first ? args.shift : self.anonymous_block_name
+
+      anonymous = false
+      if args.first
+        name = args.shift
+      else
+        name = self.anonymous_block_name
+        anonymous = true
+      end
+
       block_container = Blocks::Container.new
       block_container.name = name.to_sym
       block_container.options = options
       block_container.block = block
+      block_container.anonymous = anonymous
       block_container
     end
 
