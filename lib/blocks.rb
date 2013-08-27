@@ -1,5 +1,6 @@
 require "action_view"
 require "action_controller"
+require "call_with_params"
 
 module Blocks
   autoload :Base,          "blocks/base"

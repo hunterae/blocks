@@ -1,6 +1,7 @@
 source "http://rubygems.org"
 
 gem "rails", ">= 3.0.0"
+gem "call_with_params"
 
 group :development do
   gem "bundler", "~> 1.1.5"

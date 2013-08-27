@@ -1,5 +1,7 @@
 module Blocks
   class Base
+    include CallWithParams
+
     # a pointer to the ActionView that called Blocks
     attr_accessor :view
 
@@ -57,7 +59,7 @@ module Blocks
 
       if collection
         collection.each do |object|
-          define(view.call_if_proc(name, object, options), options, &block)
+          define(call_with_params(name, object, options), options, &block)
         end
       else
         self.define_block_container(name, options, &block)
@@ -155,7 +157,7 @@ module Blocks
           cloned_options = cloned_options.merge(object.options) if object.is_a?(Blocks::Container)
           cloned_args.push(cloned_options)
 
-          block_name = view.call_if_proc(name_or_container, *cloned_args)
+          block_name = call_with_params(name_or_container, *cloned_args)
           as_name = (as.presence || block_name).to_sym
           cloned_options[as_name] = object
 
@@ -657,7 +659,7 @@ module Blocks
 
     def content_tag(tag, tag_html, *args, &block)
       if tag
-        view.content_tag(tag, block.call, view.call_each_hash_value_if_proc(tag_html, *args))
+        view.content_tag(tag, block.call, call_each_hash_value_with_params(tag_html, *args))
       else
         block.call
       end

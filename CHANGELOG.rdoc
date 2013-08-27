@@ -1,3 +1,6 @@
+2.3.0 (August 27, 2013)
+* Moved all of the call call_if_proc and call_each_hash_value_if_proc and ProcWithArgs class into a separate gem (https://github.com/hunterae/call_with_params), now a dependency.
+
 2.2.0 (August 16, 2013)
 * Moved evaluated_procs and evaulated_proc into their own class and renamed to call_each_hash_value and call and created view helpers called call_each_hash_value_if_proc and call_if_proc
 
