@@ -5,7 +5,6 @@ require "call_with_params"
 module Blocks
   autoload :Base,          "blocks/base"
   autoload :Container,     "blocks/container"
-  autoload :ProcWithArgs,     "blocks/proc_with_args"
   autoload :ViewAdditions, "blocks/view_additions"
   autoload :ControllerAdditions, "blocks/controller_additions"
 

@@ -1,3 +1,6 @@
+2.3.1 (September 3, 2013)
+* Removed call to autoload class that was moved into a separate gem, broke .rvmrc into .ruby-gemset and .ruby-version
+
 2.3.0 (August 27, 2013)
 * Moved all of the call call_if_proc and call_each_hash_value_if_proc and ProcWithArgs class into a separate gem (https://github.com/hunterae/call_with_params), now a dependency.
 
