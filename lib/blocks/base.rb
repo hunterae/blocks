@@ -8,14 +8,8 @@ module Blocks
     # Hash of block names to Blocks::Container objects
     attr_accessor :blocks
 
-    # Array of Blocks::Container objects, storing the order of blocks as they were queued
-    attr_accessor :queued_blocks
-
     # counter, used to give unnamed blocks a unique name
     attr_accessor :anonymous_block_number
-
-    # A Hash of queued_blocks arrays; a new array is started when method_missing is invoked
-    attr_accessor :block_groups
 
     # These are the options that are passed into the initalize method
     attr_accessor :global_options
@@ -170,7 +164,7 @@ module Blocks
         args.push(options)
 
         if surrounding_tag_surrounds_before_and_after_blocks
-          buffer << content_tag(surrounding_tag, surrounding_tag_html, *args) do
+          buffer << content_tag_with_block(surrounding_tag, surrounding_tag_html, *args) do
             temp_buffer = ActiveSupport::SafeBuffer.new
             temp_buffer << render_before_blocks(name_or_container, *args)
             temp_buffer << render_block_with_around_blocks(name_or_container, *args, &block)
@@ -178,7 +172,7 @@ module Blocks
           end
         else
           buffer << render_before_blocks(name_or_container, *args)
-          buffer << content_tag(surrounding_tag, surrounding_tag_html, *args) do
+          buffer << content_tag_with_block(surrounding_tag, surrounding_tag_html, *args) do
             render_block_with_around_blocks(name_or_container, *args, &block)
           end
           buffer << render_after_blocks(name_or_container, *args)
@@ -277,91 +271,6 @@ module Blocks
       render(name_or_container, *args, &block)
     end
 
-    # Queue a block for later rendering, such as within a template.
-    #   <%= Blocks::Base.new(self).render_template("shared/wizard") do |blocks| %>
-    #     <% blocks.queue :step1 %>
-    #     <% blocks.queue :step2 do %>
-    #       My overridden Step 2 |
-    #     <% end %>
-    #     <% blocks.queue :step3 %>
-    #     <% blocks.queue do %>
-    #       | Anonymous Step 4
-    #     <% end %>
-    #   <% end %>
-    #
-    #   <!-- In /app/views/shared/wizard -->
-    #   <% blocks.define :step1 do %>
-    #     Step 1 |
-    #   <% end %>
-    #
-    #   <% blocks.define :step2 do %>
-    #     Step 2 |
-    #   <% end %>
-    #
-    #   <% blocks.define :step3 do %>
-    #     Step 3
-    #   <% end %>
-    #
-    #   <% blocks.queued_blocks.each do |block| %>
-    #     <%= blocks.render block %>
-    #   <% end %>
-    #
-    #   <!-- Will render: Step 1 | My overridden Step 2 | Step 3 | Anonymous Step 4-->
-    # Options:
-    # [+*args+]
-    #   The options to pass in when this block is rendered. These will override any options provided to the actual block
-    #   definition. Any or all of these options may be overriden by whoever calls "blocks.render" on this block.
-    #   Usually the first of these args will be the name of the block being queued (either a string or a symbol)
-    # [+block+]
-    #   The optional block definition to render when the queued block is rendered
-    def queue(*args, &block)
-      self.queued_blocks << self.define_block_container(*args, &block)
-      nil
-    end
-
-    # Render a partial, treating it as a template, and any code in the block argument will impact how the template renders
-    #   <%= Blocks::Base.new(self).render_template("shared/wizard") do |blocks| %>
-    #     <% blocks.queue :step1 %>
-    #     <% blocks.queue :step2 do %>
-    #       My overridden Step 2 |
-    #     <% end %>
-    #     <% blocks.queue :step3 %>
-    #     <% blocks.queue do %>
-    #       | Anonymous Step 4
-    #     <% end %>
-    #   <% end %>
-    #
-    #   <!-- In /app/views/shared/wizard -->
-    #   <% blocks.define :step1 do %>
-    #     Step 1 |
-    #   <% end %>
-    #
-    #   <% blocks.define :step2 do %>
-    #     Step 2 |
-    #   <% end %>
-    #
-    #   <% blocks.define :step3 do %>
-    #     Step 3
-    #   <% end %>
-    #
-    #   <% blocks.queued_blocks.each do |block| %>
-    #     <%= blocks.render block %>
-    #   <% end %>
-    #
-    #   <!-- Will render: Step 1 | My overridden Step 2 | Step 3 | Anonymous Step 4-->
-    # Options:
-    # [+partial+]
-    #   The partial to render as a template
-    # [+block+]
-    #   An optional block with code that affects how the template renders
-    def render_template(partial, &block)
-      render_options = global_options.clone
-      render_options[self.variable] = self
-      render_options[:captured_block] = view.capture(self, &block) if block_given?
-
-      view.render partial, render_options
-    end
-
     # Add a block to render before another block. This before block will be put into an array so that multiple
     #  before blocks may be queued. They will render in the order in which they are declared when the
     #  "blocks#render" method is called. Any options specified to the before block will override any options
@@ -396,7 +305,7 @@ module Blocks
     # [+block+]
     #   The block of code to render before another block
     def before(name, options={}, &block)
-      self.queue_block_container("before_#{name.to_s}", options, &block)
+      self.add_block_container_to_list("before_#{name.to_s}", options, &block)
       nil
     end
     alias prepend before
@@ -435,7 +344,7 @@ module Blocks
     # [+block+]
     #   The block of code to render after another block
     def after(name, options={}, &block)
-      self.queue_block_container("after_#{name.to_s}", options, &block)
+      self.add_block_container_to_list("after_#{name.to_s}", options, &block)
       nil
     end
     alias append after
@@ -482,43 +391,19 @@ module Blocks
     # [+block+]
     #   The block of code to render after another block
     def around(name, options={}, &block)
-      self.queue_block_container("around_#{name.to_s}", options, &block)
+      self.add_block_container_to_list("around_#{name.to_s}", options, &block)
       nil
     end
 
     protected
-
-    # If a method is missing, we'll assume the user is starting a new block group by that missing method name
-    def method_missing(m, *args, &block)
-      options = args.extract_options!
-
-      # If the specified block group has already been defined, it is simply returned here for iteration.
-      #  It will consist of all the blocks used in this block group that have yet to be rendered,
-      #   as the call for their use occurred before the template was rendered (where their definitions likely occurred)
-      return self.block_groups[m] unless self.block_groups[m].nil?
-
-      # Allows for nested block groups, store the current block positions array and start a new one
-      original_queued_blocks = self.queued_blocks
-      self.queued_blocks = []
-      self.block_groups[m] = self.queued_blocks
-
-      # Capture the contents of the block group (this will only capture block definitions and block renders; it will ignore anything else)
-      view.capture(global_options.merge(options), &block) if block_given?
-
-      # restore the original block positions array
-      self.queued_blocks = original_queued_blocks
-      nil
-    end
 
     def initialize(view, options={})
       self.template_folder = options[:template_folder] ? options.delete(:template_folder) : Blocks.template_folder
       self.variable = (options[:variable] ? options.delete(:variable) : :blocks).to_sym
       self.view = view
       self.global_options = options
-      self.queued_blocks = []
       self.blocks = {}
       self.anonymous_block_number = 0
-      self.block_groups = {}
       self.use_partials = options[:use_partials].nil? ? Blocks.use_partials : options.delete(:use_partials)
       self.surrounding_tag_surrounds_before_and_after_blocks = options[:surrounding_tag_surrounds_before_and_after_blocks].nil? ? Blocks.surrounding_tag_surrounds_before_and_after_blocks : options.delete(:surrounding_tag_surrounds_before_and_after_blocks)
     end
@@ -639,8 +524,8 @@ module Blocks
     end
 
     # Build a Blocks::Container object and add it to an array of containers matching it's block name
-    #  (used only for queuing a collection of before and after blocks for a particular block name)
-    def queue_block_container(*args, &block)
+    #  (used only for queuing a collection of before, after, and around blocks for a particular block name)
+    def add_block_container_to_list(*args, &block)
       block_container = self.build_block_container(*args, &block)
       if blocks[block_container.name].nil?
         blocks[block_container.name] = [block_container]
@@ -657,7 +542,7 @@ module Blocks
       block_container
     end
 
-    def content_tag(tag, tag_html, *args, &block)
+    def content_tag_with_block(tag, tag_html, *args, &block)
       if tag
         view.content_tag(tag, block.call, call_each_hash_value_with_params(tag_html, *args))
       else

@@ -90,98 +90,6 @@ describe Blocks::Base do
     end
   end
 
-  describe "queue method" do
-    it "should store all queued blocks in the queued_blocks array" do
-      @builder.queued_blocks.should be_empty
-      @builder.queue :test_block
-      @builder.queued_blocks.length.should eql 1
-      @builder.queued_blocks.map(&:name).first.should eql(:test_block)
-    end
-
-    it "should convert a string block name to a symbol" do
-      @builder.queue "test_block"
-      @builder.queued_blocks.map(&:name).first.should eql(:test_block)
-    end
-
-    it "should queue blocks as Blocks::Container objects" do
-      @builder.queue :test_block, :a => 1, :b => 2, :c => 3
-      container = @builder.queued_blocks.first
-      container.should be_a(Blocks::Container)
-      container.name.should eql(:test_block)
-      container.options.should eql(:a => 1, :b => 2, :c => 3)
-    end
-
-    it "should not require a name for the block being queued" do
-      @builder.queue
-      @builder.queue
-      @builder.queued_blocks.length.should eql 2
-      @builder.queued_blocks.map(&:name).first.should eql(:block_1)
-      @builder.queued_blocks.map(&:name).second.should eql(:block_2)
-    end
-
-    it "should anonymously define the name of a block if not specified" do
-      @builder.queue
-      @builder.queue :my_block
-      @builder.queue
-      @builder.queued_blocks.map(&:name).first.should eql(:block_1)
-      @builder.queued_blocks.map(&:name).second.should eql(:my_block)
-      @builder.queued_blocks.map(&:name).third.should eql(:block_2)
-    end
-
-    it "should store queued blocks in the order in which they are queued" do
-      @builder.queue :block1
-      @builder.queue :block3
-      @builder.queue :block2
-      @builder.queued_blocks.map(&:name).first.should eql(:block1)
-      @builder.queued_blocks.map(&:name).second.should eql(:block3)
-      @builder.queued_blocks.map(&:name).third.should eql(:block2)
-    end
-
-    it "should allow a definition to be provided for a queued block" do
-      block = Proc.new do |options| end
-      @builder.queue :test_block, &block
-      container = @builder.queued_blocks.first
-      container.block.should eql block
-    end
-  end
-
-  describe "render_template method" do
-    it "should attempt to render a partial specified as the :template parameter" do
-      view = mock()
-      builder = Blocks::Base.new(view)
-      view.expects(:render).with{ |template, options| template == "my_template"}
-      builder.render_template("my_template")
-    end
-
-    it "should set all of the global options as local variables to the partial it renders" do
-      view = mock()
-      builder = Blocks::Base.new(view)
-      view.expects(:render).with { |template, options| template == 'some_template' && options[:blocks] == builder }
-      builder.render_template("some_template")
-    end
-
-    it "should capture the data of a block if a block has been specified" do
-      block = Proc.new { |options| "my captured block" }
-      builder = Blocks::Base.new(@view)
-      @view.expects(:render).with { |tempate, options| options[:captured_block] == "my captured block" }
-      builder.render_template("template", &block)
-    end
-
-    it "should by default add a variable to the partial called 'blocks' as a pointer to the Blocks::Base instance" do
-      view = mock()
-      builder = Blocks::Base.new(view)
-      view.expects(:render).with { |template, options| options[:blocks] == builder }
-      builder.render_template("some_template")
-    end
-
-    it "should allow the user to override the local variable passed to the partial as a pointer to the Blocks::Base instance" do
-      view = mock()
-      builder = Blocks::Base.new(view, :variable => "my_variable")
-      view.expects(:render).with { |template, options| options[:blocks].should be_nil }
-      builder.render_template("some_template")
-    end
-  end
-
   describe "before method" do
     it "should be aliased with prepend" do
       block = Proc.new { |options| }
@@ -406,13 +314,12 @@ describe Blocks::Base do
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
-    it "should override hash options for a block by merging the runtime options the define default options into the queue level options into the global options" do
+    it "should override hash options for a block by merging the runtime options into the define default options into the queue level options into the global options" do
       block = Proc.new {|options|}
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
-      @builder.queue(:my_before_block, :param1 => "queue level", :param2 => "queue level")
+      block_container = @builder.send(:define_block_container, :my_before_block, :param1 => "queue level", :param2 => "queue level")
       @builder.define(:my_before_block, :param1 => "define level", :param2 => "define level", :param3 => "define level", &block)
-      block_container = @builder.queued_blocks.first
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'use level', :param2 => 'queue level', :param3 => 'define level')
+      @view.expects(:capture).with(:param1 => 'use level', :param2 => 'queue level', :param3 => 'define level', :param4 => 'global level')
       @builder.render block_container, :param1 => "use level"
     end
 
@@ -585,32 +492,6 @@ describe Blocks::Base do
       @builder.after(:my_after_block, :param1 => "after block level", :param2 => "after block level", &block)
       @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :param2 => 'after block level', :param3 => 'block level')
       @builder.render :my_after_block, :param1 => "top level"
-    end
-  end
-
-  describe "method_missing method" do
-    it "should start a new block group if a method is missing" do
-      @builder.some_method
-      queued_blocks = @builder.block_groups[:some_method]
-      queued_blocks.should eql []
-    end
-
-    it "should add items to a queue when a new block group is started" do
-      @builder.some_method do
-        @builder.queue :myblock1
-        @builder.queue :myblock2
-      end
-      @builder.some_method2 do
-        @builder.queue :myblock3
-      end
-      queued_blocks = @builder.block_groups[:some_method]
-      queued_blocks.length.should eql 2
-      queued_blocks.first.name.should eql :myblock1
-      queued_blocks.second.name.should eql :myblock2
-      queued_blocks = @builder.block_groups[:some_method2]
-      queued_blocks.length.should eql 1
-      queued_blocks.first.name.should eql :myblock3
-      @builder.queued_blocks.should eql []
     end
   end
 end

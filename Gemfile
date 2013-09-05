@@ -12,4 +12,5 @@ end
 group :test do
   gem "rspec-rails"
   gem "mocha"
+  gem "debugger"
 end
