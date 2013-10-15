@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "blocks"
-  s.version = "2.4.0"
+  s.version = "2.5.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Hunter"]
-  s.date = "2013-09-05"
+  s.date = "2013-10-15"
   s.description = "Blocks goes beyond blocks and partials"
   s.email = "hunterae@gmail.com"
   s.extra_rdoc_files = [
