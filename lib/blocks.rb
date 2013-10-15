@@ -14,8 +14,8 @@ module Blocks
   mattr_accessor :use_partials
   @@use_partials = false
 
-  mattr_accessor :surrounding_tag_surrounds_before_and_after_blocks
-  @@surrounding_tag_surrounds_before_and_after_blocks = false
+  mattr_accessor :wrap_with_surrounds_before_and_after_blocks
+  @@wrap_with_surrounds_before_and_after_blocks = false
 
   # Shortcut for using the templating feature / rendering templates
   def self.render_template(view, partial, options={}, &block)

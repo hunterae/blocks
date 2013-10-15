@@ -23,8 +23,8 @@ module Blocks
     # Boolean variable for whether Blocks should attempt to render blocks as partials if a defined block cannot be found
     attr_accessor :use_partials
 
-    # Boolean variable for whether Blocks should render before and after blocks inside or outside of a collections' elements' surrounding tags
-    attr_accessor :surrounding_tag_surrounds_before_and_after_blocks
+    # Boolean variable for whether Blocks should render before and after blocks inside or outside of a collections' elements' wrap_with tags
+    attr_accessor :wrap_with_surrounds_before_and_after_blocks
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -84,6 +84,25 @@ module Blocks
       nil
     end
 
+    # Skip the rendering of a particular block when blocks.render is called for the a particular block name
+    #   <%= blocks.define :some_block_name do %>
+    #     My output
+    #   <% end %>
+    #
+    #   <%= blocks.skip :some_block_name %>
+    #
+    #   <%= blocks.render :some_block_name %>
+    #   <%# will not render anything %>
+    # Options:
+    # [+name+]
+    #   The name of the block to skip rendering for
+    def skip(name)
+      blocks[name.to_sym] = nil
+      self.define_block_container(name) do
+      end
+      nil
+    end
+
     # Render a block, first rendering any "before" blocks, then rendering the block itself, then rendering
     # any "after" blocks. Additionally, a collection may also be passed in, and Blocks will render
     # an the block, along with corresponding before and after blocks for each element of the collection.
@@ -123,10 +142,10 @@ module Blocks
     #       The collection of elements to render blocks for
     #     [:as]
     #       The variable name to assign the current element in the collection being rendered over
-    #     [:surrounding_tag]
+    #     [:wrap_with]
     #       The content tag to render around a block, which might be particularly useful when rendering a collection of blocks,
     #       such as for a list or table
-    #     [:surrounding_tag_html]
+    #     [:wrap_each]
     #       The attributes to be applied to the HTML content tag, such as styling or special properties. Please note, any Procs passed
     #       in will automatically be evaluated (For example: :class => lambda { cycle("even", "odd") })
     #     [:use_partials]
@@ -141,30 +160,34 @@ module Blocks
 
       buffer = ActiveSupport::SafeBuffer.new
 
+      wrap_with = options.delete(:wrap_with) || {}
+
       if collection
         as = options.delete(:as)
+        wrap_each = options.delete(:wrap_each) || {}
 
-        collection.each do |object|
-          cloned_args = args.clone
-          cloned_args.unshift(object)
-          cloned_options = options.clone
-          cloned_options = cloned_options.merge(object.options) if object.is_a?(Blocks::Container)
-          cloned_args.push(cloned_options)
+        buffer = content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
+          collection.each do |object|
+            cloned_args = args.clone
+            cloned_args.unshift(object)
+            cloned_options = options.clone
+            cloned_options = cloned_options.merge(object.options) if object.is_a?(Blocks::Container)
+            cloned_args.push(cloned_options)
 
-          block_name = call_with_params(name_or_container, *cloned_args)
-          as_name = (as.presence || block_name).to_sym
-          cloned_options[as_name] = object
+            block_name = call_with_params(name_or_container, *cloned_args)
+            as_name = (as.presence || block_name).to_sym
+            cloned_options[as_name] = object
+            cloned_options[:wrap_with] = wrap_each
 
-          buffer << render(block_name, *cloned_args, &block)
+            buffer << render(block_name, *cloned_args, &block)
+          end
+          buffer
         end
       else
-        surrounding_tag = options.delete(:surrounding_tag)
-        surrounding_tag_html = options.delete(:surrounding_tag_html)
-
         args.push(options)
 
-        if surrounding_tag_surrounds_before_and_after_blocks
-          buffer << content_tag_with_block(surrounding_tag, surrounding_tag_html, *args) do
+        if wrap_with_surrounds_before_and_after_blocks
+          buffer << content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
             temp_buffer = ActiveSupport::SafeBuffer.new
             temp_buffer << render_before_blocks(name_or_container, *args)
             temp_buffer << render_block_with_around_blocks(name_or_container, *args, &block)
@@ -172,7 +195,7 @@ module Blocks
           end
         else
           buffer << render_before_blocks(name_or_container, *args)
-          buffer << content_tag_with_block(surrounding_tag, surrounding_tag_html, *args) do
+          buffer << content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
             render_block_with_around_blocks(name_or_container, *args, &block)
           end
           buffer << render_after_blocks(name_or_container, *args)
@@ -405,7 +428,7 @@ module Blocks
       self.blocks = {}
       self.anonymous_block_number = 0
       self.use_partials = options[:use_partials].nil? ? Blocks.use_partials : options.delete(:use_partials)
-      self.surrounding_tag_surrounds_before_and_after_blocks = options[:surrounding_tag_surrounds_before_and_after_blocks].nil? ? Blocks.surrounding_tag_surrounds_before_and_after_blocks : options.delete(:surrounding_tag_surrounds_before_and_after_blocks)
+      self.wrap_with_surrounds_before_and_after_blocks = options[:wrap_with_surrounds_before_and_after_blocks].nil? ? Blocks.wrap_with_surrounds_before_and_after_blocks : options.delete(:wrap_with_surrounds_before_and_after_blocks)
     end
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)

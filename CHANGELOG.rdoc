@@ -1,3 +1,13 @@
+2.5.0 (October 14, 2013)
+* Added skip method as a shorthand for defining or replacing a block's definition so that nothing is output when the block is rendered
+* Added ability to wrap each block in a collection with an element or render a block with an element, using syntax like:
+  <%= blocks.render :brand,
+                    :collection => @brands,
+                    :wrap_each => {:tag => "div", :style => "border: 1px solid black", :class => Proc.new {cycle("even", "odd")}},
+                    :wrap_with => {:tag => "div", :style => "color: red"}  %>
+  <%= blocks.render :brand, :wrap_with => {:tag => "div", :class => Proc.new {cycle("even", "odd")}} %>
+* Changed blocks.surrounding_tag_surrounds_before_and_after_blocks to Blocks.wrap_with_surrounds_before_and_after_blocks
+
 2.4.0 (September 4, 2013)
 * Moved queue and render_templates methods into the new with_template gem.
 

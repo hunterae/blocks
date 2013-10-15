@@ -13,7 +13,7 @@ RSpec.configure do |config|
   
   config.before :each do
     Blocks.template_folder = "blocks"
-    Blocks.surrounding_tag_surrounds_before_and_after_blocks = true
+    Blocks.wrap_with_surrounds_before_and_after_blocks = true
     Blocks.use_partials = false
   end
 end

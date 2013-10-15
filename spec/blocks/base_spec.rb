@@ -331,6 +331,14 @@ describe Blocks::Base do
       buffer.should eql "rendered content"
     end
 
+    it "should be able to render an element surrounding the block" do
+      block = Proc.new {}
+      @view.expects(:capture).with(nil).returns("rendered content")
+      @builder.define :some_block, &block
+      buffer = @builder.render :some_block, :wrap_with => {:tag => "span", :id => "my-id"}
+      buffer.should eql "<span id=\"my-id\">rendered content</span>"
+    end
+
     describe "with a collection passed in" do
       it "should render a block for each element of the collection with the name of the block used as the name of the element passed into the block" do
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
@@ -347,13 +355,13 @@ describe Blocks::Base do
       it "should render a block for each element of the collection with a surrounding element if that option is specified" do
         block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "<div>output </div><div>output </div><div>output </div>"
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "<div>output </div><div>output </div><div>output </div>"
       end
 
       it "should render a block for each element of the collection with a surrounding element and specified html options if those options are specified" do
         block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div", :surrounding_tag_html => {:class => lambda { @view.cycle("even", "odd")}, :style => "color:red"}).should eql "<div class=\"even\" style=\"color:red\">output </div><div class=\"odd\" style=\"color:red\">output </div><div class=\"even\" style=\"color:red\">output </div>"
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div", :class => lambda { @view.cycle("even", "odd")}, :style => "color:red"}).should eql "<div class=\"even\" style=\"color:red\">output </div><div class=\"odd\" style=\"color:red\">output </div><div class=\"even\" style=\"color:red\">output </div>"
       end
 
       it "should be able to render before blocks before each element of a collection" do
@@ -395,11 +403,11 @@ describe Blocks::Base do
 
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "<div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div>"
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "<div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div>"
       end
 
       it "should allow the global option to be set to render before and after blocks outside of surrounding elements" do
-        Blocks.surrounding_tag_surrounds_before_and_after_blocks = false
+        Blocks.wrap_with_surrounds_before_and_after_blocks = false
         @builder = Blocks::Base.new(@view)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
@@ -409,11 +417,11 @@ describe Blocks::Base do
 
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
       end
 
       it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when Blocks is initialized" do
-        @builder = Blocks::Base.new(@view, :surrounding_tag_surrounds_before_and_after_blocks => false)
+        @builder = Blocks::Base.new(@view, :wrap_with_surrounds_before_and_after_blocks => false)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
 
@@ -422,7 +430,19 @@ describe Blocks::Base do
 
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :surrounding_tag => "div").should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+      end
+
+      it "should be able to render an element around everything" do
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}, :wrap_with => {:tag => "div", :style => "color:red"}).should eql "<div style=\"color:red\"><div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div></div>"
       end
     end
   end
