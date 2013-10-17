@@ -9,6 +9,19 @@ With blocks, you can:
 4. Specify view-level code to render before, after, or around a particular block of code
 5. Render a collection of elements using a defined block
 
+== Author's Note
+To fully appreciate how powerful Blocks can be, i highly recommend checking out the 
+project {TableFor}[https://github.com/hunterae/table-for] first.
+This is a gem that was built using Blocks and {WithTemplate (an extension of Blocks)}[https://github.com/hunterae/with_template] 
+with very few lines of code, and illustrates the power of Blocks and WithTemplate
+and how they can be can be used to build extremely useful reusable UI components.
+
+== Installation
+
+In <b>Rails 3</b> or <b>Rails 4</b>, add this to your Gemfile.
+
+  gem "blocks"
+
 == Simple Case
   <% blocks.define :sample do |a, b| %>
     This is a snippet of code with parameters <%= a %> and <%= b %> passed in<br>
