@@ -49,3 +49,38 @@ In this example, @brands will represent a collection of brands fetched from the 
                                     :id => Proc.new {|brand| "brand#{brand.id}"}, 
                                     :class => Proc.new { cycle("even", "odd") },
                                     :style => "padding-left: 20px;" }%>
+
+== A Practical example
+Surround your javascript includes and css includes in your
+template with a named block, and from the view, the included order can easily be changed.
+Note: I use this approach in every single project I setup. 
+
+In layout, such as application.html.erb:
+  <!DOCTYPE html>
+    <head>
+      ...
+      <%= blocks.render :stylesheets do %>
+        <%= stylesheet_link_tag "application", :media => "all" %>
+      <% end %>
+    </head>
+    <body>
+      ...
+      <%= blocks.render :javascripts do %>
+        <%= javascript_include_tag "application" %>
+      <% end %>
+    </body>
+  </html>
+
+In a view, stylesheets and javascript files can easily be prepended, appended, or replace the existing set of
+includes:
+  <% blocks.before :stylesheets do %>
+    <%= stylesheet_link_tag "SOME_STYLESHEET_TO_INCLUDE_FIRST", :media => "all" %>
+  <% end %>
+  <% blocks.after :stylesheets do %>
+    <%= stylesheet_link_tag "SOME_STYLESHEET_TO_INCLUDE_LAST", :media => "all" %>
+  <% end %>
+  
+  <%# Flat out replaces the javascript includes %>
+  <% blocks.define :javascripts do %>
+    <%= stylesheet_link_tag "MY_JAVASCRIPT_FILES_TO_INCLUDE", :media => "all" %>
+  <% end %>
