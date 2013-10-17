@@ -1,3 +1,6 @@
+2.5.1 (October 17, 2013)
+* Changed Blocks.wrap_with_surrounds_before_and_after_blocks to Blocks.wrap_before_and_after_blocks
+
 2.5.0 (October 14, 2013)
 * Added skip method as a shorthand for defining or replacing a block's definition so that nothing is output when the block is rendered
 * Added ability to wrap each block in a collection with an element or render a block with an element, using syntax like:

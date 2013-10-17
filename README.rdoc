@@ -1,5 +1,7 @@
 = Blocks
 
+I AM CURRENTLY IN THE PROCESS OF WRITING THIS DOCUMENTATION OVER AGAIN SINCE A LOT HAS CHANGED SINCE THE DOCUMENTATION WAS ORIGINALLY WRITTEN.
+
 How do you render your blocks of code?
 
 The idea of this gem is simple (yet difficult to see the practical application for): blocks of code, regardless of code, whether they are a ruby block or a rails partial, are, or should be, completely interchangeable.

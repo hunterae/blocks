@@ -407,7 +407,7 @@ describe Blocks::Base do
       end
 
       it "should allow the global option to be set to render before and after blocks outside of surrounding elements" do
-        Blocks.wrap_with_surrounds_before_and_after_blocks = false
+        Blocks.wrap_before_and_after_blocks = false
         @builder = Blocks::Base.new(@view)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
@@ -421,7 +421,7 @@ describe Blocks::Base do
       end
 
       it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when Blocks is initialized" do
-        @builder = Blocks::Base.new(@view, :wrap_with_surrounds_before_and_after_blocks => false)
+        @builder = Blocks::Base.new(@view, :wrap_before_and_after_blocks => false)
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
 

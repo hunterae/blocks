@@ -24,7 +24,7 @@ module Blocks
     attr_accessor :use_partials
 
     # Boolean variable for whether Blocks should render before and after blocks inside or outside of a collections' elements' wrap_with tags
-    attr_accessor :wrap_with_surrounds_before_and_after_blocks
+    attr_accessor :wrap_before_and_after_blocks
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -143,11 +143,9 @@ module Blocks
     #     [:as]
     #       The variable name to assign the current element in the collection being rendered over
     #     [:wrap_with]
-    #       The content tag to render around a block, which might be particularly useful when rendering a collection of blocks,
-    #       such as for a list or table
+    #       The content tag to render around this block (For example: :wrap_with => {:tag => TAG_TYPE, :class => "my-class", :style => "border: 1px solid black"})
     #     [:wrap_each]
-    #       The attributes to be applied to the HTML content tag, such as styling or special properties. Please note, any Procs passed
-    #       in will automatically be evaluated (For example: :class => lambda { cycle("even", "odd") })
+    #       The content tag to render around each item in a collection (For example: :wrap_each { :class => lambda { cycle("even", "odd") }})
     #     [:use_partials]
     #       Overrides the globally defined use_partials and tells Blocks to render partials in trying to render a block
     #     [:skip_partials]
@@ -186,7 +184,7 @@ module Blocks
       else
         args.push(options)
 
-        if wrap_with_surrounds_before_and_after_blocks
+        if wrap_before_and_after_blocks
           buffer << content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
             temp_buffer = ActiveSupport::SafeBuffer.new
             temp_buffer << render_before_blocks(name_or_container, *args)
@@ -230,12 +228,10 @@ module Blocks
     #       The collection of elements to render blocks for
     #     [:as]
     #       The variable name to assign the current element in the collection being rendered over
-    #     [:surrounding_tag]
-    #       The content tag to render around a block, which might be particularly useful when rendering a collection of blocks,
-    #       such as for a list or table
-    #     [:surrounding_tag_html]
-    #       The attributes to be applied to the HTML content tag, such as styling or special properties. Please note, any Procs passed
-    #       in will automatically be evaluated (For example: :class => lambda { cycle("even", "odd") })
+    #     [:wrap_with]
+    #       The content tag to render around this block (For example: :wrap_with => {:tag => TAG_TYPE, :class => "my-class", :style => "border: 1px solid black"})
+    #     [:wrap_each]
+    #       The content tag to render around each item in a collection (For example: :wrap_each { :class => lambda { cycle("even", "odd") }})
     # [+block+]
     #   The default block to render if no such block block that is to be rendered when "blocks.render" is called for this block.
     def render_without_partials(name_or_container, *args, &block)
@@ -279,12 +275,10 @@ module Blocks
     #       The collection of elements to render blocks for
     #     [:as]
     #       The variable name to assign the current element in the collection being rendered over
-    #     [:surrounding_tag]
-    #       The content tag to render around a block, which might be particularly useful when rendering a collection of blocks,
-    #       such as for a list or table
-    #     [:surrounding_tag_html]
-    #       The attributes to be applied to the HTML content tag, such as styling or special properties. Please note, any Procs passed
-    #       in will automatically be evaluated (For example: :class => lambda { cycle("even", "odd") })
+    #     [:wrap_with]
+    #       The content tag to render around this block (For example: :wrap_with => {:tag => TAG_TYPE, :class => "my-class", :style => "border: 1px solid black"})
+    #     [:wrap_each]
+    #       The content tag to render around each item in a collection (For example: :wrap_each { :class => lambda { cycle("even", "odd") }})
     # [+block+]
     #   The default block to render if no such block block that is to be rendered when "blocks.render" is called for this block.
     def render_with_partials(name_or_container, *args, &block)
@@ -428,7 +422,7 @@ module Blocks
       self.blocks = {}
       self.anonymous_block_number = 0
       self.use_partials = options[:use_partials].nil? ? Blocks.use_partials : options.delete(:use_partials)
-      self.wrap_with_surrounds_before_and_after_blocks = options[:wrap_with_surrounds_before_and_after_blocks].nil? ? Blocks.wrap_with_surrounds_before_and_after_blocks : options.delete(:wrap_with_surrounds_before_and_after_blocks)
+      self.wrap_before_and_after_blocks = options[:wrap_before_and_after_blocks].nil? ? Blocks.wrap_before_and_after_blocks : options.delete(:wrap_before_and_after_blocks)
     end
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
