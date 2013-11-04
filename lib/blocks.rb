@@ -1,6 +1,7 @@
 require "action_view"
 require "action_controller"
 require "call_with_params"
+require "hashie"
 
 module Blocks
   autoload :Base,          "blocks/base"
@@ -8,14 +9,8 @@ module Blocks
   autoload :ViewAdditions, "blocks/view_additions"
   autoload :ControllerAdditions, "blocks/controller_additions"
 
-  mattr_accessor :template_folder
-  @@template_folder = "blocks"
-
-  mattr_accessor :use_partials
-  @@use_partials = false
-
-  mattr_accessor :wrap_before_and_after_blocks
-  @@wrap_before_and_after_blocks = false
+  mattr_accessor :config
+  @@config = Hashie::Mash.new
 
   # Shortcut for using the templating feature / rendering templates
   def self.render_template(view, partial, options={}, &block)
@@ -24,7 +19,10 @@ module Blocks
 
   # Default way to setup Blocks
   def self.setup
-    yield self
+    config.template_folder = "blocks"
+    config.wrap_before_and_after_blocks = false
+    config.use_partials = false
+    yield config
   end
 end
 

@@ -2,6 +2,7 @@ source "http://rubygems.org"
 
 gem "rails", ">= 3.0.0"
 gem "call_with_params"
+gem "hashie"
 
 group :development do
   gem "bundler", "~> 1.3.5"

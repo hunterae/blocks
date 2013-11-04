@@ -7,7 +7,7 @@ describe Blocks::ViewAdditions do
     @view_class.send(:include, Blocks::ViewAdditions::ClassMethods)
   end
 
-  describe "blocks method" do
+  describe "#blocks" do
     it "should pass the view as the only parameter to Blocks::Base initialization" do
       Blocks::Base.expects(:new).with {|view| view == @view}
       @view.blocks

@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "blocks"
-  s.version = "2.5.1"
+  s.version = "2.5.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andrew Hunter"]
-  s.date = "2013-10-17"
+  s.date = "2013-11-04"
   s.description = "Blocks goes beyond blocks and partials"
   s.email = "hunterae@gmail.com"
   s.extra_rdoc_files = [
@@ -50,12 +50,14 @@ Gem::Specification.new do |s|
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_runtime_dependency(%q<rails>, [">= 3.0.0"])
       s.add_runtime_dependency(%q<call_with_params>, [">= 0"])
+      s.add_runtime_dependency(%q<hashie>, [">= 0"])
       s.add_development_dependency(%q<bundler>, ["~> 1.3.5"])
       s.add_development_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_development_dependency(%q<simplecov>, [">= 0"])
     else
       s.add_dependency(%q<rails>, [">= 3.0.0"])
       s.add_dependency(%q<call_with_params>, [">= 0"])
+      s.add_dependency(%q<hashie>, [">= 0"])
       s.add_dependency(%q<bundler>, ["~> 1.3.5"])
       s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
       s.add_dependency(%q<simplecov>, [">= 0"])
@@ -63,6 +65,7 @@ Gem::Specification.new do |s|
   else
     s.add_dependency(%q<rails>, [">= 3.0.0"])
     s.add_dependency(%q<call_with_params>, [">= 0"])
+    s.add_dependency(%q<hashie>, [">= 0"])
     s.add_dependency(%q<bundler>, ["~> 1.3.5"])
     s.add_dependency(%q<jeweler>, ["~> 1.6.4"])
     s.add_dependency(%q<simplecov>, [">= 0"])

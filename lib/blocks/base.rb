@@ -1,3 +1,5 @@
+require 'active_support'
+
 module Blocks
   class Base
     include CallWithParams
@@ -13,18 +15,6 @@ module Blocks
 
     # These are the options that are passed into the initalize method
     attr_accessor :global_options
-
-    # The default folder to look in for global partials
-    attr_accessor :template_folder
-
-    # The variable to use when rendering the partial for the templating feature (by default, "blocks")
-    attr_accessor :variable
-
-    # Boolean variable for whether Blocks should attempt to render blocks as partials if a defined block cannot be found
-    attr_accessor :use_partials
-
-    # Boolean variable for whether Blocks should render before and after blocks inside or outside of a collections' elements' wrap_with tags
-    attr_accessor :wrap_before_and_after_blocks
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -42,10 +32,12 @@ module Blocks
     #
     # Options:
     # [+name+]
-    #   The name of the block being defined (either a string or a symbol)
+    #   The name of the block being defined (either a string or a symbol or a Proc)
     # [+options+]
     #   The default options for the block definition. Any or all of these options may be overrideen by
-    #   whomever calls "blocks.render" on this block.
+    #   whomever calls "blocks.render" on this block. If :collection => some_array,
+    #   Blocks will assume that the first argument is a Proc and define a block for each object in the
+    #   collection
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def define(name, options={}, &block)
@@ -184,7 +176,7 @@ module Blocks
       else
         args.push(options)
 
-        if wrap_before_and_after_blocks
+        if global_options.merge(options)[:wrap_before_and_after_blocks]
           buffer << content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
             temp_buffer = ActiveSupport::SafeBuffer.new
             temp_buffer << render_before_blocks(name_or_container, *args)
@@ -415,14 +407,10 @@ module Blocks
     protected
 
     def initialize(view, options={})
-      self.template_folder = options[:template_folder] ? options.delete(:template_folder) : Blocks.template_folder
-      self.variable = (options[:variable] ? options.delete(:variable) : :blocks).to_sym
       self.view = view
-      self.global_options = options
+      self.global_options = Blocks.config.merge(options)
       self.blocks = {}
       self.anonymous_block_number = 0
-      self.use_partials = options[:use_partials].nil? ? Blocks.use_partials : options.delete(:use_partials)
-      self.wrap_before_and_after_blocks = options[:wrap_before_and_after_blocks].nil? ? Blocks.wrap_before_and_after_blocks : options.delete(:wrap_before_and_after_blocks)
     end
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
@@ -450,28 +438,34 @@ module Blocks
 
     # Render a block, first trying to find a previously defined block with the same name
     def render_block(name_or_container, *args, &block)
-      options = args.extract_options!
-
       buffer = ActiveSupport::SafeBuffer.new
 
-      block_options = {}
       if (name_or_container.is_a?(Blocks::Container))
         name = name_or_container.name.to_sym
-        block_options = name_or_container.options
+        block_render_options = name_or_container.options
       else
         name = name_or_container.to_sym
+        block_render_options = {}
       end
+
+      block_definition_options = {}
+      if blocks[name]
+        block_container = blocks[name]
+        block_definition_options = block_container.options
+      end
+
+      options = global_options.merge(block_definition_options).merge(block_render_options).merge(args.extract_options!)
 
       if blocks[name]
         block_container = blocks[name]
-        args.push(global_options.merge(block_container.options).merge(block_options).merge(options))
+        args.push(options)
         buffer << view.capture(*(args[0, block_container.block.arity]), &block_container.block)
-      elsif (use_partials || options[:use_partials]) && !options[:skip_partials]
+      elsif options[:use_partials] && !options[:skip_partials]
         begin
           begin
-            buffer << view.render("#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{name.to_s}", options)
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{self.template_folder}/#{name.to_s}", global_options.merge(block_options).merge(options))
+            buffer << view.render("#{options[:template_folder]}/#{name.to_s}", options)
           end
         rescue ActionView::MissingTemplate
           args.push(global_options.merge(options))
@@ -561,9 +555,9 @@ module Blocks
 
     def content_tag_with_block(tag, tag_html, *args, &block)
       if tag
-        view.content_tag(tag, block.call, call_each_hash_value_with_params(tag_html, *args))
+        view.content_tag(tag, view.capture(&block), call_each_hash_value_with_params(tag_html, *args))
       else
-        block.call
+        view.capture(&block)
       end
     end
   end

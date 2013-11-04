@@ -7,18 +7,20 @@ describe Blocks::Base do
   end
 
   it "should be able change the default global partials directory" do
-    Blocks.template_folder = "shared"
-    Blocks.use_partials = true
+    Blocks.setup do |config|
+      config.template_folder = "shared"
+      config.use_partials = true
+    end
     @builder = Blocks::Base.new(@view)
     @builder.expects(:render_before_blocks).at_least_once
     @builder.expects(:render_after_blocks).at_least_once
-    @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
-    @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-    @view.expects(:render).with("shared/some_block", :value1 => 1, :value2 => 2).once
+    # @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
+    @view.expects(:render).with("some_block", 'template_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+    @view.expects(:render).with("shared/some_block", 'template_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
     @builder.render :some_block, :value1 => 1, :value2 => 2
   end
 
-  describe "defined? method" do
+  describe "#defined?" do
     it "should be able to determine if a block by a specific name is already defined" do
       @builder.defined?(:test_block).should be_false
       @builder.define :test_block do end
@@ -42,7 +44,7 @@ describe Blocks::Base do
     end
   end
 
-  describe "define method" do
+  describe "#define" do
     it "should be able to define a new block" do
       block = Proc.new { |options| }
 
@@ -54,7 +56,7 @@ describe Blocks::Base do
       test_block.name.should eql(:test_block)
       test_block.block.should eql(block)
     end
-    
+
     it "should not replace a defined block with another attempted definition" do
       block1 = Proc.new do |options| end
       @builder.define :test_block, :option1 => "value1", :option2 => "value2", &block1
@@ -70,9 +72,21 @@ describe Blocks::Base do
       test_block.name.should eql(:test_block)
       test_block.block.should eql(block1)
     end
+
+    it "should be able to define a collection of blocks" do
+      block = Proc.new {}
+      collection = ["block1", "block2", "block3"]
+      @builder.define Proc.new {|block_name| block_name }, :collection => collection, &block
+      @builder.blocks[:block1].should be_present
+      @builder.blocks[:block1].block.should eql block
+      @builder.blocks[:block2].should be_present
+      @builder.blocks[:block2].block.should eql block
+      @builder.blocks[:block3].should be_present
+      @builder.blocks[:block3].block.should eql block
+    end
   end
 
-  describe "replace method" do
+  describe "#replace" do
     it "should be able to replace a defined block" do
       block1 = Proc.new do |options| end
       @builder.define :test_block, :option1 => "value1", :option2 => "value2", &block1
@@ -90,14 +104,22 @@ describe Blocks::Base do
     end
   end
 
-  describe "before method" do
+  describe "#skip" do
+    it "should define an empty block" do
+      @builder.skip(:test_block)
+      @builder.blocks[:test_block].should be_present
+      @builder.blocks[:test_block].block.call.should be_nil
+    end
+  end
+
+  describe "#before" do
     it "should be aliased with prepend" do
       block = Proc.new { |options| }
       @builder.prepend :some_block, &block
       @builder.blocks[:before_some_block].should be_present
     end
 
-    it "should defined before blocks as the block name with the word 'before_' prepended to it" do
+    it "should define before blocks as the block name with the word 'before_' prepended to it" do
       block = Proc.new { |options| }
       @builder.before :some_block, &block
       @builder.blocks[:before_some_block].should be_present
@@ -143,7 +165,7 @@ describe Blocks::Base do
     end
   end
 
-  describe "after method" do
+  describe "#after" do
     it "should be aliased with append and for" do
       block = Proc.new { |options| }
       @builder.append :some_block, &block
@@ -154,7 +176,7 @@ describe Blocks::Base do
       @builder.blocks[:after_some_block].should be_present
     end
 
-    it "should defined after blocks as the block name with the word 'after_' prepended to it" do
+    it "should define after blocks as the block name with the word 'after_' prepended to it" do
       block = Proc.new { |options| }
       @builder.after :some_block, &block
       @builder.blocks[:after_some_block].should be_present
@@ -200,42 +222,103 @@ describe Blocks::Base do
     end
   end
 
-  describe "render method" do
+  describe "#around" do
+    it "should define around blocks as the block name with the word 'around_' prepended to it" do
+      block = Proc.new { |options| }
+      @builder.around :some_block, &block
+      @builder.blocks[:around_some_block].should be_present
+    end
+
+    it "should store a around block in an array" do
+      block = Proc.new { |options| }
+      @builder.around :some_block, &block
+      around_blocks = @builder.blocks[:around_some_block]
+      around_blocks.should be_a(Array)
+    end
+
+    it "should store a around block as a Blocks::Container" do
+      block = Proc.new { |options| }
+      @builder.around :some_block, :option1 => "some option", &block
+      around_blocks = @builder.blocks[:around_some_block]
+      block_container = around_blocks.first
+      block_container.should be_a(Blocks::Container)
+      block_container.options.should eql :option1 => "some option"
+      block_container.block.should eql block
+    end
+
+    it "should queue around blocks if there are multiple defined" do
+      block = Proc.new { |options| }
+      block2 = Proc.new { |options| }
+      @builder.around :some_block, &block
+      @builder.around :some_block, &block2
+      around_blocks = @builder.blocks[:around_some_block]
+      around_blocks.length.should eql 2
+    end
+
+    it "should store after blocks in the order in which they are defined" do
+      block = Proc.new { |options| }
+      block2 = Proc.new { |options| }
+      block3 = Proc.new { |options| }
+      @builder.around :some_block, &block
+      @builder.around :some_block, &block2
+      @builder.around :some_block, &block3
+      around_blocks = @builder.blocks[:around_some_block]
+      around_blocks.first.block.should eql block
+      around_blocks.second.block.should eql block2
+      around_blocks.third.block.should eql block3
+    end
+  end
+
+  describe "#render_with_partials" do
+    it "should trigger the call to #render with :use_partials set to true" do
+      @builder.expects(:render).with(:some_block, :use_partials => true)
+      @builder.render_with_partials(:some_block)
+    end
+  end
+
+  describe "#render_without_partials" do
+    it "should trigger the call to #render with :skip_partials set to true" do
+      @builder.expects(:render).with(:some_block, :skip_partials => true)
+      @builder.render_without_partials(:some_block)
+    end
+  end
+
+  describe "#render" do
     it "should alias the render method as use" do
       block = Proc.new {"output"}
       @builder.define :some_block, &block
       @builder.use(:some_block).should eql "output"
     end
 
-    it "should be able to use a defined block by its name" do
+    it "should be able to render a defined block by its name" do
       block = Proc.new {"output"}
       @builder.define :some_block, &block
       @builder.render(:some_block).should eql "output"
     end
 
-    it "should automatically pass in an options hash to a defined block that takes one paramter when that block is used" do
-      block = Proc.new {|options| "Options are #{options.inspect}"}
+    it "should automatically pass in an options hash to a defined block that takes one paramter when that block is rendered" do
+      block = Proc.new {|options| "Options are #{options.keys.join(", ")}"}
       @builder.define :some_block, &block
-      @builder.render(:some_block).should eql "Options are {}"
+      @builder.render(:some_block).should eql "Options are template_folder, wrap_before_and_after_blocks, use_partials"
     end
 
-    it "should be able to use a defined block by its name and pass in runtime arguments as a hash" do
+    it "should be able to render a defined block by its name and pass in runtime arguments as a hash" do
       block = Proc.new do |options|
         print_hash(options)
       end
       @builder.define :some_block, &block
-      @builder.render(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:param1 => 1, :param2 => "value2")
+      @builder.render(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")
     end
 
-    it "should be able to use a defined block by its name and pass in runtime arguments one by one" do
+    it "should be able to render a defined block by its name and pass in runtime arguments one by one" do
       block = Proc.new do |first_param, second_param, options|
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.define :some_block, &block
-      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:param1 => 1, :param2 => "value2")}")
+      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")}")
     end
 
-    it "should match up the number of arguments to a defined block with the parameters passed when a block is used" do
+    it "should match up the number of arguments to a defined block with the parameters passed when a block is rendered" do
       block = Proc.new {|first_param| "first_param = #{first_param}"}
       @builder.define :some_block, &block
       @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql "first_param = 3"
@@ -248,57 +331,68 @@ describe Blocks::Base do
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.replace :some_block, &block
-      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:param1 => 1, :param2 => "value2")}")
+      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")}")
     end
 
     it "should not render anything if using a block that has been defined" do
-      @builder.use_partials = true
-      @view.expects(:capture).never
-      @view.expects(:render).with("some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", {}).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      Blocks.setup do |config|
+        config.use_partials = true
+      end
+      @builder = Blocks::Base.new(@view)
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @builder.render :some_block
     end
 
     it "should first attempt to capture a block's contents when blocks.render is called" do
       block = Proc.new {|options|}
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
       @builder.define :some_block, &block
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should second attempt to render a local partial by the block's name when blocks.render is called" do
-      @builder.use_partials = true
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).once
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
+      Blocks.setup do |config|
+        config.use_partials = true
+      end
+      @builder = Blocks::Base.new(@view)
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should third attempt to render a global partial by the block's name when blocks.render is called" do
-      @builder.use_partials = true
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).once
+      Blocks.setup do |config|
+        config.use_partials = true
+      end
+      @builder = Blocks::Base.new(@view)
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
 
     it "should fourth attempt to render a default block when blocks.render is called" do
-      block = Proc.new {|options|}
-      @builder.use_partials = true
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
+      block = Proc.new do |options|
+        options[:value1].should eql 1
+        options[:value2].should eql 2
+      end
+      Blocks.setup do |config|
+        config.use_partials = true
+      end
+      @builder = Blocks::Base.new(@view)
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
     it "should not attempt to render a partial if use_partials is set to false" do
-      @builder.use_partials = false
-      block = Proc.new {|options|}
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
+      block = Proc.new do |options|
+        options[:value1].should eql 1
+        options[:value2].should eql 2
+      end
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
@@ -307,19 +401,25 @@ describe Blocks::Base do
       @builder = Blocks::Base.new(@view, :use_partials => false)
       @builder.expects(:render_before_blocks).at_least_once
       @builder.expects(:render_after_blocks).at_least_once
-      block = Proc.new {|options|}
-      @view.expects(:render).with("some_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:render).with("blocks/some_block", :value1 => 1, :value2 => 2).never
-      @view.expects(:capture).with(:value1 => 1, :value2 => 2)
+      block = Proc.new do |options|
+        options[:value1].should eql 1
+        options[:value2].should eql 2
+      end
+      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
     it "should override hash options for a block by merging the runtime options into the define default options into the queue level options into the global options" do
-      block = Proc.new {|options|}
+      block = Proc.new do |options|
+        options[:param1].should eql "use level"
+        options[:param2].should eql "queue level"
+        options[:param3].should eql "define level"
+        options[:param4].should eql "global level"
+      end
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
       block_container = @builder.send(:define_block_container, :my_before_block, :param1 => "queue level", :param2 => "queue level")
       @builder.define(:my_before_block, :param1 => "define level", :param2 => "define level", :param3 => "define level", &block)
-      @view.expects(:capture).with(:param1 => 'use level', :param2 => 'queue level', :param3 => 'define level', :param4 => 'global level')
       @builder.render block_container, :param1 => "use level"
     end
 
@@ -394,21 +494,7 @@ describe Blocks::Base do
         @builder.render(:some_block, :collection => [1,2,3]).should eql "before1 output1 after1 before2 output2 after2 before3 output3 after3 "
       end
 
-      it "should by default put surrounding elements around before and after blocks" do
-        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
-        @builder.before :some_block, &before_block
-
-        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
-        @builder.after :some_block, &after_block
-
-        block = Proc.new {|item, options| "output#{options[:some_block]} "}
-        @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "<div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div>"
-      end
-
-      it "should allow the global option to be set to render before and after blocks outside of surrounding elements" do
-        Blocks.wrap_before_and_after_blocks = false
-        @builder = Blocks::Base.new(@view)
+      it "should by default render surrounding elements outside before and after blocks" do
         before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
         @builder.before :some_block, &before_block
 
@@ -418,6 +504,22 @@ describe Blocks::Base do
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
         @builder.define :some_block, &block
         @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 "
+      end
+
+      it "should allow the global option to be set to render before and after blocks inside of surrounding elements" do
+        Blocks.setup do |config|
+          config.wrap_before_and_after_blocks = true
+        end
+        @builder = Blocks::Base.new(@view)
+        before_block = Proc.new {|item, options| "before#{options[:some_block]} "}
+        @builder.before :some_block, &before_block
+
+        after_block = Proc.new {|item, options| "after#{options[:some_block]} "}
+        @builder.after :some_block, &after_block
+
+        block = Proc.new {|item, options| "output#{options[:some_block]} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}).should eql "<div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div>"
       end
 
       it "should allow the option to be set to render before and after blocks outside of surrounding elements to be specified when Blocks is initialized" do
@@ -442,7 +544,7 @@ describe Blocks::Base do
 
         block = Proc.new {|item, options| "output#{options[:some_block]} "}
         @builder.define :some_block, &block
-        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}, :wrap_with => {:tag => "div", :style => "color:red"}).should eql "<div style=\"color:red\"><div>before1 output1 after1 </div><div>before2 output2 after2 </div><div>before3 output3 after3 </div></div>"
+        @builder.render(:some_block, :collection => [1,2,3], :wrap_each => {:tag => "div"}, :wrap_with => {:tag => "div", :style => "color:red"}).should eql "<div style=\"color:red\">before1 <div>output1 </div>after1 before2 <div>output2 </div>after2 before3 <div>output3 </div>after3 </div>"
       end
     end
   end
@@ -454,18 +556,26 @@ describe Blocks::Base do
     end
 
     it "should render before blocks when using a block" do
-      block = Proc.new {|value1, value2, options|}
+      block = Proc.new do |value1, value2, options|
+        value1.should eql 1
+        value2.should eql 2
+        options[:value3].should eql 3
+        options[:value4].should eql 4
+      end
       @builder.before("my_before_block", &block)
-      @view.expects(:capture).with(1, 2, :value3 => 3, :value4 => 4)
       @builder.render :my_before_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
     it "should override hash options for before blocks by merging the runtime options into the before block options into the block options into the global options" do
-      block = Proc.new {|options|}
+      block = Proc.new do |options|
+        options[:param1].should eql "top level"
+        options[:param2].should eql "before block level"
+        options[:param3].should eql "block level"
+        options[:param4].should eql "global level"
+      end
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
       @builder.define(:my_before_block, :param1 => "block level", :param2 => "block level", :param3 => "block level", &block)
       @builder.before(:my_before_block, :param1 => "before block level", :param2 => "before block level", &block)
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :param2 => 'before block level', :param3 => 'block level')
       @builder.render :my_before_block, :param1 => "top level"
     end
   end
@@ -499,18 +609,26 @@ describe Blocks::Base do
     end
 
     it "should render after blocks when using a block" do
-      block = Proc.new {|value1, value2, options|}
+      block = Proc.new do |value1, value2, options|
+        value1.should eql 1
+        value2.should eql 2
+        options[:value3].should eql 3
+        options[:value4].should eql 4
+      end
       @builder.after("my_after_block", &block)
-      @view.expects(:capture).with(1, 2, :value3 => 3, :value4 => 4)
       @builder.render :my_after_block, 1, 2, :value3 => 3, :value4 => 4
     end
 
     it "should override hash options for after blocks by merging the runtime options into the after block options into the block options into the global options" do
-      block = Proc.new {|options|}
+      block = Proc.new do |options|
+        options[:param1].should eql "top level"
+        options[:param2].should eql "after block level"
+        options[:param3].should eql "block level"
+        options[:param4].should eql "global level"
+      end
       @builder.global_options.merge!(:param1 => "global level", :param2 => "global level", :param3 => "global level", :param4 => "global level")
       @builder.define(:my_after_block, :param1 => "block level", :param2 => "block level", :param3 => "block level", &block)
       @builder.after(:my_after_block, :param1 => "after block level", :param2 => "after block level", &block)
-      @view.expects(:capture).with(:param4 => 'global level', :param1 => 'top level', :param2 => 'after block level', :param3 => 'block level')
       @builder.render :my_after_block, :param1 => "top level"
     end
   end
