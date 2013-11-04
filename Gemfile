@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem "rails", ">= 3.0.0"
-gem "call_with_params"
+gem "call_with_params", "~> 0.0.2"
 gem "hashie"
 
 group :development do

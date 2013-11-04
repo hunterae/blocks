@@ -8,15 +8,15 @@ describe Blocks::Base do
 
   it "should be able change the default global partials directory" do
     Blocks.setup do |config|
-      config.template_folder = "shared"
+      config.partials_folder = "shared"
       config.use_partials = true
     end
     @builder = Blocks::Base.new(@view)
     @builder.expects(:render_before_blocks).at_least_once
     @builder.expects(:render_after_blocks).at_least_once
     # @view.expects(:capture).with(:value1 => 1, :value2 => 2).never
-    @view.expects(:render).with("some_block", 'template_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-    @view.expects(:render).with("shared/some_block", 'template_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
+    @view.expects(:render).with("some_block", 'partials_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+    @view.expects(:render).with("shared/some_block", 'partials_folder' => 'shared', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
     @builder.render :some_block, :value1 => 1, :value2 => 2
   end
 
@@ -297,9 +297,9 @@ describe Blocks::Base do
     end
 
     it "should automatically pass in an options hash to a defined block that takes one paramter when that block is rendered" do
-      block = Proc.new {|options| "Options are #{options.keys.join(", ")}"}
+      block = Proc.new {|options| print_hash(options) }
       @builder.define :some_block, &block
-      @builder.render(:some_block).should eql "Options are template_folder, wrap_before_and_after_blocks, use_partials"
+      @builder.render(:some_block).should eql print_hash(:wrap_before_and_after_blocks => false, :use_partials => false, :partials_folder => "blocks", )
     end
 
     it "should be able to render a defined block by its name and pass in runtime arguments as a hash" do
@@ -307,7 +307,7 @@ describe Blocks::Base do
         print_hash(options)
       end
       @builder.define :some_block, &block
-      @builder.render(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")
+      @builder.render(:some_block, :param1 => 1, :param2 => "value2").should eql print_hash(:wrap_before_and_after_blocks => false, :use_partials => false, :partials_folder => "blocks", :param1 => 1, :param2 => "value2")
     end
 
     it "should be able to render a defined block by its name and pass in runtime arguments one by one" do
@@ -315,7 +315,7 @@ describe Blocks::Base do
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.define :some_block, &block
-      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")}")
+      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:wrap_before_and_after_blocks => false, :use_partials => false, :partials_folder => "blocks", :param1 => 1, :param2 => "value2")}")
     end
 
     it "should match up the number of arguments to a defined block with the parameters passed when a block is rendered" do
@@ -331,7 +331,7 @@ describe Blocks::Base do
         "first_param: #{first_param}, second_param: #{second_param}, #{print_hash options}"
       end
       @builder.replace :some_block, &block
-      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:template_folder => "blocks", :wrap_before_and_after_blocks => false, :use_partials => false, :param1 => 1, :param2 => "value2")}")
+      @builder.render(:some_block, 3, 4, :param1 => 1, :param2 => "value2").should eql("first_param: 3, second_param: 4, #{print_hash(:wrap_before_and_after_blocks => false, :use_partials => false, :partials_folder => "blocks", :param1 => 1, :param2 => "value2")}")
     end
 
     it "should not render anything if using a block that has been defined" do
@@ -339,15 +339,15 @@ describe Blocks::Base do
         config.use_partials = true
       end
       @builder = Blocks::Base.new(@view)
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @builder.render :some_block
     end
 
     it "should first attempt to capture a block's contents when blocks.render is called" do
       block = Proc.new {|options|}
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
       @builder.define :some_block, &block
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
@@ -357,8 +357,8 @@ describe Blocks::Base do
         config.use_partials = true
       end
       @builder = Blocks::Base.new(@view)
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
 
@@ -367,8 +367,8 @@ describe Blocks::Base do
         config.use_partials = true
       end
       @builder = Blocks::Base.new(@view)
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).once
       @builder.render :some_block, :value1 => 1, :value2 => 2
     end
 
@@ -381,8 +381,8 @@ describe Blocks::Base do
         config.use_partials = true
       end
       @builder = Blocks::Base.new(@view)
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => true, 'value1' => 1, 'value2' => 2).raises(ActionView::MissingTemplate.new([],[],[],[],[]))
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
@@ -391,8 +391,8 @@ describe Blocks::Base do
         options[:value1].should eql 1
         options[:value2].should eql 2
       end
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 
@@ -405,8 +405,8 @@ describe Blocks::Base do
         options[:value1].should eql 1
         options[:value2].should eql 2
       end
-      @view.expects(:render).with("some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
-      @view.expects(:render).with("blocks/some_block", 'template_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
+      @view.expects(:render).with("blocks/some_block", 'partials_folder' => 'blocks', 'wrap_before_and_after_blocks' => false, 'use_partials' => false, 'value1' => 1, 'value2' => 2).never
       @builder.render :some_block, :value1 => 1, :value2 => 2, &block
     end
 

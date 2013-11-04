@@ -11,17 +11,12 @@ module Blocks
 
   mattr_accessor :config
   @@config = Hashie::Mash.new
-
-  # Shortcut for using the templating feature / rendering templates
-  def self.render_template(view, partial, options={}, &block)
-    Blocks::Base.new(view, options).render_template(partial, &block)
-  end
+  @@config.wrap_before_and_after_blocks = false
+  @@config.use_partials = false
+  @@config.partials_folder = "blocks"
 
   # Default way to setup Blocks
   def self.setup
-    config.template_folder = "blocks"
-    config.wrap_before_and_after_blocks = false
-    config.use_partials = false
     yield config
   end
 end

@@ -13,7 +13,7 @@ RSpec.configure do |config|
   
   config.before :each do
     Blocks.setup do |config|
-      config.template_folder = "blocks"
+      config.partials_folder = "blocks"
       config.wrap_before_and_after_blocks = false
       config.use_partials = false
     end

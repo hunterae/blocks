@@ -465,7 +465,7 @@ module Blocks
           begin
             buffer << view.render("#{name.to_s}", options)
           rescue ActionView::MissingTemplate
-            buffer << view.render("#{options[:template_folder]}/#{name.to_s}", options)
+            buffer << view.render("#{options[:partials_folder]}/#{name.to_s}", options)
           end
         rescue ActionView::MissingTemplate
           args.push(global_options.merge(options))
