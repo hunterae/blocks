@@ -1,3 +1,6 @@
+2.6.1 (November 4, 2013)
+* Made content_tag_with_block a public method in Blocks::Base so that it can be used in table-for gem.
+
 2.6.0 (November 4, 2013)
 * Internally changed how configuration works (externally, it should feel the same, with the exception of the fact that templates_folder was changed to partials_folder... this will likely change again in the coming days)
 * Started cleaning up and rewriting some of the tests

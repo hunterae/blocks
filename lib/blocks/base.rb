@@ -404,6 +404,14 @@ module Blocks
       nil
     end
 
+    def content_tag_with_block(tag, tag_html, *args, &block)
+      if tag
+        view.content_tag(tag, view.capture(&block), call_each_hash_value_with_params(tag_html, *args))
+      else
+        view.capture(&block)
+      end
+    end
+
     protected
 
     def initialize(view, options={})
@@ -551,14 +559,6 @@ module Blocks
       block_container = self.build_block_container(*args, &block)
       blocks[block_container.name] = block_container if blocks[block_container.name].nil? && block_given?
       block_container
-    end
-
-    def content_tag_with_block(tag, tag_html, *args, &block)
-      if tag
-        view.content_tag(tag, view.capture(&block), call_each_hash_value_with_params(tag_html, *args))
-      else
-        view.capture(&block)
-      end
     end
   end
 end
