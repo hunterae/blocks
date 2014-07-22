@@ -1,3 +1,7 @@
+2.6.4 (July 21, 2014)
+* Removed dependence on jeweler for managing gem
+* Small cleanups of the code
+
 2.6.1 (November 4, 2013)
 * Made content_tag_with_block a public method in Blocks::Base so that it can be used in table-for gem.
 

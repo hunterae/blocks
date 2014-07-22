@@ -22,7 +22,7 @@ module Blocks
     # [+name+]
     #   The name of the block to check
     def defined?(name)
-      !blocks[name.to_sym].nil?
+      !blocks[name].nil?
     end
 
     # Define a block, unless a block by the same name is already defined.
@@ -34,7 +34,7 @@ module Blocks
     # [+name+]
     #   The name of the block being defined (either a string or a symbol or a Proc)
     # [+options+]
-    #   The default options for the block definition. Any or all of these options may be overrideen by
+    #   The default options for the block definition. Any or all of these options may be overridden by
     #   whomever calls "blocks.render" on this block. If :collection => some_array,
     #   Blocks will assume that the first argument is a Proc and define a block for each object in the
     #   collection
@@ -66,12 +66,12 @@ module Blocks
     # [+name+]
     #   The name of the block being defined (either a string or a symbol)
     # [+options+]
-    #   The default options for the block definition. Any or all of these options may be overrideen by
+    #   The default options for the block definition. Any or all of these options may be overridden by
     #   whomever calls "blocks.render" on this block.
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def replace(name, options={}, &block)
-      blocks[name.to_sym] = nil
+      blocks[name] = nil
       self.define_block_container(name, options, &block)
       nil
     end
@@ -89,7 +89,7 @@ module Blocks
     # [+name+]
     #   The name of the block to skip rendering for
     def skip(name)
-      blocks[name.to_sym] = nil
+      blocks[name] = nil
       self.define_block_container(name) do
       end
       nil
@@ -412,14 +412,14 @@ module Blocks
       end
     end
 
-    protected
-
     def initialize(view, options={})
       self.view = view
       self.global_options = Blocks.config.merge(options)
-      self.blocks = {}
+      self.blocks = HashWithIndifferentAccess.new
       self.anonymous_block_number = 0
     end
+
+    protected
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
     def anonymous_block_name
@@ -428,8 +428,8 @@ module Blocks
     end
 
     def render_block_with_around_blocks(name_or_container, *args, &block)
-      name = name_or_container.is_a?(Blocks::Container) ? name_or_container.name.to_sym : name_or_container.to_sym
-      around_name = "around_#{name.to_s}".to_sym
+      name = name_or_container.is_a?(Blocks::Container) ? name_or_container.name : name_or_container
+      around_name = "around_#{name}"
 
       around_blocks = blocks[around_name].present? ? blocks[around_name].clone : []
 
