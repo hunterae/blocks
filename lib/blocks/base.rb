@@ -16,6 +16,9 @@ module Blocks
     # These are the options that are passed into the initalize method
     attr_accessor :global_options
 
+    # Hash of block names that have been explicitely skipped
+    attr_accessor :skipped_blocks
+
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
     # Options:
@@ -90,6 +93,7 @@ module Blocks
     #   The name of the block to skip rendering for
     def skip(name)
       blocks[name] = nil
+      skipped_blocks[name] = true
       self.define_block_container(name) do
       end
       nil
@@ -147,6 +151,10 @@ module Blocks
     def render(name_or_container, *args, &block)
       options = args.extract_options!
       collection = options.delete(:collection)
+      name = extract_block_name name_or_container
+      if skipped_blocks[name] && global_options.skip_applies_to_surrounding_blocks
+        return
+      end
 
       buffer = ActiveSupport::SafeBuffer.new
 
@@ -415,6 +423,7 @@ module Blocks
     def initialize(view, options={})
       self.view = view
       self.global_options = Blocks.config.merge(options)
+      self.skipped_blocks = HashWithIndifferentAccess.new
       self.blocks = HashWithIndifferentAccess.new
       self.anonymous_block_number = 0
     end
@@ -428,7 +437,7 @@ module Blocks
     end
 
     def render_block_with_around_blocks(name_or_container, *args, &block)
-      name = name_or_container.is_a?(Blocks::Container) ? name_or_container.name : name_or_container
+      name = extract_block_name name_or_container
       around_name = "around_#{name}"
 
       around_blocks = blocks[around_name].present? ? blocks[around_name].clone : []
@@ -448,13 +457,7 @@ module Blocks
     def render_block(name_or_container, *args, &block)
       buffer = ActiveSupport::SafeBuffer.new
 
-      if (name_or_container.is_a?(Blocks::Container))
-        name = name_or_container.name.to_sym
-        block_render_options = name_or_container.options
-      else
-        name = name_or_container.to_sym
-        block_render_options = {}
-      end
+      name, block_render_options = extract_block_name_and_options(name_or_container)
 
       block_definition_options = {}
       if blocks[name]
@@ -472,10 +475,10 @@ module Blocks
         begin
           begin
             buffer << view.render("#{name.to_s}", options)
-          rescue ActionView::MissingTemplate
+          rescue ActionView::MissingTemplate, ArgumentError
             buffer << view.render("#{options[:partials_folder]}/#{name.to_s}", options)
           end
-        rescue ActionView::MissingTemplate
+        rescue ActionView::MissingTemplate, ArgumentError
           args.push(global_options.merge(options))
           buffer << view.capture(*(args[0, block.arity]), &block) if block_given?
         end
@@ -559,6 +562,18 @@ module Blocks
       block_container = self.build_block_container(*args, &block)
       blocks[block_container.name] = block_container if blocks[block_container.name].nil? && block_given?
       block_container
+    end
+
+    def extract_block_name(name_or_container)
+      extract_block_name_and_options(name_or_container).first
+    end
+
+    def extract_block_name_and_options(name_or_container)
+      if name_or_container.is_a?(Blocks::Container)
+        [name_or_container.name, name_or_container.options]
+      else
+        [name_or_container, {}]
+      end
     end
   end
 end

@@ -4,7 +4,7 @@ describe Blocks::ViewAdditions do
   before(:each) do
     @view_class = Class.new
     @view = @view_class.new
-    @view_class.send(:include, Blocks::ViewAdditions::ClassMethods)
+    @view_class.send(:include, Blocks::ViewAdditions)
   end
 
   describe "#blocks" do

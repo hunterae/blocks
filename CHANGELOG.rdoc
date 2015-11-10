@@ -1,3 +1,10 @@
+2.7.0 (December 9, 2015)
+* Added configuration option skip_applies_to_surrounding_blocks. When set to true, if blocks.skip :SOME_BLOCK is called,
+  any before, after, and around hooks applied to that block will also be skipped when the block attempts to render.
+  This may be configured in an initializer as follows:
+    Blocks.setup { |config| config.skip_applies_to_surrounding_blocks = true }
+* Cleanup to Blocks::Base to reduce code duplication
+
 2.6.4 (July 21, 2014)
 * Removed dependence on jeweler for managing gem
 * Small cleanups of the code
