@@ -446,6 +446,12 @@ describe Blocks::Base do
         @builder.render(:some_block, :collection => [1,2,3]).should eql "output1 output2 output3 "
       end
 
+      it "should track the current index and pass as an option to the block" do
+        block = Proc.new {|item, options| "Item #{options[:current_index] + 1}: #{item} "}
+        @builder.define :some_block, &block
+        @builder.render(:some_block, :collection => ["a", "b", "c"]).should eql "Item 1: a Item 2: b Item 3: c "
+      end
+
       it "should render a block for each element of the collection with the 'as' option specifying the name of the element passed into the block" do
         block = Proc.new {|item, options| "output#{options[:my_block_name]} "}
         @builder.define :some_block, &block

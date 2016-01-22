@@ -165,10 +165,11 @@ module Blocks
         wrap_each = options.delete(:wrap_each) || {}
 
         buffer = content_tag_with_block(wrap_with[:tag], wrap_with.except(:tag), *args) do
-          collection.each do |object|
+          collection.each_with_index do |object, index|
             cloned_args = args.clone
             cloned_args.unshift(object)
             cloned_options = options.clone
+            cloned_options[:current_index] = index
             cloned_options = cloned_options.merge(object.options) if object.is_a?(Blocks::Container)
             cloned_args.push(cloned_options)
 
