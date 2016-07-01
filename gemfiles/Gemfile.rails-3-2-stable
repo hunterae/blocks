@@ -1,0 +1,13 @@
+source "https://rubygems.org"
+
+gemspec path: ".."
+
+gem "rake", "< 11.0"
+gem "public_suffix", "~> 1.4.6"
+gem "mime-types", "< 3.0"
+gem "rack", "< 2.0"
+gem "rspec", "~> 3.0.0"
+gem "rails", github: "rails/rails", branch: "3-2-stable"
+gem "shoulda-matchers", "~> 2.0"
+gem 'test-unit', '~> 3.0'
+gem "haml", "4.0.4"
