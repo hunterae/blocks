@@ -1,5 +1,7 @@
+require 'active_support/hash_with_indifferent_access'
+
 module Blocks
-  class GlobalConfiguration < HashWithIndifferentAccess
+  class GlobalConfiguration < ActiveSupport::HashWithIndifferentAccess
 
   end
 end

@@ -1,15 +1,14 @@
 require 'blocks/view_additions'
+require 'rails/railtie'
 
 module Blocks
   extend ActiveSupport::Autoload
 
   autoload :GlobalConfiguration
-
-  eager_autoload do
-    autoload :Builder
-    autoload :Renderer
-    autoload :Container
-  end
+  autoload :Builder
+  autoload :Renderer
+  autoload :Container
+  autoload :Version
 
   mattr_accessor :global_options
   @@global_options = GlobalConfiguration.new
