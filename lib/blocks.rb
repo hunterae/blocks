@@ -1,26 +1,23 @@
-require "action_view"
-require "action_controller"
-require "call_with_params"
-require "hashie"
+require 'blocks/view_additions'
 
 module Blocks
-  autoload :Base,          "blocks/base"
-  autoload :Container,     "blocks/container"
-  autoload :ViewAdditions, "blocks/view_additions"
-  autoload :ControllerAdditions, "blocks/controller_additions"
+  extend ActiveSupport::Autoload
 
-  mattr_accessor :config
-  @@config = Hashie::Mash.new
-  @@config.wrap_before_and_after_blocks = false
-  @@config.use_partials = false
-  @@config.partials_folder = "blocks"
-  @@config.skip_applies_to_surrounding_blocks = false
+  autoload :GlobalConfiguration
+
+  eager_autoload do
+    autoload :Builder
+    autoload :Renderer
+    autoload :Container
+  end
+
+  mattr_accessor :global_options
+  @@global_options = GlobalConfiguration.new
 
   # Default way to setup Blocks
   def self.setup
-    yield config
+    yield global_options
   end
 end
 
-ActionView::Base.send :include, Blocks::ViewAdditions
-ActionController::Base.send :include, Blocks::ControllerAdditions
+require 'blocks/railtie' if defined?(Rails)
