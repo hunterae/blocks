@@ -20,7 +20,9 @@ module Blocks
 
     attr_accessor :view
 
-    attr_writer :renderer
+    attr_accessor :renderer
+
+    attr_accessor :skipped_blocks
 
     DEFINITION_MODE_TEMPLATE_DEFAULTS = :template_defaults
     DEFINITION_MODE_STANDARD = :standard
@@ -31,16 +33,18 @@ module Blocks
       self.init_options = init_options.with_indifferent_access
       self.parent_manager = parent_manager
       self.anonymous_block_number = 0
-      self.block_containers = HashWithIndifferentAccess.new
+      self.block_containers =
+        HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
       self.in_template_definition_mode = false
       self.definition_mode = DEFINITION_MODE_STANDARD
+      self.skipped_blocks = HashWithIndifferentAccess.new
     end
 
     def renderer
       @renderer ||= Renderer.new(self)
     end
 
-    delegate :render, :render_template, to: :renderer
+    delegate :render, :render_with_overrides, to: :renderer
 
     # Checks if a particular block has been defined within the current block scope.
     #   <%= blocks.defined? :some_block_name %>
@@ -48,7 +52,7 @@ module Blocks
     # [+name+]
     #   The name of the block to check
     def block_defined?(name)
-      block_containers.key?(name)
+      name && block_containers.key?(name)
     end
 
     # Define a block, unless a block by the same name is already defined.
@@ -75,6 +79,10 @@ module Blocks
         end
       else
         define_block_container(name, options, &block)
+      end
+
+      if definition_mode == DEFINITION_MODE_TEMPLATE_OVERRIDES
+        "PLACEHOLDER_FOR_#{name}"
       end
     end
 
@@ -103,18 +111,14 @@ module Blocks
       define_block_container(name, options, &block)
     end
 
-    [
-      [:before_all, :lifo],
-      [:around_all, :lifo],
-      [:before, :lifo],
-      [:around, :lifo],
-      [:prepend, :lifo],
-      [:append, :fifo],
-      [:after, :fifo],
-      [:after_all, :fifo]
-    ].each do |method_name, direction|
-      define_method(method_name) do |name, options={}, &block|
-        add_block_container_to_list("#{method_name}_#{name.to_s}", options, direction == :fifo, &block)
+    def skip(name, skip_all_hooks=false)
+      skipped_blocks[name] = { skip_all_hooks: skip_all_hooks }
+    end
+
+    BlockContainer::HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, *args|
+      define_method(hook) do |name, *args, &block|
+        block_container = block_containers[name]
+        block_container.send(hook, name, *args, &block)
       end
     end
 
@@ -126,7 +130,7 @@ module Blocks
       "block_#{anonymous_block_number}"
     end
 
-    # Build a Blocks::Container object given the passed in arguments
+    # Build a BlockContainer object given the passed in arguments
     def build_block_container(*args, &block)
       options = args.extract_options!
 
@@ -138,11 +142,9 @@ module Blocks
         anonymous = true
       end
 
-      block_container = Blocks::Container.new
+      block_container = BlockContainer.new
       block_container.name = name.to_sym
       if definition_mode == DEFINITION_MODE_TEMPLATE_OVERRIDES
-        # raise "in override mode options are #{options}"
-        # debugger
         block_container.runtime_options = options.with_indifferent_access
         block_container.default_options = HashWithIndifferentAccess.new
       else
@@ -154,27 +156,29 @@ module Blocks
       block_container
     end
 
-    # Build a Blocks::Container object and add it to the global hash of block_containers
+    # Build a BlockContainer object and add it to the global hash of block_containers
     #  if a block by the same name is not already defined
     def define_block_container(*args, &block)
       name = args.first
 
-      # debugger if name.to_s == "email"
-
       if !name || !block_defined?(name)
         block_container = build_block_container(*args, &block)
-        block_containers[block_container.name] = block_container if block_given?
+        block_containers[block_container.name] = block_container
         block_container
       else
         block_containers[name].tap do |block_container|
           if definition_mode == DEFINITION_MODE_TEMPLATE_DEFAULTS
             block_container.default_options = args.extract_options!.with_indifferent_access
+
+            block_container.block = block if block_given? && block_container.block.nil?
+          elsif block_container.block.blank?
+            block_container.block = block if block_given?
           end
         end
       end
     end
 
-    # Build a Blocks::Container object and add it to an array of containers matching it's block name
+    # Build a BlockContainer object and add it to an array of containers matching it's block name
     #  (used only for queuing a collection of before, after, and around blocks for a particular block name)
     def add_block_container_to_list(name, options, fifo, &block)
       block_container = build_block_container(name, options, &block)

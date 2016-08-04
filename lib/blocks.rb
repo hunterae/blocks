@@ -6,9 +6,19 @@ module Blocks
 
   autoload :GlobalConfiguration
   autoload :Builder
-  autoload :Renderer
-  autoload :Container
+  autoload :BlockContainer
   autoload :Version
+  autoload :HamlHelpers
+  autoload :OptionsMerger
+
+  autoload_under 'renderer' do
+    autoload :AbstractRenderer
+    autoload :Renderer
+    autoload :PartialRenderer
+    autoload :BlockWithHooksRenderer
+    autoload :AdjacentBlocksRenderer
+    autoload :SurroundingBlocksRenderer
+  end
 
   mattr_accessor :global_options
   @@global_options = GlobalConfiguration.new
@@ -18,5 +28,3 @@ module Blocks
     yield global_options
   end
 end
-
-require 'blocks/railtie' if defined?(Rails)
