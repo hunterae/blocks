@@ -68,7 +68,7 @@ module Blocks
       else
         options = args.extract_options!
         if options[:partial]
-          output_buffer << PartialRenderer.new(builder).render(options.delete(:partial))
+          output_buffer << PartialRenderer.new(builder).render(options.delete(:partial), options, &block)
         end
       end
     end

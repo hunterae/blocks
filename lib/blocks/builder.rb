@@ -178,18 +178,5 @@ module Blocks
       end
     end
 
-    # Build a BlockContainer object and add it to an array of containers matching it's block name
-    #  (used only for queuing a collection of before, after, and around blocks for a particular block name)
-    def add_block_container_to_list(name, options, fifo, &block)
-      block_container = build_block_container(name, options, &block)
-      if block_containers[block_container.name].nil?
-        block_containers[block_container.name] = [block_container]
-      elsif fifo
-        block_containers[block_container.name] << block_container
-      else
-        block_containers[block_container.name].unshift block_container
-      end
-    end
-
   end
 end

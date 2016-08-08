@@ -14,13 +14,13 @@ module Blocks
       self.builder = builder
     end
 
-    def render(partial, &block)
+    def render(partial, options={}, &block)
       if block_given?
         self.definition_mode = Blocks::Builder::DEFINITION_MODE_TEMPLATE_OVERRIDES
         overrides_and_provided_content = without_haml_interference { view.capture(builder, &block) }
       end
 
-      locals = Blocks.global_options.merge(init_options).tap do |options|
+      locals = Blocks.global_options.merge(init_options).merge(options).tap do |options|
         variable = options.delete(:builder_variable) || :builder
         options[variable] = builder
       end

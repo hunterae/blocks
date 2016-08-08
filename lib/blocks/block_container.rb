@@ -17,10 +17,13 @@ module Blocks
 
     attr_accessor :hooks
 
+    attr_accessor :options_list
+
     def initialize
       self.hooks = HashWithIndifferentAccess.new { |hash, key| hash[key] = []; hash[key] }
       self.runtime_options = HashWithIndifferentAccess.new
       self.default_options = HashWithIndifferentAccess.new
+      self.options_list = []
     end
 
     HOOKS_AND_QUEUEING_TECHNIQUE = [
@@ -37,7 +40,8 @@ module Blocks
       define_method(hook) do |name, options={}, &block|
         block_container = BlockContainer.new
         block_container.name = name
-        block_container.runtime_options = options.with_indifferent_access
+        # block_container.runtime_options = options.with_indifferent_access
+        block_conainer.options_list << options.with_indifferent_access
         block_container.block = block
         # debugger if hook == :around
 
