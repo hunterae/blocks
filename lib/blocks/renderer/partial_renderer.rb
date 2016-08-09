@@ -30,7 +30,7 @@ module Blocks
         view.render(layout: partial, locals: locals) do |*args|
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|
             block_container = block_containers["#{$1}"]
-            builder.render block_container.name, block_container, block_container.runtime_options
+            builder.render block_container.name, block_container
           end.html_safe if overrides_and_provided_content
         end
       end

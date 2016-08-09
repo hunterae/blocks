@@ -86,10 +86,6 @@ module Blocks
       end
     end
 
-    def reuse_for(block_name_to_reuse, name, options={}, &block)
-      # TODO
-    end
-
     # Define a block, replacing an existing block by the same name if it is already defined.
     #   <%= blocks.define :some_block_name, :parameter1 => "1", :parameter2 => "2" do |options| %>
     #     <%= options[:parameter1] %> and <%= options[:parameter2] %>
@@ -131,51 +127,62 @@ module Blocks
     end
 
     # Build a BlockContainer object given the passed in arguments
-    def build_block_container(*args, &block)
-      options = args.extract_options!
+    # def build_block_container(*args, &block)
+    #   options = args.extract_options!
+    #
+    #   anonymous = false
+    #   if args.first
+    #     name = args.shift
+    #   else
+    #     name = anonymous_block_name
+    #     anonymous = true
+    #   end
+    #
+    #   block_container = BlockContainer.new
+    #   block_container.name = name.to_sym
+    #   # if definition_mode == DEFINITION_MODE_TEMPLATE_OVERRIDES
+    #     # block_container.runtime_options = options.with_indifferent_access
+    #     # block_container.default_options = HashWithIndifferentAccess.new
+    #   # else
+    #     # block_container.runtime_options = HashWithIndifferentAccess.new
+    #     # block_container.default_options = options.with_indifferent_access
+    #   # end
+    #   block_container.add_options options
+    #   block_container.block = block
+    #   block_container.anonymous = anonymous
+    #   block_container
+    # end
 
-      anonymous = false
+    # Build a BlockContainer object and add it to the global hash of block_containers
+    #  if a block by the same name is not already defined
+    def define_block_container(*args, &block)
       if args.first
         name = args.shift
+        anonymous = false
       else
         name = anonymous_block_name
         anonymous = true
       end
 
-      block_container = BlockContainer.new
-      block_container.name = name.to_sym
-      if definition_mode == DEFINITION_MODE_TEMPLATE_OVERRIDES
-        block_container.runtime_options = options.with_indifferent_access
-        block_container.default_options = HashWithIndifferentAccess.new
-      else
-        block_container.runtime_options = HashWithIndifferentAccess.new
-        block_container.default_options = options.with_indifferent_access
-      end
-      block_container.block = block
-      block_container.anonymous = anonymous
-      block_container
-    end
-
-    # Build a BlockContainer object and add it to the global hash of block_containers
-    #  if a block by the same name is not already defined
-    def define_block_container(*args, &block)
-      name = args.first
-
-      if !name || !block_defined?(name)
-        block_container = build_block_container(*args, &block)
-        block_containers[block_container.name] = block_container
-        block_container
-      else
+      # if !name || !block_defined?(name)
+      #   block_container = build_block_container(*args, &block)
+      #   block_containers[block_container.name] = block_container
+      #   block_container
+      # else
         block_containers[name].tap do |block_container|
-          if definition_mode == DEFINITION_MODE_TEMPLATE_DEFAULTS
-            block_container.default_options = args.extract_options!.with_indifferent_access
+          block_container.add_options args.extract_options!
+          block_container.block = block if block_given? && block_container.block.nil?
+          block_container.anonymous = anonymous
 
-            block_container.block = block if block_given? && block_container.block.nil?
-          elsif block_container.block.blank?
-            block_container.block = block if block_given?
-          end
+          # if definition_mode == DEFINITION_MODE_TEMPLATE_DEFAULTS
+            # block_container.default_options = args.extract_options!.with_indifferent_access
+
+            # block_container.block = block if block_given? && block_container.block.nil?
+          # elsif block_container.block.blank?
+            # block_container.block = block if block_given?
+          # end
         end
-      end
+      # end
     end
 
   end

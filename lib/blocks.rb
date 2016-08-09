@@ -9,7 +9,7 @@ module Blocks
   autoload :BlockContainer
   autoload :Version
   autoload :HamlHelpers
-  autoload :OptionsMerger
+  autoload :BlockAndOptionsExtractor
 
   autoload_under 'renderer' do
     autoload :AbstractRenderer

@@ -4,10 +4,10 @@ module Blocks
     attr_accessor :name
 
     # Options that are defined when a block's definition is provided by a template
-    attr_accessor :default_options
+    # attr_accessor :default_options
 
     # Options that are defined by the user of a block
-    attr_accessor :runtime_options
+    # attr_accessor :runtime_options
 
     # The actual Ruby block of code
     attr_accessor :block
@@ -21,9 +21,17 @@ module Blocks
 
     def initialize
       self.hooks = HashWithIndifferentAccess.new { |hash, key| hash[key] = []; hash[key] }
-      self.runtime_options = HashWithIndifferentAccess.new
-      self.default_options = HashWithIndifferentAccess.new
+      # self.runtime_options = HashWithIndifferentAccess.new
+      # self.default_options = HashWithIndifferentAccess.new
       self.options_list = []
+    end
+
+    def add_options(options)
+      self.options_list.unshift options.with_indifferent_access
+    end
+
+    def merged_options
+      options_list.reduce(HashWithIndifferentAccess.new, :merge)
     end
 
     HOOKS_AND_QUEUEING_TECHNIQUE = [
@@ -36,12 +44,13 @@ module Blocks
       [:after, :fifo],
       [:after_all, :fifo]
     ]
+
     HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, direction|
       define_method(hook) do |name, options={}, &block|
         block_container = BlockContainer.new
         block_container.name = name
         # block_container.runtime_options = options.with_indifferent_access
-        block_conainer.options_list << options.with_indifferent_access
+        block_container.add_options options.with_indifferent_access
         block_container.block = block
         # debugger if hook == :around
 
