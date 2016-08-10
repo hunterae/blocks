@@ -1,19 +1,16 @@
 module Blocks
   class BlockWithHooksRenderer < AbstractRenderer
-    def render(*args, &block)
+    def render(*args, &default_definition)
       with_output_buffer do
         runtime_options = args.extract_options!
         block_name = args.shift
-        # block, options = block_and_options_to_use(block_name, runtime_options, &block)
-        block, options = BlockAndOptionsExtractor.new(builder).block_and_options_to_use(block_name, runtime_options, &block)
-        # options, block_name, block =
-        #   merged_options_and_block_name_and_block_for(block_name, runtime_options, &block)
-
+        block, options = block_and_options_to_use(block_name, runtime_options, &default_definition)
 
         wrap_each = options.delete(:wrap_each) || options.delete(:wrap_with) || options.delete(:wrap) || options.delete(:wrapper)
         wrap_all = options.delete(:wrap_all)
         wrap_container_with = options.delete(:wrap_container_with)
         collection = options.delete(:collection)
+        runtime_options = runtime_options.except(:wrap_each, :wrap_with, :wrap, :wrapper, :wrap_all, :wrap_container_with, :collection)
 
         skip_block = false
         if block_name && builder.skipped_blocks.key?(block_name)
@@ -24,15 +21,15 @@ module Blocks
         render_adjacent_hooks_for(:before_all, block_name, *args, runtime_options)
         render_nesting_hooks_for(:around_all, block_name, *args, runtime_options) do
 
-          render_wrapper(wrap_all, *args, options) do
+          render_wrapper(wrap_all, *args, runtime_options) do
             render_as_collection(collection, *args) do |*item_args|
 
-              render_wrapper(wrap_container_with, *args, options) do
+              render_wrapper(wrap_container_with, *args, runtime_options) do
                 render_adjacent_hooks_for(:before, block_name, *item_args, runtime_options)
                 if !skip_block
                   render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
 
-                    render_wrapper(wrap_each, *item_args, options) do
+                    render_wrapper(wrap_each, *item_args, runtime_options) do
                       render_adjacent_hooks_for(:prepend, block_name, *item_args, runtime_options)
                       render_block(*item_args, options, &block)
                       render_adjacent_hooks_for(:append, block_name, *item_args, runtime_options)
@@ -55,16 +52,13 @@ module Blocks
       wrapper_block = Proc.new { with_output_buffer { yield } }
       if wrapper.is_a?(Proc)
         output_buffer << call_with_params(wrapper, wrapper_block, *args)
-      elsif builder.block_defined?(wrapper)
-        block_container = block_containers[wrapper]
-        options = block_container.merged_options.merge(args.extract_options!)
-        if block_container.block
-          output_buffer << capture_block(wrapper_block, *args, options, &(block_container.block))
+      else
+        block, options = block_and_options_to_use(wrapper, args.extract_options!)
+        if block
+          output_buffer << capture_block(wrapper_block, *args, options, &block)
         else
           yield
         end
-      else
-        yield
       end
     end
 
@@ -96,17 +90,17 @@ module Blocks
       content_block = Proc.new do
         block_container = around_block_containers.shift
         if block_container
-          # options, block_name, block =
-          #   merged_options_and_block_name_and_block_for(block_container, runtime_options)
-          # capture_block(content_block, *args, options, &(block_container.block))
-          options = block_container.merged_options.merge(runtime_options)
-          capture_block(content_block, *args, options, &(block_container.block))
+          block, options = block_and_options_to_use(block_container, runtime_options)
+          if block
+            capture_block(content_block, *args, options, &block)
+          else
+            with_output_buffer { yield }
+          end
         else
           with_output_buffer { yield }
         end
       end
       output_buffer << content_block.call
-      # debugger if block_name == :content
       # output_buffer << SurroundingBlocksRenderer.new(builder).render(hook, block_name, *args, &block)
     end
 

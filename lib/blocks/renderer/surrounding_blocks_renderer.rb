@@ -8,8 +8,7 @@ module Blocks
       content_block = Proc.new do
         block_container = around_block_containers.shift
         if block_container
-          options, block_name, block =
-            merged_options_and_block_name_and_block_for(block_container, runtime_options)
+          block, options = block_and_options_to_use(block_container, runtime_options)
           capture_block(content_block, *args, options, &(block_container.block))
         else
           with_output_buffer { yield }
