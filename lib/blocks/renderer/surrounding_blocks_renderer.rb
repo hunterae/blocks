@@ -9,7 +9,11 @@ module Blocks
         block_container = around_block_containers.shift
         if block_container
           block, options = block_and_options_to_use(block_container, runtime_options)
-          capture_block(content_block, *args, options, &(block_container.block))
+          # if block
+          capture_block(content_block, *args, options, &block)
+          # else
+          #   output_buffer << with_output_buffer { yield }
+          # end
         else
           with_output_buffer { yield }
         end

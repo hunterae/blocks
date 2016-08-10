@@ -100,8 +100,7 @@ module Blocks
           with_output_buffer { yield }
         end
       end
-      output_buffer << content_block.call
-      # output_buffer << SurroundingBlocksRenderer.new(builder).render(hook, block_name, *args, &block)
+      output_buffer << SurroundingBlocksRenderer.new(builder).render(hook, block_name, *args, &block)
     end
 
     # Utility method to render either the before or after blocks for a partial block

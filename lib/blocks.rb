@@ -8,7 +8,6 @@ module Blocks
   autoload :Builder
   autoload :BlockContainer
   autoload :Version
-  autoload :HamlHelpers
   autoload :BlockAndOptionsExtractor
 
   autoload_under 'renderer' do
