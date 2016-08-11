@@ -6,22 +6,17 @@ module Blocks
       @blocks ||= Blocks::Builder.new(self)
     end
 
-    def with_template(template, options={}, builder=nil, &block)
-      original_init_options = nil
-      builder = options.delete(:builder) if !builder
+    def render_with_overrides(template, options={}, builder=nil, &block)
+      builder ||= options.delete(:builder)
       if builder
-        original_init_options = builder.init_options
         builder.init_options = builder.init_options.merge(options)
         builder.view = self
       else
         builder = Blocks::Builder.new(self, options)
       end
-
-      builder.render_with_overrides(partial: template, &block).tap do
-        builder.init_options = original_init_options if original_init_options
-      end
+      builder.render_with_overrides(partial: template, &block)
     end
-    alias_method :render_with_overrides, :with_template
+    alias_method :with_template, :render_with_overrides
 
   end
 end

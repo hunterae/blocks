@@ -12,10 +12,6 @@ module Blocks
     # counter, used to give unnamed blocks a unique name
     attr_accessor :anonymous_block_number
 
-    attr_accessor :in_template_definition_mode
-
-    attr_accessor :definition_mode
-
     attr_accessor :block_containers
 
     attr_accessor :view
@@ -24,10 +20,6 @@ module Blocks
 
     attr_accessor :skipped_blocks
 
-    DEFINITION_MODE_TEMPLATE_DEFAULTS = :template_defaults
-    DEFINITION_MODE_STANDARD = :standard
-    DEFINITION_MODE_TEMPLATE_OVERRIDES = :template_overrides
-
     def initialize(view, init_options={}, parent_manager=nil)
       self.view = view
       self.init_options = init_options.with_indifferent_access
@@ -35,9 +27,11 @@ module Blocks
       self.anonymous_block_number = 0
       self.block_containers =
         HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
-      self.in_template_definition_mode = false
-      self.definition_mode = DEFINITION_MODE_STANDARD
       self.skipped_blocks = HashWithIndifferentAccess.new
+
+      define :block_wrapper, wrapper_html: { }, wrapper_tag: :div do |content_block, options|
+        view.content_tag options[:wrapper_tag], options[:wrapper_html], &content_block
+      end
     end
 
     def renderer
@@ -80,10 +74,11 @@ module Blocks
       else
         define_block_container(name, options, &block)
       end
+    end
 
-      if definition_mode == DEFINITION_MODE_TEMPLATE_OVERRIDES
-        "PLACEHOLDER_FOR_#{name}"
-      end
+    def deferred_render(name, options={}, &block)
+      define(name, options, &block)
+      "PLACEHOLDER_FOR_#{name}"
     end
 
     # Define a block, replacing an existing block by the same name if it is already defined.
@@ -111,7 +106,7 @@ module Blocks
       skipped_blocks[name] = { skip_all_hooks: skip_all_hooks }
     end
 
-    BlockContainer::HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, *args|
+    BlockContainer::HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, *|
       define_method(hook) do |name, *args, &block|
         block_container = block_containers[name]
         block_container.send(hook, name, *args, &block)

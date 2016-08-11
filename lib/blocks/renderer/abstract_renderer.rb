@@ -7,7 +7,6 @@ module Blocks
     delegate :view,
              :block_containers,
              :init_options,
-             :definition_mode=,
               to: :builder
 
     attr_accessor :output_buffer

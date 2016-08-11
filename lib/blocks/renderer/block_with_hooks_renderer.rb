@@ -21,15 +21,14 @@ module Blocks
         render_adjacent_hooks_for(:before_all, block_name, *args, runtime_options)
         render_nesting_hooks_for(:around_all, block_name, *args, runtime_options) do
 
-          render_wrapper(wrap_all, *args, runtime_options) do
+          render_wrapper(wrap_all, *args, options) do
             render_as_collection(collection, *args) do |*item_args|
 
-              render_wrapper(wrap_container_with, *args, runtime_options) do
+              render_wrapper(wrap_container_with, *args, options) do
                 render_adjacent_hooks_for(:before, block_name, *item_args, runtime_options)
                 if !skip_block
                   render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
-
-                    render_wrapper(wrap_each, *item_args, runtime_options) do
+                    render_wrapper(wrap_each, *item_args, options) do
                       render_adjacent_hooks_for(:prepend, block_name, *item_args, runtime_options)
                       render_block(*item_args, options, &block)
                       render_adjacent_hooks_for(:append, block_name, *item_args, runtime_options)
@@ -52,13 +51,15 @@ module Blocks
       wrapper_block = Proc.new { with_output_buffer { yield } }
       if wrapper.is_a?(Proc)
         output_buffer << call_with_params(wrapper, wrapper_block, *args)
-      else
+      elsif wrapper.present?
         block, options = block_and_options_to_use(wrapper, args.extract_options!)
         if block
           output_buffer << capture_block(wrapper_block, *args, options, &block)
         else
           yield
         end
+      else
+        yield
       end
     end
 
