@@ -4,9 +4,6 @@ module Blocks
   class Builder
     include CallWithParams
 
-    # Whether this instance is a child of another instance
-    attr_accessor :parent_manager
-
     attr_accessor :init_options
 
     # counter, used to give unnamed blocks a unique name
@@ -20,10 +17,9 @@ module Blocks
 
     attr_accessor :skipped_blocks
 
-    def initialize(view, init_options={}, parent_manager=nil)
+    def initialize(view, init_options={})
       self.view = view
       self.init_options = init_options.with_indifferent_access
-      self.parent_manager = parent_manager
       self.anonymous_block_number = 0
       self.block_containers =
         HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
