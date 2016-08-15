@@ -85,22 +85,6 @@ module Blocks
     end
 
     def render_nesting_hooks_for(hook, block_name, *args, &block)
-      around_block_containers = block_containers[block_name].hooks[hook].clone
-      runtime_options = args.extract_options!
-
-      content_block = Proc.new do
-        block_container = around_block_containers.shift
-        if block_container
-          block, options = block_and_options_to_use(block_container, runtime_options)
-          if block
-            capture_block(content_block, *args, options, &block)
-          else
-            with_output_buffer { yield }
-          end
-        else
-          with_output_buffer { yield }
-        end
-      end
       output_buffer << SurroundingBlocksRenderer.new(builder).render(hook, block_name, *args, &block)
     end
 
