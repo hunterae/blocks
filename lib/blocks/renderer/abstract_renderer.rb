@@ -35,7 +35,7 @@ module Blocks
 
     def capture_block(*args, &block)
       # view.capture(*(args[0, block.arity]), &block)
-      without_haml_interference { view.capture(*(args[0, block.arity]), &block) }
+      without_haml_interference { view.capture(*(args[0, block.arity.abs]), &block) }
       # if respond_to?(:capture_without_haml)
         # capture_without_haml(*(args[0, block.arity]), &block)
       # else

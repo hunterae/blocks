@@ -11,6 +11,7 @@ module Blocks
         variable = options.delete(:builder_variable) || :builder
         options[variable] = builder
       end
+      locals[:options] = locals
 
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
