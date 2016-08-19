@@ -130,6 +130,7 @@ module Blocks
 
       block_containers[name].tap do |block_container|
         block_container.add_options args.extract_options!
+        block_container.name = name
         block_container.block = block if block_given? && block_container.block.nil?
         block_container.anonymous = anonymous
       end

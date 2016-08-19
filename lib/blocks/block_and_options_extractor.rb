@@ -15,7 +15,6 @@ module Blocks
       options_to_use = nil
       block_container_options = HashWithIndifferentAccess.new
       renders_with_proxy = false
-      runtime_defaults = runtime_options.delete(:defaults).to_h.with_indifferent_access
 
       if block_container_or_block_name.is_a?(BlockContainer)
         block_container = block_container_or_block_name
@@ -52,6 +51,7 @@ module Blocks
       end
 
       options_to_use ||= Blocks.global_options.merge(init_options)
+      runtime_defaults = (runtime_options.delete(:defaults) || block_container_options.delete(:defaults)).to_h.with_indifferent_access
       options_to_use = options_to_use.merge(runtime_defaults).merge(block_container_options).merge(runtime_options)
 
       [block_to_use, options_to_use]

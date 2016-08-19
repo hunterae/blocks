@@ -12,12 +12,10 @@ module Blocks
         options[variable] = builder
       end
       locals[:options] = locals
-
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|
-            block_container = block_containers["#{$1}"]
-            builder.render block_container.name, block_container
+            builder.render $1, options
           end.html_safe
         end
       end
