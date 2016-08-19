@@ -30,7 +30,7 @@ module Blocks
                   render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
                     render_wrapper(wrap_each, *item_args, options) do
                       render_adjacent_hooks_for(:prepend, block_name, *item_args, runtime_options)
-                      render_block(*item_args, options, &block)
+                      render_block(*item_args, options.merge(block_name: block_name), &block)
                       render_adjacent_hooks_for(:append, block_name, *item_args, runtime_options)
                     end
 
