@@ -11,8 +11,7 @@ module Blocks
         variable = options.delete(:builder_variable) || :builder
         options[variable] = builder
       end
-      locals[:options] = locals
-      view.render(layout: partial, locals: locals) do |*args|
+      view.render(layout: partial, locals: locals.merge(options: locals)) do |*args|
         if overrides_and_provided_content
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|
             builder.render $1, options

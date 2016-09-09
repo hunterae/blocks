@@ -10,7 +10,7 @@ module Blocks
              :init_options,
              to: :builder
 
-    def block_and_options_to_use(block_container_or_block_name, runtime_options, &block)
+    def block_and_options_to_use(block_container_or_block_name, runtime_options=HashWithIndifferentAccess.new, &block)
       block_to_use = nil
       options_to_use = nil
       block_container_options = HashWithIndifferentAccess.new
@@ -30,7 +30,7 @@ module Blocks
 
       if runtime_options.key?(:with)
         renders_with_proxy = true
-        block_to_use, options_to_use = block_and_options_to_use(runtime_options.delete(:with), HashWithIndifferentAccess.new, &block)
+        block_to_use, options_to_use = block_and_options_to_use(runtime_options.delete(:with), { block: block }.with_indifferent_access)
       end
 
       if block_container
@@ -39,7 +39,7 @@ module Blocks
         if !renders_with_proxy
           if block_container_options.key?(:with)
             renders_with_proxy = true
-            block_to_use, options_to_use = block_and_options_to_use(block_container_options.delete(:with), HashWithIndifferentAccess.new, &block)
+            block_to_use, options_to_use = block_and_options_to_use(block_container_options.delete(:with), { block: block }.with_indifferent_access)
           else
             block_to_use = block_container.block
           end
