@@ -39,7 +39,7 @@ module Blocks
         if !renders_with_proxy
           if block_container_options.key?(:with)
             renders_with_proxy = true
-            block_to_use, options_to_use = block_and_options_to_use(block_container_options.delete(:with), { block: block }.with_indifferent_access)
+            block_to_use, options_to_use = block_and_options_to_use(block_container_options.delete(:with), { block: block || block_container.block }.with_indifferent_access)
           else
             block_to_use = block_container.block
           end
