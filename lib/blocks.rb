@@ -1,5 +1,4 @@
 require 'blocks/view_additions'
-require 'rails/railtie'
 
 module Blocks
   extend ActiveSupport::Autoload

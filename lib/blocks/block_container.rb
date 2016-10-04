@@ -13,6 +13,9 @@ module Blocks
 
     attr_accessor :options_list
 
+    LAST_IN_FIRST_OUT = :lifo
+    FIRST_IN_FIRST_OUT = :fifo
+
     def initialize
       self.hooks = HashWithIndifferentAccess.new { |hash, key| hash[key] = []; hash[key] }
       self.options_list = []
@@ -27,14 +30,15 @@ module Blocks
     end
 
     HOOKS_AND_QUEUEING_TECHNIQUE = [
-      [:before_all, :lifo],
-      [:around_all, :lifo],
-      [:before, :lifo],
-      [:around, :lifo],
-      [:prepend, :lifo],
-      [:append, :fifo],
-      [:after, :fifo],
-      [:after_all, :fifo]
+      [:before_all, LAST_IN_FIRST_OUT],
+      [:around_all, LAST_IN_FIRST_OUT],
+      [:before, LAST_IN_FIRST_OUT],
+      [:around, LAST_IN_FIRST_OUT],
+      [:surround, LAST_IN_FIRST_OUT],
+      [:prepend, LAST_IN_FIRST_OUT],
+      [:append, FIRST_IN_FIRST_OUT],
+      [:after, FIRST_IN_FIRST_OUT],
+      [:after_all, FIRST_IN_FIRST_OUT]
     ]
 
     HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, direction|
@@ -44,7 +48,7 @@ module Blocks
         block_container.add_options options.with_indifferent_access
         block_container.block = block
 
-        if direction == :fifo
+        if direction == FIRST_IN_FIRST_OUT
           hooks[hook] << block_container
         else
           hooks[hook].unshift block_container

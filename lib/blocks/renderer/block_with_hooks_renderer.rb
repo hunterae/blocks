@@ -6,9 +6,9 @@ module Blocks
         block_name = args.shift
         block, options = block_and_options_to_use(block_name, runtime_options, &default_definition)
 
-        wrap_each = options.delete(:wrap_each) || options.delete(:wrap_with) || options.delete(:wrap) || options.delete(:wrapper)
         wrap_all = options.delete(:wrap_all)
-        wrap_container_with = options.delete(:wrap_container_with)
+        wrap_each = options.delete(:wrap_each)
+        wrap_with = options.delete(:wrap_with) || options.delete(:wrap) || options.delete(:wrapper)
         collection = options.delete(:collection)
         runtime_options = runtime_options.except(:wrap_each, :wrap_with, :wrap, :wrapper, :wrap_all, :wrap_container_with, :collection)
 
@@ -24,19 +24,22 @@ module Blocks
           render_wrapper(wrap_all, *args, options) do
             render_as_collection(collection, *args) do |*item_args|
 
-              render_wrapper(wrap_container_with, *args, options) do
-                render_adjacent_hooks_for(:before, block_name, *item_args, runtime_options)
-                if !skip_block
-                  render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
-                    render_wrapper(wrap_each, *item_args, options) do
-                      render_adjacent_hooks_for(:prepend, block_name, *item_args, runtime_options)
-                      render_block(*item_args, options.merge(block_name: block_name), &block)
-                      render_adjacent_hooks_for(:append, block_name, *item_args, runtime_options)
+              render_wrapper(wrap_each, *args, options) do
+                render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
+                  render_adjacent_hooks_for(:before, block_name, *item_args, runtime_options)
+                  if !skip_block
+                    render_wrapper(wrap_with, *item_args, options) do
+                      render_nesting_hooks_for(:surround, block_name, *item_args, runtime_options) do
+                        # render_wrapper(wrap_with, *item_args, options) do
+                          render_adjacent_hooks_for(:prepend, block_name, *item_args, runtime_options)
+                          render_block(*item_args, options.merge(block_name: block_name), &block)
+                          render_adjacent_hooks_for(:append, block_name, *item_args, runtime_options)
+                        # end
+                      end
                     end
-
                   end
+                  render_adjacent_hooks_for(:after, block_name, *item_args, runtime_options)
                 end
-                render_adjacent_hooks_for(:after, block_name, *item_args, runtime_options)
               end
 
             end
@@ -55,6 +58,8 @@ module Blocks
         block, options = block_and_options_to_use(wrapper, args.extract_options!)
         if block
           output_buffer << capture_block(wrapper_block, *args, options, &block)
+        elsif builder.respond_to?(wrapper)
+          output_buffer << builder.send(wrapper, *args, options, &wrapper_block)
         else
           yield
         end

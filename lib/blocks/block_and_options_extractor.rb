@@ -14,7 +14,7 @@ module Blocks
       block_to_use = nil
       options_to_use = nil
       block_container_options = HashWithIndifferentAccess.new
-      renders_with_proxy = false
+      proxy_block = nil
 
       if block_container_or_block_name.is_a?(BlockContainer)
         block_container = block_container_or_block_name
@@ -29,25 +29,33 @@ module Blocks
       end
 
       if runtime_options.key?(:with)
-        renders_with_proxy = true
-        block_to_use, options_to_use = block_and_options_to_use(runtime_options.delete(:with), { block: block }.with_indifferent_access)
+        proxy_block = runtime_options.delete(:with)
+        block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block }.with_indifferent_access)
       end
 
       if block_container
         block_container_options = block_container.merged_options
 
-        if !renders_with_proxy
+        if !proxy_block
           if block_container_options.key?(:with)
-            renders_with_proxy = true
-            block_to_use, options_to_use = block_and_options_to_use(block_container_options.delete(:with), { block: block || block_container.block }.with_indifferent_access)
+            proxy_block = block_container_options.delete(:with)
+            block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block || block_container.block }.with_indifferent_access)
           else
             block_to_use = block_container.block
           end
         end
       end
 
-      if !block_to_use && !renders_with_proxy
-        block_to_use = block
+      if !block_to_use
+        if !proxy_block
+          block_to_use = block
+        elsif builder.respond_to?(proxy_block)
+          block_to_use = Proc.new do |*args|
+            options = args.extract_options!
+            block ||= options.delete(:block)
+            builder.send(proxy_block, *args, &block)
+          end
+        end
       end
 
       options_to_use ||= Blocks.global_options.merge(init_options)
