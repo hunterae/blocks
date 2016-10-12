@@ -47,12 +47,23 @@ module Blocks
       BlockAndOptionsExtractor.new(builder).block_and_options_to_use(block_container_or_block_name, runtime_options, &default_definition)
     end
 
-    def without_haml_interference
-      if view.respond_to?(:non_haml)
-        view.non_haml { yield }
-      else
-        yield
+    def without_haml_interference(&block)
+      # Complete hack to get around issues with Haml
+      if view.instance_variables.include?(:@haml_buffer)
+        haml_buffer = view.instance_variable_get(:@haml_buffer)
+        if haml_buffer
+          was_active = haml_buffer.active?
+          haml_buffer.active = false
+        else
+          haml_buffer = Haml::Buffer.new(nil, Haml::Options.new.for_buffer)
+          haml_buffer.active = false
+          kill_buffer = true
+          view.instance_variable_set(:@haml_buffer, haml_buffer)
+        end
       end
+      yield
+    ensure
+      haml_buffer.active = was_active if haml_buffer
     end
   end
 end
