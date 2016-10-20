@@ -28,7 +28,7 @@ module Blocks
         end
       end
 
-      if runtime_options.key?(:with)
+      if runtime_options.key?(:with) && runtime_options[:with]
         proxy_block = runtime_options.delete(:with)
         block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block }.with_indifferent_access)
       end
@@ -37,7 +37,7 @@ module Blocks
         block_container_options = block_container.merged_options
 
         if !proxy_block
-          if block_container_options.key?(:with)
+          if block_container_options.key?(:with) && block_container_options[:with]
             proxy_block = block_container_options.delete(:with)
             block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block || block_container.block }.with_indifferent_access)
           else
