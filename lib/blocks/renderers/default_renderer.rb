@@ -1,5 +1,5 @@
 module Blocks
-  class Renderer < AbstractRenderer
+  class DefaultRenderer < AbstractRenderer
     def render(*args, &block)
       BlockWithHooksRenderer.new(builder).render(*args, &block)
     end

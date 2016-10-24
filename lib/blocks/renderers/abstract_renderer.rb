@@ -1,8 +1,7 @@
 module Blocks
+
   class AbstractRenderer
-    # include ActionView::Helpers::CaptureHelper
     include CallWithParams
-    # include Haml::Helpers if defined?(Haml)
 
     delegate :view,
              :block_containers,
@@ -21,10 +20,6 @@ module Blocks
     end
 
     protected
-    # def with_output_buffer(&block)
-    #   without_haml_interference { super(&block) }
-    # end
-
     def with_output_buffer
       view.with_output_buffer { yield }
     end
@@ -34,13 +29,7 @@ module Blocks
     end
 
     def capture_block(*args, &block)
-      # view.capture(*(args[0, block.arity]), &block)
       without_haml_interference { view.capture(*(args[0, block.arity.abs]), &block) }
-      # if respond_to?(:capture_without_haml)
-        # capture_without_haml(*(args[0, block.arity]), &block)
-      # else
-        # capture(*(args[0, block.arity]), &block)
-      # end
     end
 
     def block_and_options_to_use(block_container_or_block_name, runtime_options, &default_definition)

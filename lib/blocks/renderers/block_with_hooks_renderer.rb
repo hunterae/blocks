@@ -12,10 +12,10 @@ module Blocks
         collection = options.delete(:collection)
         runtime_options = runtime_options.except(:wrap_each, :wrap_with, :wrap, :wrapper, :wrap_all, :wrap_container_with, :collection)
 
-        skip_block = false
-        if block_name && builder.skipped_blocks.key?(block_name)
-          skip_block = true
-          return if builder.skipped_blocks[block_name][:skip_all_hooks]
+        container = block_containers[block_name] if block_name
+        if container && container.skip_content
+          skip_content = true
+          return if container.skip_all_hooks
         end
 
         render_adjacent_hooks_for(:before_all, block_name, *args, runtime_options)
@@ -27,7 +27,7 @@ module Blocks
               render_wrapper(wrap_each, *args, options) do
                 render_nesting_hooks_for(:around, block_name, *item_args, runtime_options) do
                   render_adjacent_hooks_for(:before, block_name, *item_args, runtime_options)
-                  if !skip_block
+                  if !skip_content
                     render_wrapper(wrap_with, *item_args, options) do
                       render_nesting_hooks_for(:surround, block_name, *item_args, runtime_options) do
                         # render_wrapper(wrap_with, *item_args, options) do

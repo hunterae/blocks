@@ -1,28 +1,31 @@
-require 'blocks/view_additions'
+require 'active_support/all'
+require 'blocks/action_view_extensions/view_extensions'
 
 module Blocks
   extend ActiveSupport::Autoload
 
-  autoload :GlobalConfiguration
-  autoload :Builder
-  autoload :BlockContainer
+  eager_autoload do
+    autoload_under 'builders' do
+      autoload :Builder
+    end
+
+    autoload_under 'renderers' do
+      autoload :AbstractRenderer
+      autoload :DefaultRenderer
+      autoload :PartialRenderer
+      autoload :BlockWithHooksRenderer
+      autoload :AdjacentBlocksRenderer
+      autoload :SurroundingBlocksRenderer
+    end
+
+    autoload_under 'utilities' do
+      autoload :BlockAndOptionsExtractor
+      autoload :Configurator
+      autoload :BlockContainer
+    end
+  end
+
   autoload :Version
-  autoload :BlockAndOptionsExtractor
 
-  autoload_under 'renderer' do
-    autoload :AbstractRenderer
-    autoload :Renderer
-    autoload :PartialRenderer
-    autoload :BlockWithHooksRenderer
-    autoload :AdjacentBlocksRenderer
-    autoload :SurroundingBlocksRenderer
-  end
-
-  mattr_accessor :global_options
-  @@global_options = GlobalConfiguration.new
-
-  # Default way to setup Blocks
-  def self.setup
-    yield global_options
-  end
+  include Configurator
 end

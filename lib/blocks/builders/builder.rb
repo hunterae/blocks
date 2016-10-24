@@ -15,7 +15,7 @@ module Blocks
 
     attr_accessor :renderer
 
-    attr_accessor :skipped_blocks
+    delegate :render, :render_with_overrides, to: :renderer
 
     def initialize(view, init_options={})
       self.view = view
@@ -23,21 +23,14 @@ module Blocks
       self.anonymous_block_number = 0
       self.block_containers =
         HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
-      self.skipped_blocks = HashWithIndifferentAccess.new
-
-      define :block_wrapper, wrapper_html: { }, wrapper_tag: :div do |content_block, options|
-        view.content_tag options[:wrapper_tag], options[:wrapper_html], &content_block
-      end
     end
 
     def renderer
-      @renderer ||= Renderer.new(self)
+      @renderer ||= Blocks::DefaultRenderer.new(self)
     end
 
-    delegate :render, :render_with_overrides, to: :renderer
-
     # Checks if a particular block has been defined within the current block scope.
-    #   <%= blocks.defined? :some_block_name %>
+    #   <%= blocks.block_defined? :some_block_name %>
     # Options:
     # [+name+]
     #   The name of the block to check
@@ -60,20 +53,35 @@ module Blocks
     #   collection
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
-    def define(name, options={}, &block)
-      collection = options.delete(:collection)
+    def define(*args, &block)
+      options = args.extract_options!
 
+      collection = options.delete(:collection)
       if collection
-        collection.each do |object|
-          define(call_with_params(name, object, options), options, &block)
+        collection.map do |object|
+          define(call_with_params(args.first, object, options), options, &block)
         end
+
       else
-        define_block_container(name, options, &block)
+        if args.first
+          name = args.shift
+          anonymous = false
+        else
+          name = anonymous_block_name
+          anonymous = true
+        end
+        
+        block_containers[name].tap do |block_container|
+          block_container.add_options options
+          block_container.name = name
+          block_container.block = block if block_given? && block_container.block.nil?
+          block_container.anonymous = anonymous
+        end
       end
     end
 
     def deferred_render(*args, &block)
-      block_container = define_block_container(*args, &block)
+      block_container = define(*args, &block)
       "PLACEHOLDER_FOR_#{block_container.name} "
     end
 
@@ -95,14 +103,18 @@ module Blocks
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def replace(name, options={}, &block)
       blocks[name] = nil
-      define_block_container(name, options, &block)
+      define(name, options, &block)
     end
 
     def skip(name, skip_all_hooks=false)
-      skipped_blocks[name] = { skip_all_hooks: skip_all_hooks }
+      block_containers[name].skip(skip_all_hooks)
     end
 
-    BlockContainer::HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, *|
+    def skip_completely(name)
+      skip(name, true)
+    end
+
+    BlockContainer::HOOKS.each do |hook|
       define_method(hook) do |name, *args, &block|
         block_container = block_containers[name]
         block_container.send(hook, name, *args, &block)
@@ -116,25 +128,5 @@ module Blocks
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
     end
-
-    # Build a BlockContainer object and add it to the global hash of block_containers
-    #  if a block by the same name is not already defined
-    def define_block_container(*args, &block)
-      if args.first
-        name = args.shift
-        anonymous = false
-      else
-        name = anonymous_block_name
-        anonymous = true
-      end
-
-      block_containers[name].tap do |block_container|
-        block_container.add_options args.extract_options!
-        block_container.name = name
-        block_container.block = block if block_given? && block_container.block.nil?
-        block_container.anonymous = anonymous
-      end
-    end
-
   end
 end
