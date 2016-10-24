@@ -65,8 +65,8 @@ module Blocks
     end
 
     def skip(all_hooks=false)
-      container.skip_content = true
-      container.skip_all_hooks = all_hooks
+      self.skip_content = true
+      self.skip_all_hooks = all_hooks
     end
 
     HOOKS_AND_QUEUEING_TECHNIQUE.each do |hook, direction|
