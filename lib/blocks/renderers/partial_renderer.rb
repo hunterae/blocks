@@ -1,7 +1,5 @@
 module Blocks
   class PartialRenderer < AbstractRenderer
-    RESTRICTED_LOCALS = [:class]
-
     def initialize(builder)
       self.builder = builder
     end
@@ -12,7 +10,6 @@ module Blocks
       locals = Blocks.global_options.merge(init_options).merge(options)
       locals[options.delete(:builder_variable) || :builder] = builder
       locals[:options] = locals
-      locals = locals.except(*RESTRICTED_LOCALS)
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|

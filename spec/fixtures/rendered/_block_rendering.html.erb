@@ -1,0 +1,93 @@
+<%- if hooks %>
+<div class="bg-danger">
+  Second Before All
+</div>
+<div class="bg-danger">
+  First Before All
+</div>
+<div class="bg-danger">
+  Second Around All
+  <div class="bg-warning">
+    First Around All
+<%- end %>
+<%- if wrappers %>
+    <div class="bg-info">
+      Test Block Wrapper for all
+<%- end %>
+<% (collection || [nil]).each do |item| %>
+<%- if wrappers %>
+      <div class="bg-info">
+        Test Block Wrapper for each item
+<%- end %>
+<%- if hooks %>
+        <div class="bg-success">
+          Second Around for item <%= item %>
+          <div class="bg-info">
+            First Around for item <%= item %>
+            <div class="bg-success">
+              Second Before for item <%= item %>
+            </div>
+            <div class="bg-success">
+              First Before for item <%= item %>
+            </div>
+<%- end %>
+<%- if wrappers %>
+            <div class="bg-info">
+              Test Block Wrapper for item <%= item %>
+<%- end %>
+<%- if hooks %>
+              <div class="bg-success">
+                Second Surround for item <%= item %>
+                <div class="bg-info">
+                  First Surround for item <%= item %>
+                  <div class="bg-primary">First Prepended block <%= item %></div>
+                  <div class="bg-primary">Second Prepended block <%= item %></div>
+<%- end %>
+<% if render_with_different_block %>
+  <div class="bg-primary">Some other block <%= item %></div>
+<% else %>
+<% case block_or_partial %>
+  <% when Symbol %>
+    <div class="bg-primary">Actual block <%= item %></div>
+  <% when String %>
+    <%= render partial: block_or_partial, locals: { options: { object: item } } %>
+  <% end %>
+<% end %>
+<%- if hooks %>
+                  <div class="bg-primary">First Appended block <%= item %></div>
+                  <div class="bg-primary">Second Appended block <%= item %></div>
+                </div>
+              </div>
+<%- end %>
+<%- if wrappers %>
+            </div>
+<%- end %>
+<%- if hooks %>
+            <div class="bg-success">
+              First After for item <%= item %>
+            </div>
+            <div class="bg-success">
+              Second After for item <%= item %>
+            </div>
+          </div>
+        </div>
+<%- end %>
+<%- if wrappers %>
+      </div>
+<%- end %>
+<% end %>
+<%- if wrappers %>
+    </div>
+<%- end %>
+<%- if hooks %>
+  </div>
+</div>
+<%- end %>
+<%- if hooks %>
+<div class="bg-danger">
+  First After All
+</div>
+<div class="bg-danger">
+  Second After All
+</div>
+<%- end %>

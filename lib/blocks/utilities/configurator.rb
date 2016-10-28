@@ -5,6 +5,7 @@ module Blocks
     included do
       mattr_accessor :global_options
       add_config(:builder_class)
+      add_config(:renderer_class)
       reset_config
     end
 
@@ -37,6 +38,7 @@ module Blocks
         self.global_options = HashWithIndifferentAccess.new
         configure do |config|
           config.builder_class = Builder
+          config.renderer_class = DefaultRenderer
         end
       end
     end

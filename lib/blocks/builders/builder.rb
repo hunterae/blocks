@@ -13,9 +13,9 @@ module Blocks
 
     attr_accessor :view
 
-    attr_accessor :renderer
+    attr_accessor :default_renderer
 
-    delegate :render, :render_with_overrides, to: :renderer
+    delegate :render, :render_with_overrides, to: :default_renderer
 
     def initialize(view, init_options={})
       self.view = view
@@ -25,17 +25,18 @@ module Blocks
         HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
     end
 
-    def renderer
-      @renderer ||= Blocks::DefaultRenderer.new(self)
+    def default_renderer
+      @default_renderer ||= Blocks.renderer_class.new(self)
     end
 
-    # Checks if a particular block has been defined within the current block scope.
-    #   <%= blocks.block_defined? :some_block_name %>
-    # Options:
-    # [+name+]
-    #   The name of the block to check
-    def block_defined?(name)
-      name && block_containers.key?(name)
+    AbstractRenderer::RENDERERS.each do |klass|
+      name = klass.to_s.demodulize.underscore
+
+      class_eval <<-RUBY, __FILE__, __LINE__ + 1
+        def #{name}
+          @#{name} ||= #{klass}.new(self)
+        end
+      RUBY
     end
 
     # Define a block, unless a block by the same name is already defined.
@@ -70,7 +71,7 @@ module Blocks
           name = anonymous_block_name
           anonymous = true
         end
-        
+
         block_containers[name].tap do |block_container|
           block_container.add_options options
           block_container.name = name
@@ -106,8 +107,8 @@ module Blocks
       define(name, options, &block)
     end
 
-    def skip(name, skip_all_hooks=false)
-      block_containers[name].skip(skip_all_hooks)
+    def skip(name, completely=false)
+      block_containers[name].skip(completely)
     end
 
     def skip_completely(name)
@@ -115,9 +116,8 @@ module Blocks
     end
 
     BlockContainer::HOOKS.each do |hook|
-      define_method(hook) do |name, *args, &block|
-        block_container = block_containers[name]
-        block_container.send(hook, name, *args, &block)
+      define_method(hook) do |name, options={}, &block|
+        block_containers[name].send(hook, options, &block)
       end
     end
 

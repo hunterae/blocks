@@ -1,27 +1,33 @@
-require 'active_support/all'
+require 'active_support/hash_with_indifferent_access'
 require 'blocks/action_view_extensions/view_extensions'
 
 module Blocks
   extend ActiveSupport::Autoload
 
   eager_autoload do
-    autoload_under 'builders' do
-      autoload :Builder
-    end
-
     autoload_under 'renderers' do
-      autoload :AbstractRenderer
       autoload :DefaultRenderer
       autoload :PartialRenderer
       autoload :BlockWithHooksRenderer
       autoload :AdjacentBlocksRenderer
-      autoload :SurroundingBlocksRenderer
+      autoload :NestingBlocksRenderer
+      autoload :CollectionRenderer
+      autoload :WrapperRenderer
+      autoload :BlockRenderer
+      autoload :AbstractRenderer
+    end
+
+    autoload_under 'builders' do
+      autoload :Builder
     end
 
     autoload_under 'utilities' do
       autoload :BlockAndOptionsExtractor
       autoload :Configurator
       autoload :BlockContainer
+
+      # WIP
+      autoload :IndifferentHashWithCaller
     end
   end
 

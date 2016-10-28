@@ -1,17 +1,17 @@
 module Blocks
   class DefaultRenderer < AbstractRenderer
     def render(*args, &block)
-      BlockWithHooksRenderer.new(builder).render(*args, &block)
+      block_with_hooks_renderer.render(*args, &block)
     end
 
     def render_with_overrides(*args, &block)
-      name = args.first
       options = args.extract_options!
+      name = args.first
       if name.is_a?(Symbol) || name.is_a?(String)
         options[:overrides] = block
-        BlockWithHooksRenderer.new(builder).render(*args, options)
+        block_with_hooks_renderer.render(*args, options)
       elsif options[:partial]
-        PartialRenderer.new(builder).render(options.delete(:partial), &block)
+        partial_renderer.render(options.delete(:partial), &block)
       else
         # TODO
       end

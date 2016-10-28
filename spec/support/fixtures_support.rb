@@ -1,0 +1,12 @@
+def view
+  @view ||= ActionView::Base.new("spec/fixtures")
+end
+
+def render_template_and_compare_to_fixture(partial, options={})
+  locals = with_default_options(options)
+  rendered = view.render partial: partial.to_s, locals: locals
+  expected = view.render partial: "rendered/#{partial}", locals: locals
+  expect(rendered).to closely_resemble_html(expected)
+
+  rendered
+end

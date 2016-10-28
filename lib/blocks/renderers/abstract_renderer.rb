@@ -1,14 +1,22 @@
 module Blocks
-
   class AbstractRenderer
     include CallWithParams
+
+    RENDERERS = [
+      AdjacentBlocksRenderer,
+      BlockRenderer,
+      BlockWithHooksRenderer,
+      CollectionRenderer,
+      PartialRenderer,
+      NestingBlocksRenderer,
+      WrapperRenderer
+    ]
 
     delegate :view,
              :block_containers,
              :init_options,
               to: :builder
 
-    attr_accessor :output_buffer
     attr_accessor :builder
 
     def initialize(builder)
@@ -19,7 +27,12 @@ module Blocks
       raise NotImplementedError
     end
 
+    delegate *(RENDERERS.map do |klass|
+      klass.to_s.demodulize.underscore
+    end), to: :builder
+
     protected
+
     def with_output_buffer
       view.with_output_buffer { yield }
     end

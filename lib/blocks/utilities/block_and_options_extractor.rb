@@ -21,11 +21,7 @@ module Blocks
         block_name = block_container.name
       else
         block_name = block_container_or_block_name
-        block_container = if builder.block_defined?(block_name)
-          block_containers[block_name]
-        else
-          nil
-        end
+        block_container = block_containers[block_name]
       end
 
       if runtime_options.key?(:with) && runtime_options[:with]
