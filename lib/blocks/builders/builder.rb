@@ -39,6 +39,10 @@ module Blocks
       RUBY
     end
 
+    def block_defined?(block_name)
+      block_name && block_containers.key?(block_name)
+    end
+
     # Define a block, unless a block by the same name is already defined.
     #   <%= blocks.define :some_block_name, :parameter1 => "1", :parameter2 => "2" do |options| %>
     #     <%= options[:parameter1] %> and <%= options[:parameter2] %>

@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "guard-rspec"
   spec.add_development_dependency "terminal-notifier-guard", "~> 1.6.1"
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency "capybara"
 
   spec.add_dependency "call_with_params"
   spec.add_dependency "rails", ">= 3.0.0"

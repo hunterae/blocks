@@ -45,7 +45,7 @@
 <%- end %>
 <% if render_with_different_block %>
   <div class="bg-primary">Some other block <%= item %></div>
-<% else %>
+<% elsif !defined?(block_skipped) || !block_skipped %>
 <% case block_or_partial %>
   <% when Symbol %>
     <div class="bg-primary">Actual block <%= item %></div>

@@ -40,11 +40,11 @@ RSpec::Matchers.define :closely_resemble_html do |expected|
     "closely_resemble_html(#{@expected})"
   end
 
-  failure_message_for_should do |text|
+  failure_message do |text|
     "expected #{@actual} \n\n\nto closely resemble\n\n\n #{@expected}"
   end
 
-  failure_message_for_should_not do |text|
+  failure_message_when_negated do |text|
     "expected #{@actual} \n\n\nto not closely resemble\n\n\n #{@expected}"
   end
 

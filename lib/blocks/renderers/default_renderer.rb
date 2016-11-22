@@ -11,7 +11,7 @@ module Blocks
         options[:overrides] = block
         block_with_hooks_renderer.render(*args, options)
       elsif options[:partial]
-        partial_renderer.render(options.delete(:partial), &block)
+        partial_renderer.render(options.delete(:partial), options, &block)
       else
         # TODO
       end

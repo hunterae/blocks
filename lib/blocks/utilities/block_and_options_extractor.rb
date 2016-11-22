@@ -49,7 +49,7 @@ module Blocks
           block_to_use = Proc.new do |*args|
             options = args.extract_options!
             block ||= options.delete(:block)
-            builder.send(proxy_block, *args, &block)
+            builder.send(proxy_block, *args, options, &block)
           end
         end
       end
