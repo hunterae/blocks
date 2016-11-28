@@ -87,7 +87,7 @@ module Blocks
 
     def deferred_render(*args, &block)
       block_container = define(*args, &block)
-      "PLACEHOLDER_FOR_#{block_container.name} "
+      Blocks::BlockPlaceholder.new(block_container)
     end
 
     # Define a block, replacing an existing block by the same name if it is already defined.

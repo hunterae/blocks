@@ -25,6 +25,7 @@ module Blocks
       autoload :BlockAndOptionsExtractor
       autoload :Configurator
       autoload :BlockContainer
+      autoload :BlockPlaceholder
 
       # WIP
       autoload :IndifferentHashWithCaller

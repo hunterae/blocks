@@ -19,7 +19,7 @@ module Blocks
         render_nesting_hooks_for(BlockContainer::AROUND_ALL, block_name, *args, runtime_options) do
           render_wrapper(wrap_all, *args, options) do
             render_as_collection(collection, *args, options) do |*item_args, options|
-              render_wrapper(wrap_each, *args, options) do
+              render_wrapper(wrap_each, *item_args, options) do
                 render_nesting_hooks_for(BlockContainer::AROUND, block_name, *item_args, runtime_options) do
                   render_adjacent_hooks_for(BlockContainer::BEFORE, block_name, *item_args, runtime_options)
                   if !skip_content

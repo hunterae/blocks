@@ -13,7 +13,7 @@ module Blocks
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|
-            builder.render $1, *args, options
+            builder.render $1, *args
           end.html_safe
         end
       end

@@ -42,7 +42,15 @@ module Blocks
     end
 
     def capture_block(*args, &block)
-      without_haml_interference { view.capture(*(args[0, block.arity.abs]), &block) }
+      without_haml_interference do
+        if block.arity > 0
+          args = args[0, block.arity]
+        end
+
+        with_output_buffer do
+          output_buffer << view.capture(*args, &block)
+        end
+      end
     end
 
     def block_and_options_to_use(block_container_or_block_name, runtime_options, &default_definition)

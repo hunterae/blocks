@@ -4,8 +4,8 @@ module Blocks
       if collection
         options = args.extract_options!
         object_name = options.delete(:as) || :object
-        collection.each do |item|
-          yield *([item] + args + [options.merge(object_name => item)])
+        collection.each_with_index do |item, index|
+          yield *([item] + args + [options.merge(object_name => item, current_index: index)])
         end
       else
         yield *args
