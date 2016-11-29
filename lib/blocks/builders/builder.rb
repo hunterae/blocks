@@ -17,12 +17,40 @@ module Blocks
 
     delegate :render, :render_with_overrides, to: :default_renderer
 
+    CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
+
     def initialize(view, init_options={})
       self.view = view
       self.init_options = init_options.with_indifferent_access
       self.anonymous_block_number = 0
       self.block_containers =
         HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
+
+      permit CONTENT_TAG_WRAPPER_BLOCK
+      define CONTENT_TAG_WRAPPER_BLOCK, wrapper_tag: :div do |content_block, *args|
+        options = args.extract_options!
+        wrapper_options = if options[:wrapper_html_option]
+          if options[:wrapper_html_option].is_a?(Array)
+            wrapper_attribute = nil
+            options[:wrapper_html_option].each do |attribute|
+              if options[attribute].present?
+                wrapper_attribute = attribute
+                break
+              end
+            end
+            options[wrapper_attribute]
+          else
+            options[options[:wrapper_html_option]]
+          end
+        end
+        wrapper_options = concatenating_merge(options[:wrapper_html], wrapper_options)
+        view.content_tag options[:wrapper_tag],
+          call_each_hash_value_with_params(wrapper_options || {}, *args, options),
+          &content_block
+
+      end
+
+      permit_all
     end
 
     def default_renderer
@@ -125,12 +153,18 @@ module Blocks
       end
     end
 
+    include BuilderPermissions
+
     protected
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
     def anonymous_block_name
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
+    end
+
+    def concatenating_merge(options, options2)
+      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) {|key, v1, v2| "#{v1} #{v2}" }
     end
   end
 end

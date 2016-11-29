@@ -19,13 +19,16 @@ module Blocks
 
     autoload_under 'builders' do
       autoload :Builder
+      autoload :BuilderPermissions
     end
 
     autoload_under 'utilities' do
       autoload :BlockAndOptionsExtractor
+      autoload :DynamicConfiguration
       autoload :Configurator
       autoload :BlockContainer
       autoload :BlockPlaceholder
+      autoload :InvalidPermissionsHandler
 
       # WIP
       autoload :IndifferentHashWithCaller
