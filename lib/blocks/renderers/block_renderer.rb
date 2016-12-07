@@ -3,7 +3,8 @@ module Blocks
     def render(*args, &block)
       options = args.extract_options!
       output_buffer << if options[:partial]
-        partial_renderer.render(options.delete(:partial), options.merge(block: block))
+        options = options.merge(block: block) if block_given?
+        partial_renderer.render(options.delete(:partial), options)
       elsif block_given?
         capture_block(*args, options, &block)
       end
