@@ -6,10 +6,10 @@ module Blocks
         block_name = args.shift
         block, options = block_and_options_to_use(block_name, runtime_options, &default_definition)
         wrap_all = options.delete(:wrap_all)
-        wrap_each = options.delete(:wrap_each)
-        wrap_with = options.delete(:wrap_with) || options.delete(:wrap) || options.delete(:wrapper)
+        wrap_each = options.delete(:wrap_each) || options.delete(:outer_wrapper)
+        wrap_with = options.delete(:wrap_with) || options.delete(:wrap) || options.delete(:wrapper) || options.delete(:inner_wrapper)
         collection = options.delete(:collection)
-        runtime_options = runtime_options.except(:wrap_each, :wrap_with, :wrap, :wrapper, :wrap_all, :wrap_container_with, :collection)
+        runtime_options = runtime_options.except(:wrap_each, :wrap_with, :wrap, :wrapper, :wrap_all, :wrap_container_with, :collection, :outer_wrapper, :inner_wrapper)
 
         container = block_containers[block_name] if block_name
         skip_content = container.try(:skip_content)

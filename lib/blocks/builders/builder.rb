@@ -43,9 +43,8 @@ module Blocks
             options[options[:wrapper_html_option]]
           end
         end
-        wrapper_options = concatenating_merge(options[:wrapper_html], wrapper_options)
         view.content_tag options[:wrapper_tag],
-          call_each_hash_value_with_params(wrapper_options || {}, *args, options),
+          concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
           &content_block
 
       end
@@ -135,7 +134,7 @@ module Blocks
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def replace(name, options={}, &block)
-      blocks[name] = nil
+      block_containers.delete(name)
       define(name, options, &block)
     end
 
@@ -155,16 +154,19 @@ module Blocks
 
     include BuilderPermissions
 
+    def concatenating_merge(options, options2, *args)
+      options = call_each_hash_value_with_params(options, *args)
+      options2 = call_each_hash_value_with_params(options2, *args)
+
+      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) {|key, v1, v2| "#{v1} #{v2}" }
+    end
+
     protected
 
     # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
     def anonymous_block_name
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
-    end
-
-    def concatenating_merge(options, options2)
-      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) {|key, v1, v2| "#{v1} #{v2}" }
     end
   end
 end

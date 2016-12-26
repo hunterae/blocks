@@ -31,11 +31,11 @@
               First Before for item <%= item %>
             </div>
 <%- end %>
-<%- if wrappers %>
+<%- if wrappers && !block_skipped  %>
             <div class="bg-info">
               Test Block Wrapper for item <%= item %>
 <%- end %>
-<%- if hooks %>
+<%- if hooks && !block_skipped %>
               <div class="bg-success">
                 Second Surround for item <%= item %>
                 <div class="bg-info">
@@ -45,7 +45,7 @@
 <%- end %>
 <% if render_with_different_block %>
   <div class="bg-primary">Some other block <%= item %></div>
-<% elsif !defined?(block_skipped) || !block_skipped %>
+<% elsif !block_skipped %>
 <% case block_or_partial %>
   <% when Symbol %>
     <div class="bg-primary">Actual block <%= item %></div>
@@ -53,13 +53,13 @@
     <%= render partial: block_or_partial, locals: { options: { object: item } } %>
   <% end %>
 <% end %>
-<%- if hooks %>
+<%- if hooks && !block_skipped %>
                   <div class="bg-primary">First Appended block <%= item %></div>
                   <div class="bg-primary">Second Appended block <%= item %></div>
                 </div>
               </div>
 <%- end %>
-<%- if wrappers %>
+<%- if wrappers && !block_skipped %>
             </div>
 <%- end %>
 <%- if hooks %>

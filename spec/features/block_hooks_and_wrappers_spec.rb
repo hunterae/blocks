@@ -9,7 +9,8 @@ feature "Block Hooks and Wrappers" do
       wrappers: wrappers,
       collection: collection,
       block_or_partial: block_or_partial,
-      render_with_different_block: render_with_different_block
+      render_with_different_block: render_with_different_block,
+      block_skipped: false
     }
   end
 
