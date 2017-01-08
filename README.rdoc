@@ -1,3 +1,4 @@
+{<img alt='Stories in Ready' src='https://badge.waffle.io/hunterae/blocks.png?label=ready&title=Ready' />}[https://waffle.io/hunterae/blocks]
 = Blocks
 
 How do you render your blocks of code?
