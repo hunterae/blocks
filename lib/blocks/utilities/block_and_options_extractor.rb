@@ -12,7 +12,7 @@ module Blocks
 
     def block_and_options_to_use(block_container_or_block_name, runtime_options=HashWithIndifferentAccess.new, &block)
       block_to_use = nil
-      options_to_use = nil
+      proxy_options = HashWithIndifferentAccess.new
       block_container_options = HashWithIndifferentAccess.new
       proxy_block = nil
 
@@ -26,7 +26,7 @@ module Blocks
 
       if runtime_options.key?(:with) && runtime_options[:with]
         proxy_block = runtime_options.delete(:with)
-        block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block }.with_indifferent_access)
+        block_to_use, proxy_options = block_and_options_to_use(proxy_block, { block: block, proxy: true }.with_indifferent_access)
       end
 
       if block_container
@@ -35,7 +35,7 @@ module Blocks
         if !proxy_block
           if block_container_options.key?(:with) && block_container_options[:with]
             proxy_block = block_container_options.delete(:with)
-            block_to_use, options_to_use = block_and_options_to_use(proxy_block, { block: block || block_container.block }.with_indifferent_access)
+            block_to_use, proxy_options = block_and_options_to_use(proxy_block, { block: block || block_container.block, proxy: true }.with_indifferent_access)
           else
             block_to_use = block_container.block
           end
@@ -54,9 +54,22 @@ module Blocks
         end
       end
 
-      options_to_use ||= Blocks.global_options.merge(init_options)
-      runtime_defaults = (runtime_options.delete(:defaults) || block_container_options.delete(:defaults)).to_h.with_indifferent_access
-      options_to_use = options_to_use.merge(runtime_defaults).merge(block_container_options).merge(runtime_options)
+      proxy = runtime_options.delete(:proxy)
+      runtime_defaults = (
+        runtime_options.delete(:defaults) ||
+        block_container_options.delete(:defaults)
+      ).to_h.with_indifferent_access
+      if proxy
+        options_to_use = runtime_defaults.merge(block_container_options).merge(runtime_options)
+      else
+        options_to_use =
+          Blocks.global_options.
+                 merge(init_options).
+                 merge(runtime_defaults).
+                 merge(proxy_options).
+                 merge(block_container_options).
+                 merge(runtime_options)
+      end
 
       [block_to_use, options_to_use]
     end
