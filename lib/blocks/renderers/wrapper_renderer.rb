@@ -1,18 +1,16 @@
 module Blocks
   class WrapperRenderer < AbstractRenderer
-    def render(wrapper, *args, &block)
+    def render(wrapper, runtime_context, &block)
       content_block = Proc.new { with_output_buffer { yield } }
-      if wrapper.is_a?(Proc)
-        output_buffer << capture_block(content_block, *args, &wrapper)
-      elsif wrapper.present?
-        wrapper_block, options = block_and_options_to_use(wrapper, args.extract_options!)
-        if wrapper_block
-          output_buffer << capture_block(content_block, *args, options, &wrapper_block)
-        elsif builder.respond_to?(wrapper)
-          output_buffer << builder.send(wrapper, *args, options, &content_block)
-        else
-          yield
-        end
+      if wrapper.nil?
+        yield
+      elsif wrapper.is_a?(Proc)
+        output_buffer << capture_block(content_block, *(runtime_context.runtime_args), runtime_context, &wrapper)
+      elsif block_containers.key?(wrapper)
+        runtime_context = runtime_context.context_for_block_container(block_containers[wrapper])
+        render_block(content_block, runtime_context)
+      elsif builder.respond_to?(wrapper)
+        output_buffer << builder.send(wrapper, runtime_context, &content_block)
       else
         yield
       end

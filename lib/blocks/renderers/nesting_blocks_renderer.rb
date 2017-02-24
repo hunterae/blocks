@@ -1,15 +1,17 @@
 module Blocks
   class NestingBlocksRenderer < AbstractRenderer
-    def render(hook, block_name, *args, &block)
-      around_block_containers = block_containers[block_name].hooks[hook]
-      runtime_options = args.extract_options!
+    def render(hook, runtime_context, &block)
+      hooks = block_containers[runtime_context.block_name].hooks[hook]
 
       content_block = Proc.new { with_output_buffer { yield } }
-      renderer = around_block_containers.
-        inject(content_block) do |inner_content, container|
-          around_block, options = block_and_options_to_use(container, runtime_options)
-          Proc.new { capture_block(inner_content, *args, options, &around_block) }
-        end
+      renderer = hooks.inject(content_block) do |inner_content, container|
+        hook_runtime_context = runtime_context.context_for_block_container(container)
+        Proc.new {
+          with_output_buffer do
+            render_block(inner_content, hook_runtime_context)
+          end
+        }
+      end
 
       output_buffer << renderer.call
     end

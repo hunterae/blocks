@@ -1,9 +1,5 @@
 module Blocks
   class PartialRenderer < AbstractRenderer
-    def initialize(builder)
-      self.builder = builder
-    end
-
     def render(partial, options={}, &block)
       overrides_and_provided_content = capture_block(builder, &block) if block_given?
 

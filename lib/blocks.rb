@@ -6,6 +6,8 @@ module Blocks
 
   eager_autoload do
     autoload_under 'renderers' do
+      autoload :RenderingStrategy
+      autoload :RuntimeContext
       autoload :DefaultRenderer
       autoload :PartialRenderer
       autoload :BlockWithHooksRenderer
@@ -23,15 +25,12 @@ module Blocks
     end
 
     autoload_under 'utilities' do
-      autoload :BlockAndOptionsExtractor
       autoload :DynamicConfiguration
       autoload :Configurator
       autoload :BlockContainer
       autoload :BlockPlaceholder
       autoload :InvalidPermissionsHandler
-
-      # WIP
-      autoload :IndifferentHashWithCaller
+      autoload :HashWithCaller
     end
   end
 

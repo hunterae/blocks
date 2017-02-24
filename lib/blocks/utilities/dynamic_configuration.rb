@@ -1,4 +1,3 @@
-require 'byebug'
 module Blocks
   module DynamicConfiguration
     extend ActiveSupport::Concern

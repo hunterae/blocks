@@ -1,12 +1,11 @@
 module Blocks
   class AdjacentBlocksRenderer < AbstractRenderer
-    def render(hook, block_name, *args)
-      runtime_options = args.extract_options!
-      hooks = block_containers[block_name].hooks[hook]
-      hooks = hooks.reverse if hook.to_s.index("before") == 0
+    def render(hook, runtime_context)
+      hooks = block_containers[runtime_context.block_name].hooks[hook]
+      hooks = hooks.reverse if hook.to_s.index("before") == 0 || hook.to_s.index("prepend") == 0
       hooks.each do |block_container|
-        block, options = block_and_options_to_use(block_container, runtime_options)
-        output_buffer << capture_block(*args, options, &block) if block
+        hook_runtime_context = runtime_context.context_for_block_container(block_container)
+        render_block(hook_runtime_context)
       end
     end
   end

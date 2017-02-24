@@ -1,23 +1,16 @@
 module Blocks
-  class BlockContainer
+  class BlockContainer < RenderingStrategy
     # The name of the block defined (possibly an anonymous name)
     attr_accessor :name
-
-    # The actual Ruby block of code
-    attr_accessor :block
 
     # Whether the block is anonymous (doesn't have a user-specified name)
     attr_accessor :anonymous
 
     attr_accessor :hooks
 
-    attr_accessor :options_list
-
     attr_accessor :skip_content
 
     attr_accessor :skip_completely
-
-    attr_accessor :parent_block_container
 
     BEFORE_ALL = :before_all
     AROUND_ALL = :around_all
@@ -33,26 +26,32 @@ module Blocks
              AROUND_ALL, AROUND, SURROUND,
              APPEND, AFTER, AFTER_ALL]
 
-    def initialize(*args, &block)
-      self.hooks = HashWithIndifferentAccess.new { |hash, key| hash[key] = []; hash[key] }
-      self.options_list = []
+    def initialize(parent_block_container=nil, options=nil, &block)
+      super(&nil)
 
-      if args.present?
-        options = args.extract_options!
-        self.parent_block_container = options.delete(:parent_block_container)
-        self.add_options options
-        self.name = args.first || parent_block_container.try(:name)
-        self.block = block
+      if options.nil?
+        self.hooks = HashWithIndifferentAccess.new { |hash, key| hash[key] = []; hash[key] }
+      else
+        self.name = parent_block_container.name
+        self.add_options options, &block
       end
     end
 
-    def add_options(options)
-      # called_by = caller.detect {|c| !c.include?("/lib/blocks")}
-      options_list << options.with_indifferent_access
+    def add_options(options, &block)
+      super(name, options, &block)
     end
 
-    def merged_options
-      options_list.reduce(HashWithIndifferentAccess.new, :reverse_merge)
+    def to_s
+      description = []
+      block_name = self.name.to_s
+      if block_name.include?(" ")
+        block_name = ":\"#{block_name}\""
+      else
+        block_name = ":#{block_name}"
+      end
+      description << "Block Name: #{block_name}"
+      description << super
+      description.join("\n")
     end
 
     def skip(completely=false)
@@ -62,9 +61,7 @@ module Blocks
 
     HOOKS.each do |hook|
       define_method(hook) do |options={}, &block|
-        hooks[hook] << BlockContainer.new(
-          options.merge(parent_block_container: self), &block
-        )
+        hooks[hook] << BlockContainer.new(self, options, &block)
       end
     end
   end

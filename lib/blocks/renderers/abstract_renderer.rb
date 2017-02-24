@@ -1,6 +1,7 @@
 module Blocks
   class AbstractRenderer
     include CallWithParams
+    extend Forwardable
 
     RENDERERS = [
       AdjacentBlocksRenderer,
@@ -12,11 +13,6 @@ module Blocks
       WrapperRenderer
     ]
 
-    delegate :view,
-             :block_containers,
-             :init_options,
-              to: :builder
-
     attr_accessor :builder
 
     def initialize(builder)
@@ -27,19 +23,31 @@ module Blocks
       raise NotImplementedError
     end
 
-    delegate *(RENDERERS.map do |klass|
-      klass.to_s.demodulize.underscore
-    end), to: :builder
+    def_delegators :builder,
+      :view,
+      :block_containers,
+      :init_options,
+      :with_output_buffer,
+      :output_buffer,
+      *(RENDERERS.map do |klass|
+       klass.to_s.demodulize.underscore
+      end)
+
+    # def with_output_buffer
+    #   view.with_output_buffer { yield }
+    # end
+    #
+    # def output_buffer
+    #   view.output_buffer
+    # end
+
+    RENDERERS.each do |klass|
+      object_name = klass.to_s.demodulize.underscore
+      method_name = "render_#{object_name.gsub("_renderer", "")}"
+      def_delegator object_name.to_sym, :render, method_name.to_sym
+    end
 
     protected
-
-    def with_output_buffer
-      view.with_output_buffer { yield }
-    end
-
-    def output_buffer
-      view.output_buffer
-    end
 
     def capture_block(*args, &block)
       without_haml_interference do
@@ -51,10 +59,6 @@ module Blocks
           output_buffer << view.capture(*args, &block)
         end
       end
-    end
-
-    def block_and_options_to_use(block_container_or_block_name, runtime_options, &default_definition)
-      BlockAndOptionsExtractor.new(builder).block_and_options_to_use(block_container_or_block_name, runtime_options, &default_definition)
     end
 
     def without_haml_interference(&block)

@@ -30,7 +30,7 @@ module Blocks
       end
 
       if block_container
-        block_container_options = block_container.merged_options
+        block_container_options = block_container
 
         if !proxy_block
           if block_container_options.key?(:with) && block_container_options[:with]

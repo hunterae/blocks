@@ -13,9 +13,13 @@ module Blocks
 
     attr_accessor :view
 
-    attr_accessor :default_renderer
-
-    delegate :render, :render_with_overrides, to: :default_renderer
+    delegate :render,
+             :render_with_overrides,
+             to: :default_renderer
+    delegate :with_output_buffer,
+             :output_buffer,
+             :content_tag,
+             to: :view
 
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
 
@@ -23,11 +27,12 @@ module Blocks
       self.view = view
       self.init_options = init_options.with_indifferent_access
       self.anonymous_block_number = 0
-      self.block_containers =
-        HashWithIndifferentAccess.new { |hash, key| hash[key] = BlockContainer.new }
+      self.block_containers = HashWithIndifferentAccess.new { |hash, key|
+        hash[key] = BlockContainer.new
+      }
 
       permit CONTENT_TAG_WRAPPER_BLOCK
-      define CONTENT_TAG_WRAPPER_BLOCK, wrapper_tag: :div do |content_block, *args|
+      define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
         options = args.extract_options!
         wrapper_options = if options[:wrapper_html_option]
           if options[:wrapper_html_option].is_a?(Array)
@@ -43,7 +48,7 @@ module Blocks
             options[options[:wrapper_html_option]]
           end
         end
-        view.content_tag options[:wrapper_tag],
+        content_tag options[:wrapper_tag],
           concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
           &content_block
 
@@ -67,7 +72,13 @@ module Blocks
     end
 
     def block_defined?(block_name)
-      block_name && block_containers.key?(block_name)
+      block_containers.key?(block_name)
+    end
+
+    def define_each(collection, block_name_proc, *args, &block)
+      collection.map do |object|
+        define(call_with_params(block_name_proc, object, *args), object, *args, &block)
+      end
     end
 
     # Define a block, unless a block by the same name is already defined.
@@ -77,38 +88,28 @@ module Blocks
     #
     # Options:
     # [+name+]
-    #   The name of the block being defined (either a string or a symbol or a Proc)
+    #   The name of the block being defined (either a string or a symbol)
     # [+options+]
     #   The default options for the block definition. Any or all of these options may be overridden by
-    #   whomever calls "blocks.render" on this block. If :collection => some_array,
-    #   Blocks will assume that the first argument is a Proc and define a block for each object in the
-    #   collection
+    #   whomever calls "blocks.render" on this block.
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def define(*args, &block)
       options = args.extract_options!
 
-      collection = options.delete(:collection)
-      if collection
-        collection.map do |object|
-          define(call_with_params(args.first, object, options), options, &block)
-        end
-
+      if args.first
+        name = args.shift
+        anonymous = false
       else
-        if args.first
-          name = args.shift
-          anonymous = false
-        else
-          name = anonymous_block_name
-          anonymous = true
-        end
+        name = anonymous_block_name
+        anonymous = true
+      end
 
-        block_containers[name].tap do |block_container|
-          block_container.add_options options
-          block_container.name = name
-          block_container.block = block if block_given? && block_container.block.nil?
-          block_container.anonymous = anonymous
-        end
+      block_containers[name].tap do |block_container|
+        block_container.name = name
+        block_container.add_options options, &block
+        block_container.block = block if block_given? && block_container.block.nil?
+        block_container.anonymous = anonymous
       end
     end
 

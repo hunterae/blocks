@@ -4,13 +4,6 @@ module Blocks
 
     included do
       include DynamicConfiguration
-      singleton_class.class_eval do
-        remove_possible_method(:global_options)
-        global_options = HashWithIndifferentAccess.new
-        define_method(:global_options) do
-          global_options
-        end
-      end
 
       add_config(:builder_class)
       add_config(:renderer_class)
