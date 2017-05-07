@@ -5,10 +5,10 @@ module Blocks
       if wrapper.nil?
         yield
       elsif wrapper.is_a?(Proc)
-        output_buffer << capture_block(content_block, *(runtime_context.runtime_args), runtime_context, &wrapper)
-      elsif block_containers.key?(wrapper)
-        runtime_context = runtime_context.context_for_block_container(block_containers[wrapper])
-        render_block(content_block, runtime_context)
+        output_buffer << capture(content_block, *(runtime_context.runtime_args), runtime_context, &wrapper)
+      elsif block_definitions.key?(wrapper)
+        runtime_context = runtime_context.extend_to_block_definition(block_definitions[wrapper])
+        block_renderer.render(content_block, runtime_context)
       elsif builder.respond_to?(wrapper)
         output_buffer << builder.send(wrapper, runtime_context, &content_block)
       else

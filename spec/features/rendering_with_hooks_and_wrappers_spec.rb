@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-feature "Block Hooks and Wrappers" do
+feature "Rendering with Hooks and Wrappers" do
   def with_default_options(hooks: true, wrappers: true, collection: nil,
                            block_or_partial: :block,
                            render_with_different_block: false)

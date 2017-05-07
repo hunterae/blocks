@@ -1,0 +1,55 @@
+<%
+  def block_description(block_name, runtime: false, default: false)
+    prefix = if runtime
+      "Runtime "
+    elsif default
+      "Default "
+    end
+    "From #{prefix}#{block_name.to_s.titleize} Definition"
+  end
+
+  def block_options(block_name, additional_options: {}, runtime: true, defaults: true)
+    standard_description = block_description(block_name)
+    unique_block_option = "#{block_name}_option"
+
+    options = additional_options.merge(
+      unique_block_option => standard_description,
+      shared_option: standard_description,
+      shared_standard_option: standard_description
+    )
+
+    if runtime
+      runtime_description = block_description(block_name, runtime: true)
+      unique_runtime_block_option = "runtime_#{unique_block_option}"
+      options[:runtime] = {
+        shared_option: runtime_description,
+        shared_runtime_option: runtime_description,
+        unique_runtime_block_option => runtime_description,
+      }
+    end
+
+    if defaults
+      default_description = block_description(block_name, default: true)
+      unique_default_block_option = "default_#{unique_block_option}"
+      options[:defaults] = {
+        shared_option: default_description,
+        shared_default_option: default_description,
+        unique_default_block_option => default_description
+      }
+    end
+    options
+  end
+
+  def define_block(block_name, additional_options={}, &block)
+    blocks.define block_name, block_options(block_name, additional_options: additional_options), &block
+  end
+%>
+
+<% define_block :test_block, with: :proxy_block_1 %>
+<% define_block :proxy_block_1, with: :proxy_block_2 %>
+<% define_block :proxy_block_2, with: :proxy_block_3 %>
+<% define_block :proxy_block_3 do |options| %>
+  <% raise options.inspect %>
+<% end %>
+
+<%= blocks.render :test_block, block_options(:runtime, runtime: false) %>

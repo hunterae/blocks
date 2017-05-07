@@ -1,3 +1,4 @@
+require 'active_support/core_ext/hash'
 require 'active_support/hash_with_indifferent_access'
 require 'blocks/action_view_extensions/view_extensions'
 
@@ -6,9 +7,9 @@ module Blocks
 
   eager_autoload do
     autoload_under 'renderers' do
-      autoload :RenderingStrategy
+      autoload :Renderer
       autoload :RuntimeContext
-      autoload :DefaultRenderer
+      autoload :AbstractRenderer
       autoload :PartialRenderer
       autoload :BlockWithHooksRenderer
       autoload :AdjacentBlocksRenderer
@@ -16,23 +17,29 @@ module Blocks
       autoload :CollectionRenderer
       autoload :WrapperRenderer
       autoload :BlockRenderer
-      autoload :AbstractRenderer
     end
 
     autoload_under 'builders' do
+      autoload :HookDefinition
+      autoload :BlockDefinition
       autoload :Builder
-      autoload :BuilderPermissions
+      autoload :BlockPlaceholder
     end
 
     autoload_under 'utilities' do
       autoload :DynamicConfiguration
       autoload :Configurator
-      autoload :BlockContainer
-      autoload :BlockPlaceholder
-      autoload :InvalidPermissionsHandler
+      autoload :OptionsSet
+      autoload :HashWithRenderStrategy
       autoload :HashWithCaller
     end
   end
+
+  # WIP
+  # autoload_under 'experimental' do
+  #   autoload :BuilderPermissions
+  #   autoload :InvalidPermissionsHandler
+  # end
 
   autoload :Version
 

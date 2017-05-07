@@ -1,3 +1,4 @@
+# WIP
 module Blocks
   class InvalidPermissionsHandler
     LOG = :log

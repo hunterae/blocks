@@ -1,14 +1,13 @@
 module Blocks
   class NestingBlocksRenderer < AbstractRenderer
     def render(hook, runtime_context, &block)
-      hooks = block_containers[runtime_context.block_name].hooks[hook]
-
+      hooks = block_definitions[runtime_context.block_name].hooks_for hook
       content_block = Proc.new { with_output_buffer { yield } }
-      renderer = hooks.inject(content_block) do |inner_content, container|
-        hook_runtime_context = runtime_context.context_for_block_container(container)
+      renderer = hooks.inject(content_block) do |inner_content, block_definition|
+        hook_runtime_context = runtime_context.extend_to_block_definition(block_definition)
         Proc.new {
           with_output_buffer do
-            render_block(inner_content, hook_runtime_context)
+            block_renderer.render(inner_content, hook_runtime_context)
           end
         }
       end

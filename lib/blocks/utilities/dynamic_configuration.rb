@@ -2,16 +2,6 @@ module Blocks
   module DynamicConfiguration
     extend ActiveSupport::Concern
 
-    included do
-      singleton_class.class_eval do
-        remove_possible_method(:global_options)
-        global_options = HashWithIndifferentAccess.new
-        define_method(:global_options) do
-          global_options
-        end
-      end
-    end
-
     module ClassMethods
       def add_config(*attrs)
         options = attrs.extract_options!
@@ -21,7 +11,6 @@ module Blocks
         default_value = options.fetch(:default, nil)
 
         attrs.each do |name|
-          self.global_options[name] = default_value
           define_singleton_method(name) do |value="UNDEFINED"|
             if value == "UNDEFINED"
               default_value
@@ -34,7 +23,6 @@ module Blocks
           ivar = "@#{name}"
 
           define_singleton_method("#{name}=") do |val|
-            self.global_options[name] = val
             singleton_class.class_eval do
               remove_possible_method(name)
               define_method(name) do |value="UNDEFINED"|

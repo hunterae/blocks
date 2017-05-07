@@ -1,8 +1,5 @@
 module Blocks
   class AbstractRenderer
-    include CallWithParams
-    extend Forwardable
-
     RENDERERS = [
       AdjacentBlocksRenderer,
       BlockRenderer,
@@ -13,43 +10,22 @@ module Blocks
       WrapperRenderer
     ]
 
-    attr_accessor :builder
+    attr_accessor :main_renderer, :builder
 
-    def initialize(builder)
-      self.builder = builder
+    delegate *(RENDERERS.map {|r| r.to_s.demodulize.underscore }), to: :main_renderer
+    delegate :block_definitions, :view, to: :builder
+    delegate :with_output_buffer, :output_buffer, to: :view
+
+    def initialize(main_renderer=nil)
+      self.main_renderer = main_renderer
+      self.builder = main_renderer.builder
     end
 
     def render(*args)
       raise NotImplementedError
     end
 
-    def_delegators :builder,
-      :view,
-      :block_containers,
-      :init_options,
-      :with_output_buffer,
-      :output_buffer,
-      *(RENDERERS.map do |klass|
-       klass.to_s.demodulize.underscore
-      end)
-
-    # def with_output_buffer
-    #   view.with_output_buffer { yield }
-    # end
-    #
-    # def output_buffer
-    #   view.output_buffer
-    # end
-
-    RENDERERS.each do |klass|
-      object_name = klass.to_s.demodulize.underscore
-      method_name = "render_#{object_name.gsub("_renderer", "")}"
-      def_delegator object_name.to_sym, :render, method_name.to_sym
-    end
-
-    protected
-
-    def capture_block(*args, &block)
+    def capture(*args, &block)
       without_haml_interference do
         if block.arity > 0
           args = args[0, block.arity]
@@ -61,8 +37,10 @@ module Blocks
       end
     end
 
+    protected
+
+    # Complete hack to get around issues with Haml
     def without_haml_interference(&block)
-      # Complete hack to get around issues with Haml
       if view.instance_variables.include?(:@haml_buffer)
         haml_buffer = view.instance_variable_get(:@haml_buffer)
         if haml_buffer

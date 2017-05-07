@@ -1,3 +1,4 @@
+# WIP
 module Blocks
   module BuilderPermissions
     extend ActiveSupport::Concern
@@ -43,7 +44,7 @@ module Blocks
 
     def permitted?(name)
       allow_all_blocks ||
-      (block_containers[name].try(:anonymous) && allow_anonymous_blocks) ||
+      (block_definitions[name].try(:anonymous) && allow_anonymous_blocks) ||
       !name.respond_to?(:to_sym) ||
       permitted_blocks.any? {|e| e.to_sym == name.to_sym }
     end

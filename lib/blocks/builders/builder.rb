@@ -4,75 +4,45 @@ module Blocks
   class Builder
     include CallWithParams
 
-    attr_accessor :init_options
-
+    attr_accessor :view
+    attr_accessor :block_definitions
+    attr_accessor :options_set
     # counter, used to give unnamed blocks a unique name
     attr_accessor :anonymous_block_number
 
-    attr_accessor :block_containers
-
-    attr_accessor :view
-
     delegate :render,
              :render_with_overrides,
-             to: :default_renderer
-    delegate :with_output_buffer,
-             :output_buffer,
-             :content_tag,
-             to: :view
+             :deferred_render,
+             to: :renderer
+
+    delegate :runtime_options,
+             :standard_options,
+             :default_options,
+             to: :options_set
 
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
 
     def initialize(view, init_options={})
       self.view = view
-      self.init_options = init_options.with_indifferent_access
       self.anonymous_block_number = 0
-      self.block_containers = HashWithIndifferentAccess.new { |hash, key|
-        hash[key] = BlockContainer.new
-      }
-
-      permit CONTENT_TAG_WRAPPER_BLOCK
-      define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
-        options = args.extract_options!
-        wrapper_options = if options[:wrapper_html_option]
-          if options[:wrapper_html_option].is_a?(Array)
-            wrapper_attribute = nil
-            options[:wrapper_html_option].each do |attribute|
-              if options[attribute].present?
-                wrapper_attribute = attribute
-                break
-              end
-            end
-            options[wrapper_attribute]
-          else
-            options[options[:wrapper_html_option]]
-          end
-        end
-        content_tag options[:wrapper_tag],
-          concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
-          &content_block
-
+      self.block_definitions = HashWithIndifferentAccess.new
+      block_definitions.default_proc = Proc.new do |hash, key|
+        hash[key] = BlockDefinition.new(key)
       end
+      self.options_set = OptionsSet.new("Builder Options")
 
-      permit_all
+      options_set.add_options(init_options)
+      options_set.add_options(Blocks.global_options)
+
+      define_helper_blocks
     end
 
-    def default_renderer
-      @default_renderer ||= Blocks.renderer_class.new(self)
-    end
-
-    AbstractRenderer::RENDERERS.each do |klass|
-      name = klass.to_s.demodulize.underscore
-
-      class_eval <<-RUBY, __FILE__, __LINE__ + 1
-        def #{name}
-          @#{name} ||= #{klass}.new(self)
-        end
-      RUBY
+    def renderer
+      @renderer ||= Blocks.renderer_class.new(self)
     end
 
     def block_defined?(block_name)
-      block_containers.key?(block_name)
+      block_definitions.key?(block_name)
     end
 
     def define_each(collection, block_name_proc, *args, &block)
@@ -105,17 +75,10 @@ module Blocks
         anonymous = true
       end
 
-      block_containers[name].tap do |block_container|
-        block_container.name = name
-        block_container.add_options options, &block
-        block_container.block = block if block_given? && block_container.block.nil?
-        block_container.anonymous = anonymous
+      block_definitions[name].tap do |block_definition|
+        block_definition.add_options options, &block
+        block_definition.anonymous = anonymous
       end
-    end
-
-    def deferred_render(*args, &block)
-      block_container = define(*args, &block)
-      Blocks::BlockPlaceholder.new(block_container)
     end
 
     # Define a block, replacing an existing block by the same name if it is already defined.
@@ -135,25 +98,27 @@ module Blocks
     # [+block+]
     #   The block that is to be rendered when "blocks.render" is called for this block.
     def replace(name, options={}, &block)
-      block_containers.delete(name)
+      block_definitions.delete(name)
       define(name, options, &block)
     end
 
     def skip(name, completely=false)
-      block_containers[name].skip(completely)
+      block_definitions[name].skip(completely)
     end
 
     def skip_completely(name)
       skip(name, true)
     end
 
-    BlockContainer::HOOKS.each do |hook|
-      define_method(hook) do |name, options={}, &block|
-        block_containers[name].send(hook, options, &block)
-      end
+    def skipped?(name)
+      block_definitions[name].skip_content
     end
 
-    include BuilderPermissions
+    HookDefinition::HOOKS.each do |hook|
+      define_method(hook) do |name, options={}, &block|
+        block_definitions[name].send(hook, options, &block)
+      end
+    end
 
     def concatenating_merge(options, options2, *args)
       options = call_each_hash_value_with_params(options, *args)
@@ -168,6 +133,30 @@ module Blocks
     def anonymous_block_name
       self.anonymous_block_number += 1
       "block_#{anonymous_block_number}"
+    end
+
+    def define_helper_blocks
+      define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
+        options = args.extract_options!
+        wrapper_options = if options[:wrapper_html_option]
+          if options[:wrapper_html_option].is_a?(Array)
+            wrapper_attribute = nil
+            options[:wrapper_html_option].each do |attribute|
+              if options[attribute].present?
+                wrapper_attribute = attribute
+                break
+              end
+            end
+            options[wrapper_attribute]
+          else
+            options[options[:wrapper_html_option]]
+          end
+        end
+
+        content_tag options[:wrapper_tag],
+          concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
+          &content_block
+      end
     end
   end
 end

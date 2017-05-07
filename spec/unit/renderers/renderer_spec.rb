@@ -1,11 +1,15 @@
 require 'spec_helper'
 
-describe Blocks::DefaultRenderer do
+describe Blocks::Renderer do
   let(:view) { ActionView::Base.new }
   let(:builder) { Blocks::Builder.new(view) }
   let(:block_with_hooks_renderer) { builder.block_with_hooks_renderer }
 
-  subject { Blocks::DefaultRenderer.new(builder) }
+  subject { Blocks::Renderer.new(builder) }
+
+  context 'Initialization' do
+    xit "TODO"
+  end
 
   context '#render' do
     it "should render nothing when passed no arguments" do
@@ -36,5 +40,10 @@ describe Blocks::DefaultRenderer do
   end
 
   context '#render_with_overrides' do
+    xit "TODO"
+  end
+
+  context '#deferred_render' do
+    xit "TODO"
   end
 end
