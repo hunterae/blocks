@@ -6,3 +6,4 @@
 Gemfile.lock
 spec/database.yml
 .byebug_history
+coverage/

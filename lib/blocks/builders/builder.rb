@@ -4,11 +4,14 @@ module Blocks
   class Builder
     include CallWithParams
 
+    # A pointer to the view context
     attr_accessor :view
+
+    # A HashWithIndifferentAccess of block names to BlockDefinition mappings
     attr_accessor :block_definitions
+
+    # Options provided during initialization of builder
     attr_accessor :options_set
-    # counter, used to give unnamed blocks a unique name
-    attr_accessor :anonymous_block_number
 
     delegate :render,
              :render_with_overrides,
@@ -22,18 +25,12 @@ module Blocks
 
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
 
-    def initialize(view, init_options={})
+    def initialize(view, options={})
       self.view = view
-      self.anonymous_block_number = 0
-      self.block_definitions = HashWithIndifferentAccess.new
-      block_definitions.default_proc = Proc.new do |hash, key|
+      self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
         hash[key] = BlockDefinition.new(key)
       end
-      self.options_set = OptionsSet.new("Builder Options")
-
-      options_set.add_options(init_options)
-      options_set.add_options(Blocks.global_options)
-
+      self.options_set = OptionsSet.new("Builder Options", options)
       define_helper_blocks
     end
 
@@ -69,15 +66,11 @@ module Blocks
 
       if args.first
         name = args.shift
-        anonymous = false
+        block_definitions[name].tap do |block_definition|
+          block_definition.add_options options, &block
+        end
       else
-        name = anonymous_block_name
-        anonymous = true
-      end
-
-      block_definitions[name].tap do |block_definition|
-        block_definition.add_options options, &block
-        block_definition.anonymous = anonymous
+        BlockDefinition.new(options, &block)
       end
     end
 
@@ -110,10 +103,6 @@ module Blocks
       skip(name, true)
     end
 
-    def skipped?(name)
-      block_definitions[name].skip_content
-    end
-
     HookDefinition::HOOKS.each do |hook|
       define_method(hook) do |name, options={}, &block|
         block_definitions[name].send(hook, options, &block)
@@ -124,16 +113,16 @@ module Blocks
       options = call_each_hash_value_with_params(options, *args)
       options2 = call_each_hash_value_with_params(options2, *args)
 
-      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) {|key, v1, v2| "#{v1} #{v2}" }
+      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) do |key, v1, v2|
+        if v1.is_a?(String) && v2.is_a?(String)
+          "#{v1} #{v2}"
+        else
+          v2
+        end
+      end
     end
 
     protected
-
-    # Return a unique name for an anonymously defined block (i.e. a block that has not been given a name)
-    def anonymous_block_name
-      self.anonymous_block_number += 1
-      "block_#{anonymous_block_number}"
-    end
 
     def define_helper_blocks
       define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
@@ -152,7 +141,6 @@ module Blocks
             options[options[:wrapper_html_option]]
           end
         end
-
         content_tag options[:wrapper_tag],
           concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
           &content_block

@@ -40,6 +40,15 @@ module Blocks
     protected
 
     # Complete hack to get around issues with Haml
+    #  Haml does some hacking to ActionView's with_output_buffer and
+    #  output_buffer. In doing so, they make certain assumptions about
+    #  the layout and the view template. The Blocks gem doesn't capture
+    #  blocks immediately but rather stores them for later capturing.
+    #  This can produce an issue if a block that is stored was in Haml
+    #  but the Layout is in ERB. Haml will think that any blocks it
+    #  captures while rendering the layout will be in ERB format. However,
+    #  the block would need to be captured in Haml using a Haml buffer.
+    #  This workaround accomplishes that.
     def without_haml_interference(&block)
       if view.instance_variables.include?(:@haml_buffer)
         haml_buffer = view.instance_variable_get(:@haml_buffer)

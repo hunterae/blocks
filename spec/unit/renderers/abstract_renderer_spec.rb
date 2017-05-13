@@ -25,7 +25,9 @@ describe Blocks::AbstractRenderer do
   end
 
   context '#render' do
-    xit "TODO"
+    it 'should throw a NotImplementedError' do
+      expect { subject.render }.to raise_error NotImplementedError
+    end
   end
 
   context '#capture' do

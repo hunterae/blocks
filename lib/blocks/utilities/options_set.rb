@@ -6,8 +6,9 @@ module Blocks
     attr_accessor :standard_options
     attr_accessor :default_options
 
-    def initialize(name, options={}, &block)
-      self.name = name
+    def initialize(*args, &block)
+      options = args.extract_options!
+      self.name = args.first
       reset
       add_options options, &block
       super(&nil)

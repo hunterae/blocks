@@ -135,7 +135,8 @@ module Blocks
         render_options_set,
         block_options_set,
         OptionsSet.new("Runtime Block", block: self.runtime_block),
-        builder_options_set
+        builder_options_set,
+        Blocks.global_options_set
       ].compact
 
       options_set_with_render_strategy_index = nil

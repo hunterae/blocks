@@ -6,131 +6,100 @@ feature "Rendering Option Merging" do
   let(:builder) { Blocks::Builder.new(view) }
   let(:runtime_context) { Blocks::RuntimeContext.new(builder, TEST_BLOCK) }
 
-  context "with global options present" do
-    before do
-      Blocks.configure do |config|
-        global_options = config.global_options
-        config.global_options.add_options(
-          defaults: {
-            default_option: "global default",
-            shared_option: "global default"
-          },
-          runtime: {
-            runtime_option: "global runtime",
-            shared_option: "global runtime"
-          },
-          standard_option: "global standard",
-          shared_option: "global standard"
-        )
-      end
-    end
+  it 'should merge and give precedence to render options over block runtime options' do
+    builder.define TEST_BLOCK, runtime: { shared: 1, a: 1 }
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, shared: 2, b: 2
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-    it "should merge options runtime into standard into defaults" do
-      expect(runtime_context[:shared_option]).to eql "global runtime"
-      expect(runtime_context[:default_option]).to eql "global default"
-      expect(runtime_context[:runtime_option]).to eql "global runtime"
-      expect(runtime_context[:standard_option]).to eql "global standard"
-    end
+  it 'should merge and give precedence to block runtime options over builder runtime options' do
+    builder = Blocks::Builder.new(view, runtime: { shared: 1, a: 1 })
+    builder.define TEST_BLOCK, runtime: { shared: 2, b: 2 }
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-    context "with init_options present" do
-      let(:init_options) do
-        {
-          defaults: {
-            default_option: "init default",
-            shared_option: "init default"
-          },
-          runtime: {
-            runtime_option: "init runtime",
-            shared_option: "init runtime"
-          },
-          standard_option: "init standard",
-          shared_option: "init standard"
-        }
-      end
-      let(:builder) { Blocks::Builder.new(view, init_options) }
+  it 'should merge and give precedence to builder runtime options over global runtime options' do
+    Blocks.global_options_set.add_options runtime: { shared: 1, a: 1 }
+    builder = Blocks::Builder.new(view, runtime: { shared: 2, b: 2 })
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-      it "should merge options (with precedence for the init options) runtime into standard into defaults" do
-        expect(runtime_context[:shared_option]).to eql "init runtime"
-        expect(runtime_context[:default_option]).to eql "init default"
-        expect(runtime_context[:runtime_option]).to eql "init runtime"
-        expect(runtime_context[:standard_option]).to eql "init standard"
-      end
+  it 'should merge and give precedence to global runtime options over standard block options' do
+    Blocks.global_options_set.add_options runtime: { shared: 1, a: 1 }
+    builder.define TEST_BLOCK, shared: 2, b: 2
+    expect(runtime_context).to eql({ shared: 1, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-      context "with block options present" do
-        before do
-          builder.define TEST_BLOCK,
-            defaults: {
-              default_option: "test_block default",
-              shared_option: "test_block default"
-            },
-            runtime: {
-              runtime_option: "test_block runtime",
-              shared_option: "test_block runtime"
-            },
-            standard_option: "test_block standard",
-            shared_option: "test_block standard"
-        end
+  it 'should merge and give precedence to block standard options over builder standard options' do
+    builder = Blocks::Builder.new(view, shared: 1, a: 1)
+    builder.define TEST_BLOCK, shared: 2, b: 2
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-        it "should merge options (with precedence for the block options) runtime into standard into defaults" do
-          expect(runtime_context[:shared_option]).to eql "test_block runtime"
-          expect(runtime_context[:default_option]).to eql "test_block default"
-          expect(runtime_context[:runtime_option]).to eql "test_block runtime"
-          expect(runtime_context[:standard_option]).to eql "test_block standard"
-        end
+  it 'should merge and give precedence to builder standard options over global standard options' do
+    Blocks.global_options_set.add_options shared: 1, a: 1
+    builder = Blocks::Builder.new(view, shared: 2, b: 2)
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-        it "should give precedence to block options over proxy options" do
-          builder.define TEST_BLOCK, with: :proxy_1
-          3.times do |i|
-            proxy_block_name = "proxy_#{ i + 1 }"
-            builder.define proxy_block_name,
-              defaults: {
-                default_option: "#{proxy_block_name} default",
-                shared_option: "#{proxy_block_name} default",
-                shared_proxy_option: "#{proxy_block_name} default"
-              },
-              runtime: {
-                runtime_option: "#{proxy_block_name} runtime",
-                shared_option: "#{proxy_block_name} runtime",
-                shared_proxy_option: "#{proxy_block_name} runtime"
-              },
-              proxy_block_name => "#{proxy_block_name} standard",
-              shared_proxy_option: "#{proxy_block_name} standard",
-              standard_option: "#{proxy_block_name} standard",
-              shared_option: "#{proxy_block_name} standard",
-              with: "proxy_#{ i + 2 }"
-          end
+  it 'should merge and give precedence to global standard options over render default options' do
+    Blocks.global_options_set.add_options shared: 1, a: 1
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
+    expect(runtime_context).to eql({ shared: 1, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-          expect(runtime_context[:shared_option]).to eql "test_block runtime"
-          expect(runtime_context[:default_option]).to eql "test_block default"
-          expect(runtime_context[:runtime_option]).to eql "test_block runtime"
-          expect(runtime_context[:standard_option]).to eql "test_block standard"
-          expect(runtime_context[:shared_proxy_option]).to eql "proxy_1 runtime"
-          3.times do |i|
-            expect(runtime_context["proxy_#{i+1}"]).to eql "proxy_#{i+1} standard"
-          end
-        end
+  it 'should merge and give precedence to render default options over block default options' do
+    builder.define TEST_BLOCK, defaults: { shared: 1, a: 1 }
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-        context "with render options present" do
-          let(:runtime_context) do
-            Blocks::RuntimeContext.new(builder, TEST_BLOCK, {
-              defaults: {
-                default_option: "render default",
-                shared_option: "render default"
-              },
-              runtime_option: "render runtime",
-              shared_option: "render runtime"
-            })
-          end
+  it 'should merge and give precedence to block default options over builder default options' do
+    builder = Blocks::Builder.new(view, defaults: { shared: 1, a: 1 })
+    builder.define TEST_BLOCK, defaults: { shared: 2, b: 2 }
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-          it "should merge options (with precedence for the render options) runtime into standard into defaults" do
-            expect(runtime_context[:shared_option]).to eql "render runtime"
-            expect(runtime_context[:default_option]).to eql "render default"
-            expect(runtime_context[:runtime_option]).to eql "render runtime"
-            expect(runtime_context[:standard_option]).to eql "test_block standard"
-          end
-        end
+  it 'should merge and give precedence to builder default options over global default options' do
+    Blocks.global_options_set.add_options defaults: { shared: 1, a: 1 }
+    builder = Blocks::Builder.new(view, defaults: { shared: 2, b: 2 })
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 }.with_indifferent_access)
+  end
 
-      end
-    end
+  it 'should obey the merging and precedence rules for an example that includes every type of option' do
+    Blocks.global_options_set.add_options runtime: {
+      shared: 1, a: 1, run: 1
+    }, shared: 2, b: 2, std: 1, defaults: {
+      shared: 3, c: 3 , def: 1
+    }
+
+    builder = Blocks::Builder.new(view,
+      runtime: { shared: 4, d: 4, run: 2 },
+      shared: 5, e: 5, std: 2,
+      defaults: { shared: 6, f: 6, def: 2 })
+
+    builder.define TEST_BLOCK, runtime: {
+      shared: 7, g: 7, run: 3
+    },
+    shared: 8, h: 8, std: 3,
+    defaults: {
+      shared: 9, i: 9, def: 3
+    }
+
+    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK,
+      shared: 10, j: 10, run: 4, defaults: {
+        shared: 11, k: 11, def: 4
+      }
+
+    expect(runtime_context).to eql({
+      shared: 10, run: 4, def: 4, std: 3,
+      a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11
+    }.with_indifferent_access)
   end
 end

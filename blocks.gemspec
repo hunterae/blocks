@@ -36,6 +36,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "capybara"
   spec.add_development_dependency "shoulda-matchers", "~> 3.1"
   spec.add_development_dependency "simplecov"
+  spec.add_development_dependency "haml"
+  spec.add_development_dependency "codeclimate-test-reporter", "~> 1.0.0"
 
   spec.add_dependency "call_with_params"
   spec.add_dependency "rails", ">= 3.0.0"

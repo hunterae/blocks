@@ -9,7 +9,7 @@ rspec_options = {
 
 guard :rspec, cmd: "bundle exec rspec" do
   watch(%r{^spec/.+_spec\.rb$})
-  watch(%r{^lib/blocks/(.+)\.rb$})     { "spec" }
+  watch(%r{^lib/blocks/(.+)\.rb$})     { |m| ["spec/features", "spec/unit/#{m[1]}_spec.rb"] }
   watch(%r{^lib/blocks.rb$})           { "spec" }
   watch('spec/spec_helper.rb')         { "spec" }
 end

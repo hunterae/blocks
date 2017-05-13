@@ -1,7 +1,6 @@
 module Blocks
   class BlockDefinition < OptionsSet
     attr_accessor :options_set,
-                  :anonymous,
                   :skip_content,
                   :skip_completely,
                   *HookDefinition::HOOKS.map {|hook| "#{hook}_hooks" }
@@ -14,10 +13,6 @@ module Blocks
     def skip(completely=false)
       self.skip_content = true
       self.skip_completely = completely
-    end
-
-    def anonymous?
-      !!anonymous
     end
 
     def skip_content?

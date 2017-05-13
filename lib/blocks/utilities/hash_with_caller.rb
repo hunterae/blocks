@@ -33,11 +33,7 @@ module Blocks
     def add_options(*args)
       options = args.extract_options!
 
-      caller_id = if args.first
-        args.first
-      else
-        ""
-      end
+      caller_id = args.first.to_s.presence || ""
 
       if !options.is_a?(HashWithCaller) && Blocks.lookup_caller_location?
         caller_location = caller.detect do |c|
