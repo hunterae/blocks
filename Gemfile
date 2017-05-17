@@ -8,10 +8,6 @@ gem "shoulda-matchers", "~> 2.0"
 gem "haml", "~> 5.0.0"
 gem "rspec", "~> 3.6.0"
 
-gem "nokogiri", "1.6.8.1"
-gem "capybara"
-gem "simplecov"
-
 # gem "debugger"
 
 # gem "guard-rspec"

@@ -29,4 +29,8 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "call_with_params"
   spec.add_dependency "rails", ">= 3.0.0"
+
+  spec.add_development_dependency "nokogiri", "1.6.8.1"
+  spec.add_development_dependency "capybara"
+  spec.add_development_dependency "simplecov"
 end
