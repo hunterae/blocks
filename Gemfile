@@ -6,9 +6,6 @@ gem "rspec", "~> 3.6.0"
 gem "rails", github: "rails/rails", branch: "5-1-stable"
 gem "shoulda-matchers", "~> 2.0"
 gem "haml", "~> 5.0.0"
-gem "rspec", "~> 3.6.0"
-
-# gem "debugger"
 
 # gem "guard-rspec"
 # gem "terminal-notifier-guard"

@@ -16,32 +16,21 @@ begin
 rescue LoadError
 end
 
+begin
+  require 'ruby-debug'
+rescue LoadError
+end
+
 require 'rails/all'
 require 'blocks'
 require 'rspec'
 require 'capybara/rspec'
-# require 'rspec/rails'
 require 'shoulda/matchers'
 
-# Shoulda::Matchers.configure do |config|
-#   config.integrate do |with|
-#     with.test_framework :rspec
-#   end
-# end
-# raise Shoulda::Matchers.methods.inspect
-# Shoulda::Matchers.configure do |config|
-#   config.integrate do |with|
-#     # Choose a test framework:
-#     with.test_framework :rspec
-#
-#     # Choose one or more libraries:
-#     # with.library :active_record
-#     # with.library :active_model
-#     # with.library :action_controller
-#     # Or, choose the following (which implies all of the above):
-#     # with.library :rails
-#   end
-# end
+module Blocks
+  class Application < Rails::Application
+  end
+end
 
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |f| require f }
 
