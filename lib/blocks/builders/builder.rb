@@ -28,7 +28,7 @@ module Blocks
     def initialize(view, options={})
       self.view = view
       self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
-        hash[key] = BlockDefinition.new(key)
+        hash[key] = BlockDefinition.new(key); hash[key]
       end
       self.options_set = OptionsSet.new("Builder Options", options)
       define_helper_blocks
@@ -110,10 +110,11 @@ module Blocks
     end
 
     def concatenating_merge(options, options2, *args)
-      options = call_each_hash_value_with_params(options, *args)
-      options2 = call_each_hash_value_with_params(options2, *args)
+      options = call_each_hash_value_with_params(options, *args) || {}
+      options2 = call_each_hash_value_with_params(options2, *args) || {}
 
-      options.to_h.symbolize_keys.merge(options2.to_h.symbolize_keys) do |key, v1, v2|
+
+      options.symbolize_keys.merge(options2.symbolize_keys) do |key, v1, v2|
         if v1.is_a?(String) && v2.is_a?(String)
           "#{v1} #{v2}"
         else

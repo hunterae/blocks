@@ -65,5 +65,9 @@ module Blocks
         end
       end
     end
+
+    def nested_under_indifferent_access
+      self
+    end
   end
 end

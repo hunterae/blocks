@@ -76,5 +76,9 @@ module Blocks
         default_options.render_strategy_and_item
       ]
     end
+
+    def nested_under_indifferent_access
+      self
+    end
   end
 end

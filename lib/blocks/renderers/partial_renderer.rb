@@ -4,8 +4,8 @@ module Blocks
       overrides_and_provided_content = capture(builder, &block) if block_given?
       locals = options.merge(
         (options[:builder_variable] || :builder) => builder,
-        options: options
-      )
+      ).symbolize_keys
+      locals[:options] = options
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
           overrides_and_provided_content.to_str.gsub(/PLACEHOLDER_FOR_([\w]+)/) do |s|

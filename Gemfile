@@ -1,4 +1,20 @@
-source 'https://rubygems.org'
+source "https://rubygems.org"
 
-# Specify your gem's dependencies in blocks.gemspec
 gemspec
+
+gem "rspec", "~> 3.6.0"
+gem "rails", github: "rails/rails", branch: "5-1-stable"
+gem "shoulda-matchers", "~> 2.0"
+gem "haml", "~> 5.0.0"
+gem "rspec", "~> 3.6.0"
+
+gem "nokogiri", "1.6.8.1"
+gem "capybara"
+gem "simplecov"
+
+# gem "debugger"
+
+# gem "guard-rspec"
+# gem "terminal-notifier-guard"
+# gem "byebug"
+# gem "codeclimate-test-reporter", "~> 1.0.0"

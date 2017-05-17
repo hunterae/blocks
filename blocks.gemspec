@@ -27,18 +27,6 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "bundler"
-  spec.add_development_dependency "rake"
-  spec.add_development_dependency "rspec", ">= 3.0"
-  spec.add_development_dependency "guard-rspec"
-  spec.add_development_dependency "terminal-notifier-guard"
-  spec.add_development_dependency "byebug"
-  spec.add_development_dependency "capybara"
-  spec.add_development_dependency "shoulda-matchers"
-  spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "haml"
-  spec.add_development_dependency "codeclimate-test-reporter", "~> 1.0.0"
-
   spec.add_dependency "call_with_params"
   spec.add_dependency "rails", ">= 3.0.0"
 end

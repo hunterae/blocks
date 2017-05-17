@@ -1,17 +1,14 @@
 require 'spec_helper'
 
 feature "Rendering with Hooks and Wrappers" do
-  def with_default_options(hooks: true, wrappers: true, collection: nil,
-                           block_or_partial: :block,
-                           render_with_different_block: false)
-    {
-      hooks: hooks,
-      wrappers: wrappers,
-      collection: collection,
-      block_or_partial: block_or_partial,
-      render_with_different_block: render_with_different_block,
-      block_skipped: false
-    }
+  def with_default_options(options={})
+    options[:hooks] ||= true
+    options[:wrappers] ||= true
+    options[:collection] ||= nil
+    options[:block_or_partial] = :block if !options.key?(:block_or_partial)
+    options[:render_with_different_block] ||= false
+    options[:block_skipped] = false
+    options
   end
 
   [[1, 2], nil].each do |collection|

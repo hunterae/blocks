@@ -149,8 +149,8 @@ describe Blocks::Builder do
       block2 = Proc.new {}
       subject.define :test_block, &block1
       block_definition = subject.define :test_block, &block2
-      expect(block_definition.standard_options[:block]).not_to eq block2
-      expect(block_definition.standard_options[:block]).to eq block1
+      expect(block_definition.standard_options[:block].object_id).not_to eq block2.object_id
+      expect(block_definition.standard_options[:block].object_id).to eq block1.object_id
     end
 
     it "should be able to define a block without a name" do
