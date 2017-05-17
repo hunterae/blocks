@@ -3,6 +3,7 @@ source "https://rubygems.org"
 gemspec path: ".."
 
 gem "rake", "< 11.0"
+gem "public_suffix", "~> 1.4.6"
 gem "rack", "< 2.0"
 gem "mime-types", "< 3.0"
 gem "rspec", "~> 3.0.0"

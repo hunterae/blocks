@@ -17,21 +17,21 @@ gemfile:
   - gemfiles/Gemfile.rails-4-1-stable
   - gemfiles/Gemfile.rails-4-2-stable
   - gemfiles/Gemfile.rails-5-0-stable
-  - Gemfile
+  - gemfiles/Gemfile.rails-5-1-stable
 matrix:
   allow_failures:
     - rvm: ruby-head
   exclude:
     - rvm: 1.9.3
-      gemfile: Gemfile
+      gemfile: gemfiles/Gemfile.rails-5-1-stable
     - rvm: 1.9.3
       gemfile: gemfiles/Gemfile.rails-5-0-stable
     - rvm: 2.0.0
-      gemfile: Gemfile
+      gemfile: gemfiles/Gemfile.rails-5-1-stable
     - rvm: 2.0.0
       gemfile: gemfiles/Gemfile.rails-5-0-stable
     - rvm: 2.1.10
-      gemfile: Gemfile
+      gemfile: gemfiles/Gemfile.rails-5-1-stable
     - rvm: 2.1.10
       gemfile: gemfiles/Gemfile.rails-5-0-stable
 script: 'bundle exec rake'
