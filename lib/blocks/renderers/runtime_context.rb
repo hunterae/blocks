@@ -18,8 +18,8 @@ module Blocks
                   :render_options_set,
                   :block_options_set,
                   :proxy_options_set,
-                  :merged_options_set,
-                  :parent_runtime_context
+                  :parent_options_set,
+                  :merged_options_set
 
     delegate :skip_content, :skip_completely, to: :block_options_set, allow_nil: true
 
@@ -48,7 +48,7 @@ module Blocks
     end
 
     def extend_to_block_definition(block_definition)
-      RuntimeContext.new(builder, block_definition, parent_runtime_context: parent_runtime_context).tap do |rc|
+      RuntimeContext.new(builder, block_definition, parent_options_set: merged_options_set.clone).tap do |rc|
         rc.runtime_args = self.runtime_args
       end
     end
@@ -89,7 +89,7 @@ module Blocks
       if !render_options.is_a?(HashWithIndifferentAccess)
         render_options = render_options.with_indifferent_access
       end
-      self.parent_runtime_context = render_options.delete(:parent_runtime_context)
+      self.parent_options_set = render_options.delete(:parent_options_set)
       self.render_options_set = OptionsSet.new(
         "Render Options",
         defaults: render_options.delete(:defaults),
@@ -140,7 +140,7 @@ module Blocks
         OptionsSet.new("Runtime Block", block: self.runtime_block),
         builder_options_set,
         Blocks.global_options_set,
-        parent_runtime_context.try(:merged_options_set).try(:clone)
+        parent_options_set
       ].compact
 
       options_set_with_render_strategy_index = nil
@@ -160,7 +160,7 @@ module Blocks
         self.render_item = add_proxy_options render_item
       end
 
-      merged_options_set = OptionsSet.new("Parent Options Set")
+      self.merged_options_set = OptionsSet.new("Parent Options Set")
       [:runtime_options, :standard_options, :default_options].each do |option_level|
         all_options_sets.each_with_index do |options_set, index|
           options_for_level = options_set.send(option_level)
