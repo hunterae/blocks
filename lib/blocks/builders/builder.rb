@@ -13,6 +13,8 @@ module Blocks
     # Options provided during initialization of builder
     attr_accessor :options_set
 
+    delegate :content_tag, to: :view
+
     delegate :render,
              :render_with_overrides,
              :deferred_render,
