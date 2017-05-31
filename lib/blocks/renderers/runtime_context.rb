@@ -45,6 +45,14 @@ module Blocks
       extract_control_options
     end
 
+    def extend_to_block_definition(block_definition)
+      RuntimeContext.new(builder, block_definition, {}).tap do |rc|
+        rc.runtime_args = self.runtime_args
+        rc.add_options self
+      end
+    end
+
+    # TODO: this method needs to be rewritten to output a proper hash
     def to_s
       description = []
       if block_name
@@ -59,7 +67,7 @@ module Blocks
 
       if render_item.is_a?(String)
         description << "Renders with partial \"#{render_item}\""
-      elsif strategy == HashWithRenderStrategy::RENDER_WITH_PARTIAL
+      elsif render_item.is_a?(Proc)
         description << "Renders with block defined at #{render_item.source_location}"
       end
 
@@ -72,13 +80,6 @@ module Blocks
 
       description << super
       description.join("\n")
-    end
-
-    def extend_to_block_definition(block_definition)
-      RuntimeContext.new(builder, block_definition, {}).tap do |rc|
-        rc.runtime_args = self.runtime_args
-        rc.add_options self
-      end
     end
 
     private

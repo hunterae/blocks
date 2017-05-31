@@ -10,15 +10,14 @@ module Blocks
       WrapperRenderer
     ]
 
-    attr_accessor :main_renderer, :builder
+    attr_accessor :main_renderer
 
-    delegate *(RENDERERS.map {|r| r.to_s.demodulize.underscore }), to: :main_renderer
-    delegate :block_definitions, :view, to: :builder
+    delegate :builder, *(RENDERERS.map {|r| r.to_s.demodulize.underscore }), to: :main_renderer
+    delegate :block_definitions, :block_for, :view, to: :builder
     delegate :with_output_buffer, :output_buffer, to: :view
 
     def initialize(main_renderer=nil)
       self.main_renderer = main_renderer
-      self.builder = main_renderer.builder
     end
 
     def render(*args)

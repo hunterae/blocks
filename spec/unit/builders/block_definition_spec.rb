@@ -91,16 +91,25 @@ describe Blocks::BlockDefinition do
 
   context '#to_s' do
     it "should report the render_strategy" do
-      defintion = Blocks::BlockDefinition.new(with: "some_block")
-      expect(defintion.to_s).to include "proxy block \"some_block\""
+      definition = Blocks::BlockDefinition.new(with: "some_block")
+      expect(definition.to_s).to include "Renders with proxy block \"some_block\""
 
-      defintion = Blocks::BlockDefinition.new(partial: "some_partial")
-      expect(defintion.to_s).to include "partial \"some_partial\""
+      definition = Blocks::BlockDefinition.new(partial: "some_partial")
+      expect(definition.to_s).to include "Renders with partial \"some_partial\""
 
-      defintion = Blocks::BlockDefinition.new(&block)
-      # expect(defintion.to_s).to match /block defined at [\".*/spec/unit/builders/block_definition_spec.rb\", 5\]/
+      definition = Blocks::BlockDefinition.new(&block)
+      expect(definition.to_s).to match "Renders with block defined at.*spec/unit/builders/block_definition_spec.rb\", 5\]"
     end
-    xit "should detect the highest precedence render_strategy"
+    it "should detect the highest precedence render_strategy" do
+      definition = Blocks::BlockDefinition.new(defaults: { with: "default_proxy" })
+      expect(definition.to_s).to include "Renders with proxy block \"default_proxy\""
+
+      definition = Blocks::BlockDefinition.new(defaults: { with: "default_proxy" }, with: "standard_proxy")
+      expect(definition.to_s).to include "Renders with proxy block \"standard_proxy\""
+
+      definition = Blocks::BlockDefinition.new(defaults: { with: "default_proxy" }, with: "standard_proxy", runtime: { with: "runtime_proxy" })
+      expect(definition.to_s).to include "Renders with proxy block \"runtime_proxy\""
+    end
   end
 
 end

@@ -3,7 +3,8 @@ source "https://rubygems.org"
 gemspec
 
 gem "rspec", "~> 3.6.0"
-gem "rails", github: "rails/rails", branch: "5-1-stable"
+gem "rails", github: "rails/rails"
+gem 'rack', git: 'git://github.com/rack/rack.git'
 gem "shoulda-matchers", "~> 2.0"
 gem "haml", "~> 5.0.0"
 

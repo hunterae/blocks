@@ -5,6 +5,7 @@ SimpleCov.start do
   add_filter "/spec"
   add_filter "/lib/blocks/experimental"
 end
+# TODO: disable coverage unless running entire suite
 
 begin
   require 'debugger'

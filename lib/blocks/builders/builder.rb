@@ -38,6 +38,10 @@ module Blocks
       @renderer ||= Blocks.renderer_class.new(self)
     end
 
+    def block_for(block_name)
+      block_definitions[block_name] if block_defined?(block_name)
+    end
+
     def block_defined?(block_name)
       block_definitions.key?(block_name)
     end
@@ -109,6 +113,7 @@ module Blocks
       end
     end
 
+    # TODO: move this logic elsewhere
     def concatenating_merge(options, options2, *args)
       options = call_each_hash_value_with_params(options, *args) || {}
       options2 = call_each_hash_value_with_params(options2, *args) || {}
@@ -125,6 +130,7 @@ module Blocks
 
     protected
 
+    # TODO: move this logic elsewhere
     def define_helper_blocks
       define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
         options = args.extract_options!

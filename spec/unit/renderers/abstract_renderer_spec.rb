@@ -6,7 +6,9 @@ describe Blocks::AbstractRenderer do
   subject { Blocks::AbstractRenderer.new(renderer) }
 
   context "Initialization" do
-    xit "TODO"
+    it "should store the renderer as an attribute" do
+      expect(subject.main_renderer).to eql renderer
+    end
   end
 
   context "Delegation" do
@@ -14,8 +16,9 @@ describe Blocks::AbstractRenderer do
       field = field.to_s.demodulize.underscore.to_sym
       it { should delegate_method(field).to(:main_renderer) }
     end
+    it { should delegate_method(:builder).to(:main_renderer) }
 
-    [:block_definitions, :view].each do |field|
+    [:block_definitions, :view, :block_for].each do |field|
       it { should delegate_method(field).to(:builder) }
     end
 

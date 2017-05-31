@@ -10,6 +10,7 @@ module Blocks
       block_with_hooks_renderer.render(*args, &block)
     end
 
+    # TODO: this needs to be handled by a new renderer
     def render_with_overrides(*args, &block)
       options = args.extract_options!
       name = args.first
@@ -18,10 +19,12 @@ module Blocks
       elsif options[:partial]
         partial_renderer.render(options.delete(:partial), options, &block)
       else
-        # TODO
+        # TODO: handle other possible rendering methods such as a custom renderer
       end
     end
 
+    # TODO: this needs to be handled by a new renderer
+    #  TODO: also get rid of BlockPlaceholder
     def deferred_render(*args, &block)
       block_definition = define(*args, &block)
       Blocks::BlockPlaceholder.new(block_definition)

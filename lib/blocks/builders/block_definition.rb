@@ -35,7 +35,9 @@ module Blocks
       RUBY
 
       define_method(hook) do |*args, &block|
-        hooks_for(hook) << HookDefinition.new(self, hook, *args, &block)
+        HookDefinition.new(self, hook, *args, &block).tap do |definition|
+          hooks_for(hook) << definition
+        end
       end
     end
 

@@ -101,6 +101,17 @@ describe Blocks::Builder do
     end
   end
 
+  context '#block_for' do
+    it 'should return nil if #block_defined? returns false' do
+      expect(subject).to receive(:block_defined?).and_return false
+      expect(subject.block_for(:some_block)).to be nil
+    end
+    it 'should return a block definition if #block_defined? returns false' do
+      expect(subject).to receive(:block_defined?).and_return true
+      expect(subject.block_for(:some_block)).to be_a Blocks::BlockDefinition
+    end
+  end
+
   context '#block_defined?' do
     it "should check if a block has previously been defined" do
       expect(subject.block_defined?(:test_block)).to be false

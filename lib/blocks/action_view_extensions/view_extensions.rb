@@ -8,15 +8,13 @@ module Blocks
 
     def render_with_overrides(*args, &block)
       options = args.extract_options!.with_indifferent_access
-      builder = options.delete(:builder)
-      partial = args.first || options.delete(:partial) || options.delete(:template)
-      if !builder
-        builder = Blocks.builder_class.new(self, options)
-      # elsif !!options.delete(:isolate_namespace)
-      else
+      partial = options.delete(:partial) || options.delete(:template) || args.first
+      if builder = options.delete(:builder)
         builder.view = self
         # builder = builder.clone
         # TODO: figure out what to do here
+      else
+        builder = Blocks.builder_class.new(self, options)
       end
       builder.render_with_overrides(options.merge(partial: partial), &block)
     end

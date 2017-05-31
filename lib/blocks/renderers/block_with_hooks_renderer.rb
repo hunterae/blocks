@@ -1,4 +1,5 @@
 module Blocks
+  # TODO: Make this render order customizable
   class BlockWithHooksRenderer < AbstractRenderer
     def render(*args, &default_definition)
       with_output_buffer do
