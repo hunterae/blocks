@@ -140,7 +140,7 @@ module Blocks
         OptionsSet.new("Runtime Block", block: self.runtime_block),
         builder_options_set,
         Blocks.global_options_set,
-        merged_options_set.clone
+        parent_runtime_context.try(:merged_options_set).try(:clone)
       ].compact
 
       options_set_with_render_strategy_index = nil
