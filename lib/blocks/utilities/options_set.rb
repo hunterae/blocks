@@ -14,6 +14,17 @@ module Blocks
       super(&nil)
     end
 
+    def initialize_copy(original)
+      super
+      control_fields = (
+        RuntimeContext::CONTROL_VARIABLES.keys +
+        RuntimeContext::CONTROL_VARIABLES.values
+      ).flatten.compact
+      self.runtime_options = original.runtime_options.clone.except(*control_fields)
+      self.default_options = original.default_options.clone.except(*control_fields)
+      self.standard_options = original.standard_options.clone.except(*control_fields)
+    end
+
     def to_s
       description = []
       description << "Block Name: #{name}"

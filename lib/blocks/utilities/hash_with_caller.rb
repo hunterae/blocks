@@ -24,7 +24,7 @@ module Blocks
         else
           value
         end
-        "\"#{key}\" => #{value_display} [#{callers[key]}]"
+        "\"#{key}\" => #{value_display}, # [#{callers[key]}]"
       end.join(",\n")
       description << "}"
       description.join("\n")
