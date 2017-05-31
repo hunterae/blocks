@@ -29,6 +29,10 @@ describe Blocks::Builder do
     [:runtime_options, :standard_options, :default_options].each do |field|
       it { should delegate_method(field).to(:options_set) }
     end
+
+    [:content_tag].each do |field|
+      it { should delegate_method(field).to(:view) }
+    end
   end
 
   # TODO: Move these somewhere else

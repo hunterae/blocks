@@ -17,13 +17,13 @@ module Blocks
       autoload :CollectionRenderer
       autoload :WrapperRenderer
       autoload :BlockRenderer
+      autoload :BlockPlaceholder
     end
 
     autoload_under 'builders' do
       autoload :HookDefinition
       autoload :BlockDefinition
       autoload :Builder
-      autoload :BlockPlaceholder
     end
 
     autoload_under 'utilities' do

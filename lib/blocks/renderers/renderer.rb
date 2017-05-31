@@ -26,7 +26,7 @@ module Blocks
     # TODO: this needs to be handled by a new renderer
     #  TODO: also get rid of BlockPlaceholder
     def deferred_render(*args, &block)
-      block_definition = define(*args, &block)
+      block_definition = builder.define(*args, &block)
       Blocks::BlockPlaceholder.new(block_definition)
     end
 
