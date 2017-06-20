@@ -13,6 +13,8 @@ module Blocks
     # Options provided during initialization of builder
     attr_accessor :options_set
 
+    attr_accessor :anonymous_block_number
+
     delegate :content_tag, to: :view
 
     delegate :render,
@@ -32,6 +34,7 @@ module Blocks
       self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
         hash[key] = BlockDefinition.new(key); hash[key]
       end
+      self.anonymous_block_number = 0
       self.options_set = OptionsSet.new("Builder Options", options)
       define_helper_blocks
     end
@@ -70,13 +73,16 @@ module Blocks
     def define(*args, &block)
       options = args.extract_options!
 
-      if args.first
-        name = args.shift
-        block_definitions[name].tap do |block_definition|
-          block_definition.add_options options, &block
-        end
+      name, anonymous = if args.first
+        [args.shift, false]
       else
-        BlockDefinition.new(options, &block)
+        self.anonymous_block_number += 1
+        ["anonymous_block_#{anonymous_block_number}", true]
+      end
+
+      block_definitions[name].tap do |block_definition|
+        block_definition.add_options options, &block
+        block_definition.anonymous = anonymous
       end
     end
 

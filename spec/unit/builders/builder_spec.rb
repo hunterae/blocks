@@ -171,7 +171,7 @@ describe Blocks::Builder do
     it "should be able to define a block without a name" do
       block1 = Proc.new {}
       block_definition = subject.define a: 1, b: 2, &block1
-      expect(block_definition.name).to be_nil
+      expect(block_definition.name).to eql "anonymous_block_1"
       expect(block_definition.standard_options).to eq "a" => 1, "b" => 2, "block" => block1
     end
   end

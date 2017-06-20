@@ -3,12 +3,9 @@ module Blocks
     attr_accessor :options_set,
                   :skip_content,
                   :skip_completely,
+                  :anonymous,
                   *HookDefinition::HOOKS.map {|hook| "#{hook}_hooks" }
 
-
-    def initialize(*args, &block)
-      super
-    end
 
     def skip(completely=false)
       self.skip_content = true
