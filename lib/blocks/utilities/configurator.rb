@@ -17,7 +17,7 @@ module Blocks
         configure do |config|
           config.builder_class = Builder
           config.renderer_class = Renderer
-          config.lookup_caller_location = true
+          config.lookup_caller_location = false
           config.global_options_set = OptionsSet.new("Global Options")
         end
       end

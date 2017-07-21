@@ -2,6 +2,8 @@ source "https://rubygems.org"
 
 gemspec path: ".."
 
+gem "nokogiri", "1.6.8.1"
+gem "capybara"
 gem "rake", "< 11.0"
 gem "public_suffix", "~> 1.4.6"
 gem "mime-types", "< 3.0"
