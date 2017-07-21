@@ -30,6 +30,12 @@ module Blocks
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
 
     def initialize(view, options={})
+      if defined?(::Haml) && !view.instance_variables.include?(:@haml_buffer)
+        class << view
+          include Haml::Helpers
+        end
+        view.init_haml_helpers
+      end
       self.view = view
       self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
         hash[key] = BlockDefinition.new(key); hash[key]

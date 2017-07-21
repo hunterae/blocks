@@ -1,13 +1,10 @@
 module Blocks
   class Renderer
     attr_accessor :builder
+    delegate :render, to: :block_with_hooks_renderer
 
     def initialize(builder)
       self.builder = builder
-    end
-
-    def render(*args, &block)
-      block_with_hooks_renderer.render(*args, &block)
     end
 
     # TODO: this needs to be handled by a new renderer

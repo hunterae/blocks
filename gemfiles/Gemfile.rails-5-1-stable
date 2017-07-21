@@ -4,6 +4,8 @@ gemspec path: ".."
 
 # Requires min Ruby version 2.2.2
 
+gem "nokogiri", "1.6.8.1"
+gem "capybara"
 gem "rspec", "~> 3.6.0"
 gem "rails", github: "rails/rails", branch: "5-1-stable"
 gem "shoulda-matchers", "~> 2.0"

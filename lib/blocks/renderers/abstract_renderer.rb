@@ -49,7 +49,7 @@ module Blocks
     #  the block would need to be captured in Haml using a Haml buffer.
     #  This workaround accomplishes that.
     def without_haml_interference(&block)
-      if view.instance_variables.include?(:@haml_buffer)
+      if defined?(::Haml) && view.instance_variables.include?(:@haml_buffer)
         haml_buffer = view.instance_variable_get(:@haml_buffer)
         if haml_buffer
           was_active = haml_buffer.active?

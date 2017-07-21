@@ -4,6 +4,10 @@ require 'simplecov'
 SimpleCov.start do
   add_filter "/spec"
   add_filter "/lib/blocks/experimental"
+  add_group "Renderers", "/lib/blocks/renderers"
+  add_group "Builders", "/lib/blocks/builders"
+  add_group "Utilities", "/lib/blocks/utilities"
+  add_group "Rails Extensions", "/lib/blocks/action_view_extensions"
 end
 # TODO: disable coverage unless running entire suite
 
@@ -41,6 +45,6 @@ RSpec.configure do |config|
   end
 
   config.treat_symbols_as_metadata_keys_with_true_values = true
-  config.filter_run focus: true
+  config.filter_run_when_matching :focus
   config.run_all_when_everything_filtered = true
 end
