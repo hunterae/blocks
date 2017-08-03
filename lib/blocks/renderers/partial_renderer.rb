@@ -1,7 +1,10 @@
 module Blocks
   class PartialRenderer < AbstractRenderer
     def render(partial, options={}, &block)
-      overrides_and_provided_content = capture(builder, &block) if block_given?
+      if !options.is_a?(Blocks::RuntimeContext)
+        options = RuntimeContext.new(builder, options).to_hash.with_indifferent_access.deep_dup
+      end
+      overrides_and_provided_content = capture(builder, options, &block) if block_given?
       locals = options.merge(
         (options[:builder_variable] || :builder) => builder,
       ).symbolize_keys

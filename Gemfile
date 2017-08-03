@@ -5,6 +5,7 @@ gemspec
 gem "nokogiri"
 gem "capybara"
 gem "rspec", "~> 3.6.0"
+gem "arel", github: "rails/arel"
 gem "rails", github: "rails/rails"
 gem 'rack'
 gem "shoulda-matchers", "~> 2.0"
