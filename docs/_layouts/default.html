@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {% include header.html %}
+  </head>
+  <body>
+    <!-- Docs master nav -->
+    <!-- include nav/main.html -->
+
+    <!-- Docs page layout -->
+    <!-- <div id="content" tabindex="-1">
+      <div class="container">
+        <h1>{{ page.title }}</h1>
+        <p>{{ page.lead }}</p>
+        include ads.html
+      </div>
+    </div> -->
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-9" role="main">
+          {{ content }}
+        </div>
+        <div class="col-md-3" role="complementary">
+          <nav class="hidden-print hidden-xs hidden-sm">
+            <ul class="nav">
+
+            </ul>
+            <a class="back-to-top" href="#top">
+              Back to top
+            </a>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    {% include footer.html %}
+  </body>
+</html>
