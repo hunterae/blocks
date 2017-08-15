@@ -4,10 +4,11 @@ description: Blocks gives you total control over how your blocks of code render.
 baseurl: "/blocks" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 github_username: hunterae
-
-# Build settings
+google_analytics: "UA-104699666-1"
 markdown: kramdown
-# theme: minima
+theme: jekyll-theme-slate
+source: docs
+destination: _gh_pages
 plugins:
   - jekyll-feed
   - jekyll-coffeescript
