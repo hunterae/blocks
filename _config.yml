@@ -8,7 +8,7 @@ google_analytics: "UA-104699666-1"
 markdown: kramdown
 theme: jekyll-theme-slate
 source: docs
-destination: _gh_pages
+destination: _site
 plugins:
   - jekyll-feed
   - jekyll-coffeescript
