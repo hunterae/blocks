@@ -1,4 +1,4 @@
-Let's jump right in with a relatively minor but important difference. The Blocks gem does not care whether the name of your Block is a String or a Symbol; it treats both as the same. So whereas using content_for with yield will require that the name matches identically, Blocks will handle the mismatch in Symbol and String:
+Let's jump right in with a relatively minor but important difference. The Blocks gem does not care whether the name of your Block is a String or a Symbol; it treats both as the same. So whereas using content_for with yield will require that the name matches identically, Blocks will handle the mismatch of Symbols and Strings:
 
 ```erb
 <% blocks.define :my_content, partial: "my_partial" %>

@@ -1,10 +1,10 @@
 With Blocks, you can define a Block of code for later rendering using 3 different strategies. Rendering that Block of code is done with the same call for each strategy.
 
-{% include responsive_image.html link="images/BlockRendering.png" %}
+{% include responsive_image.html link="assets/images/BlockRendering.png" %}
 
 ### Strategy 1 - Defining with a Ruby Block
 
-A Block may be defined as a standard Ruby block (which includes Ruby Blocks, Procs, and Lambdas):
+A Block may be defined as a standard Ruby block (which may be a Ruby Block, Proc, or Lambda):
 
 ```erb
 <% blocks.define :my_block do %>
@@ -28,7 +28,7 @@ A Block may be defined as a proxy to another block using the with keyword in the
 <% blocks.define :my_block, with: :some_proxy_block %>
 ```
 
-Proxy Blocks can also be chained together though separation definitions. The order of Block definitions is irrelevant, so long as they all occur before the Block is rendered.
+Proxy Blocks can also be chained together though separate definitions. The order of Block definitions is irrelevant, so long as they all occur before the Block is rendered.
 
 ```erb
 <% blocks.define :my_block, with: :some_proxy_block %>

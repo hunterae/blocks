@@ -1,1 +1,26 @@
+title: Blocks Docs
+email: hunterae@gmail.com
+description: Blocks gives you total control over how your blocks of code render.
+baseurl: "/blocks" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+github_username: hunterae
+google_analytics: "UA-104699666-1"
+markdown: kramdown
 theme: jekyll-theme-slate
+source: docs
+destination: _gh_pages
+plugins:
+  - jekyll-feed
+  - jekyll-coffeescript
+
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
+exclude:
+  - Gemfile
+  - Gemfile.lock
+#   - node_modules
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/

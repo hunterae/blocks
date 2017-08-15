@@ -5,4 +5,5 @@
 Gemfile.lock
 .byebug_history
 coverage/
-_site/
+_gh_pages/
+.sass-cache/
