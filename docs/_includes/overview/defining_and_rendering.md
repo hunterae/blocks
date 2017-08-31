@@ -1,6 +1,8 @@
+{% assign images_url = '/' | prepend: site.images_dir | prepend: '/' | prepend: site_url %}
+
 With Blocks, you can define a Block of code for later rendering using 3 different strategies. Rendering that Block of code is done with the same call for each strategy.
 
-{% include responsive_image.html link="assets/images/BlockRendering.png" %}
+<img src="{{ 'BlockRendering.png' | prepend: images_url }}">
 
 ### Strategy 1 - Defining with a Ruby Block
 

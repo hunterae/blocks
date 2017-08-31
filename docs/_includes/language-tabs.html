@@ -1,0 +1,11 @@
+{% if include.languages %}
+  <div class="lang-selector">
+    {% for lang in include.languages %}
+      {% if lang.is_a? Hash %}
+        <a href="#" data-language-name="{{ lang.keys.first }}">{{ lang.values.first }}</a>
+      {% else %}
+        <a href="#" data-language-name="{{ lang }}">{{ lang }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% endif %}

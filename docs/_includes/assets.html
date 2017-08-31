@@ -1,0 +1,32 @@
+{% assign css_url = '/' | prepend: site.css_dir | prepend: '/' | prepend: include.site_url %}
+{% assign fonts_url = '/' | prepend: site.fonts_dir | prepend: '/' | prepend: include.site_url %}
+{% assign js_url = '/' | prepend: site.js_dir | prepend: '/' | prepend: include.site_url %}
+<style>
+  @font-face {
+    font-family: 'slate';
+    src:url("{{ 'slate.eot?-syv14m' | prepend: fonts_url }}");
+    src:url("{{ 'slate.eot?#iefix-syv14m' | prepend: fonts_url }}") format('embedded-opentype'),
+        url("{{ 'slate.woff2?-syv14m' | prepend: fonts_url }}") format('woff2'),
+        url("{{ 'slate.woff?-syv14m' | prepend: fonts_url }}") format('woff'),
+        url("{{ 'slate.ttf?-syv14m' | prepend: fonts_url }}") format('truetype'),
+        url("{{'slate.svg?-syv14m#slate' | prepend: fonts_url }}") format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+  /* bundle exec rougify style base16.monokai > _sass/_syntax.scss */
+  /* Rouge::Themes::Base16::Monokai.render(:scope => '.highlight') */
+</style>
+<link href="{{ 'screen.css' | prepend: css_url }}" media="screen" rel="stylesheet" type="text/css">
+<link href="{{ 'print.css' | prepend: css_url }}" media="print" rel="stylesheet" type="text/css">
+
+<script src="{{ 'lib/energize.js' | prepend: js_url }}"></script>
+<script src="{{ 'lib/jquery.js' | prepend: js_url }}"></script>
+<script src="{{ 'lib/jquery_ui.js' | prepend: js_url }}"></script>
+<script src="{{ 'lib/jquery.tocify.js' | prepend: js_url }}"></script>
+<script src="{{ 'lib/imagesloaded.min.js' | prepend: js_url }}"></script>
+<script src="{{ 'lib/lunr.js' | prepend: js_url }}"></script>
+<script src="{{ 'app/lang.js' | prepend: js_url }}"></script>
+{% if page.search %}
+  <script src="{{ 'app/search.js' | prepend: js_url }}"></script>
+{% endif %}
+<script src="{{ 'app/toc.js' | prepend: js_url }}"></script>

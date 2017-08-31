@@ -23,5 +23,4 @@ group :development, :test do
   gem "jgd"
   gem "jekyll-feed", "~> 0.6"
   gem "jekyll-coffeescript"
-  gem "jekyll-theme-slate"
 end
