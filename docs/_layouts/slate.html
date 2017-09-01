@@ -19,7 +19,7 @@ under the License.
 {% else %}
   {% assign site_url = site.url %}
 {% endif %}
-{% assign language_tabs = page.language_tabs | default: [] %}
+{% assign language_tabs = page.language_tabs %}
 {% assign images_url = '/' | prepend: site.images_dir | prepend: '/' | prepend: site_url %}
 <html>
   <head>

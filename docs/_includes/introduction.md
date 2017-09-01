@@ -1,3 +1,5 @@
+# Introduction
+
 The Blocks gem is many things.
 
 It acts as:
@@ -10,3 +12,5 @@ It acts as:
 * a simple mechanism for changing or skipping the rendering behavior for particular blocks of code
 
 Essentially, this all boils down to the following: Blocks makes it easy to define blocks of code that can be rendered either verbatim or with replacements and modifications at some later point in time.
+
+[![Build Status](https://travis-ci.org/hunterae/blocks.svg?branch=3-0-stable)](https://travis-ci.org/hunterae/blocks)
