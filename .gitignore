@@ -1,6 +1,5 @@
 /pkg/*
 .bundle
-.ruby-version
 .ruby-gemset
 Gemfile.lock
 .byebug_history

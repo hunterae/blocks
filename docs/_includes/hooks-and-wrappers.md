@@ -1,3 +1,5 @@
+# Hooks and Wrappers
+
 In Rails, when you make multiple content_for calls with the same block name, and then yield to that block name, it outputs the concatenated content of the content_for blocks in the order in which they were defined:
 
 ```erb

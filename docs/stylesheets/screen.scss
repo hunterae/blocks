@@ -176,7 +176,7 @@ html, body {
 
   // This is the currently selected ToC entry
   .tocify-focus {
-    box-shadow: 0px 1px 0px $nav-active-shadow;
+    // box-shadow: 0px 1px 0px $nav-active-shadow;
     background-color: $nav-active-bg;
     color: $nav-active-text;
   }
@@ -396,6 +396,7 @@ html, body {
     font-size: 15px;
     margin-top: 2.5em;
     margin-bottom: 0.8em;
+    clear: both;
   }
 
   h4, h5, h6 {
