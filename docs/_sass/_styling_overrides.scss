@@ -1,0 +1,50 @@
+body {
+  font-size: 14px;
+}
+
+.tocify-wrapper {
+  width: 275px;
+  font-size: 14px;
+  & > img {
+    width: 80%;
+    margin: 1.8vw;
+    @media (max-width: $tablet-width) {
+      margin: 6vw;
+    }
+  }
+  & .tocify-subheader .tocify-item>a {
+    font-size: 13px;
+  }
+}
+
+
+
+.page-wrapper {
+  margin-left: 275px;
+  & > .dark-box {
+    width: 40%;
+  }
+}
+
+
+.content pre, .content blockquote {
+  width: 40%;
+}
+
+.content>h1, .content>h2, .content>h3, .content>h4, .content>h5, .content>h6, .content>p, .content>table, .content>ul, .content>ol, .content>aside, .content>dl {
+  margin-right: 40%;
+}
+
+.tocify-wrapper .tocify-item>a, .tocify-wrapper .toc-footer li {
+  padding: 5px $nav-padding 5px $nav-padding;
+}
+
+ul.search-results {
+  padding: 0;
+}
+
+.content > aside, aside.warning, aside.success {
+  text-shadow: none;
+  color: #FFFFFF;
+  font-weight: 500;
+}
