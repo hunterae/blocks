@@ -14,11 +14,16 @@ includes:
   - installation
   - defining
   - rendering
-  - hooks-and-wrappers
+  - hooks
+  - wrappers
   - skipping
   - templating
   - configuration
-  - old
+  - custom-builders
+  - option-merging
+  - caller-id
+  - use-cases
+  - acknowledgements
 
 search: true
 layout: slate
