@@ -46,6 +46,7 @@ module Blocks
       extract_control_options
     end
 
+    # TODO: this method needs to clone without context, i.e. with render_strategy, item, etc
     def extend_to_block_definition(block_definition)
       RuntimeContext.new(builder, block_definition, parent_options_set: merged_options_set.clone).tap do |rc|
         rc.runtime_args = self.runtime_args

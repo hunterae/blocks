@@ -1,6 +1,6 @@
 # Introduction
 
-The Blocks gem is many things.
+The [blocks gem](http://github.com/hunterae/blocks) is many things.
 
 It acts as:
 

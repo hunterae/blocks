@@ -559,8 +559,62 @@ If the block being rendered is not a partial, it will store "object" as a key in
 
 ## Without a Name
 
-TODO
+```erb
+<!-- rendering a partial -->
+<%= blocks.render partial:
+  "a_partial" %>
 
-## Reserved Keywords
+<!-- with local options -->
+<%= blocks.render a: 1, b: 2,
+  partial: "a_partial" %>
 
-TODO
+-# and a collection
+<%= blocks.render a: 1, b: 2,
+  partial: "a_partial",
+  collection: [1, 2, 3] %>
+
+-# rendering with a proxy
+<%= blocks.render with:
+  :some_proxy %>
+```
+
+```haml
+-# rendering a partial
+= blocks.render partial: "a_partial"
+
+-# with local options
+= blocks.render partial: "a_partial",
+  a: 1, b: 2
+
+-# and a collection
+= blocks.render partial: "a_partial",
+  a: 1, b: 2, collection: [1, 2, 3]
+
+-# rendering with a proxy
+= blocks.render with: :some_proxy
+```
+
+```ruby
+# where builder is an instance
+#  of Blocks::Builder
+
+# rendering a partial
+builder.render partial: "a_partial"
+
+# with local options
+builder.render partial: "a_partial",
+  a: 1, b: 2
+
+# and a collection
+builder.render partial: "a_partial",
+  a: 1, b: 2, collection: [1, 2, 3]
+
+# rendering with a proxy
+builder.render with: :some_proxy
+```
+
+Blocks may be rendered without a block name.
+
+This is usually done in combination with a wrapper, a proxy, or a partial.
+
+Use this when you don't need corresponding hooks for the block to be rendered or when wanting to render a partial or a proxy block.
