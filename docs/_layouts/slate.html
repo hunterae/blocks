@@ -28,7 +28,7 @@ under the License.
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title>{{ page.title | default: "API Documentation" | prepend: ' - ' | prepend: site.title }}</title>
 
-    {% include assets.html site_url=site_url %}
+    {% include slate/assets.html site_url=site_url %}
   </head>
 
   <body class="{{ page_classes }}" data-languages='{{ language_tabs | jsonify }}'>
@@ -40,7 +40,8 @@ under the License.
     </a>
     <div class="tocify-wrapper">
       <img src="{{ 'logo.png' | prepend: images_url }}">
-      {% include language-tabs.html languages=language_tabs %}
+      {{site.host}}
+      {% include slate/language-tabs.html languages=language_tabs %}
       {% if page.search %}
         <div class="search">
           <input type="text" class="search" id="input-search" placeholder="Search">
@@ -68,7 +69,7 @@ under the License.
         {% endif %}
       </div>
       <div class="dark-box">
-        {% include language-tabs.html languages=language_tabs %}
+        {% include slate/language-tabs.html languages=language_tabs %}
       </div>
     </div>
   </body>
