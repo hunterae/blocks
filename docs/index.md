@@ -17,6 +17,7 @@ includes:
   - hooks
   - wrappers
   - skipping
+  - reserved-keywords
   - templating
   - configuration
   - custom-builders

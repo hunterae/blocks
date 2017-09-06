@@ -586,8 +586,30 @@ Every block that are defined with a Ruby block or a proxy to a Block that is def
 
 ## Without a Name
 
-TODO
+```erb
+See Ruby tab
+```
 
-## Reserved Keywords
+```haml
+See Ruby tab
+```
 
-TODO
+```ruby
+# where builder is an instance of
+#  Blocks::Builder
+anonymous_block = builder.define do
+  "hello"
+end
+
+puts anonymous_block.name
+# Outputs "anonymous_block_1"
+
+puts anonymous_block.anonymous
+# Outputs true
+```
+
+Blocks may be defined without a name. When no block name is provided, an anonymous name will be generated.
+
+<aside class="notice">
+  This is really only useful directly within the Ruby code or when extending the Blocks::Builder class.
+</aside>

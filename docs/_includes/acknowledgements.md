@@ -1,6 +1,6 @@
 # Acknowledgements
 
-The blocks gem was written and is maintained by [Andrew Hunter](http://github.com/hunterae).
+The [blocks gem](http://github.com/hunterae/blocks) was written and is maintained by [Andrew Hunter](http://github.com/hunterae).
 
 If you think this looks somewhat familiar, there's good reason for that. Any similarities you may notice with [Rails's content_for with yield](http://api.rubyonrails.org/classes/ActionView/Helpers/CaptureHelper.html#method-i-content_for) and [rendering partials in Rails](https://apidock.com/rails/ActionController/Base/render) are intentional (the proxying feature may even remind you of [Ruby's Forwardable Module](http://ruby-doc.org/stdlib-2.0.0/libdoc/forwardable/rdoc/Forwardable.html)). Part of the original reasoning for the creating this gem was to provide a common interface for rendering both Ruby blocks and Rails' partials.
 
