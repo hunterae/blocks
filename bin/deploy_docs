@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+jgd -r 3-0-stable
