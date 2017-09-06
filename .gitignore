@@ -6,3 +6,4 @@ Gemfile.lock
 coverage/
 _site/
 .sass-cache/
+.idea/
