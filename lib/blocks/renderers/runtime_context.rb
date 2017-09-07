@@ -38,8 +38,11 @@ module Blocks
       self.runtime_block = runtime_block
       self.proxy_options_set = OptionsSet.new("Proxy Options Set")
 
-      convert_render_options(runtime_args.extract_options!)
-      identify_block(runtime_args.shift)
+      render_options = runtime_args.extract_options!
+      block_name = runtime_args.shift
+
+      convert_render_options(render_options)
+      identify_block(block_name)
 
       self.runtime_args = runtime_args
       merge_options_and_identify_render_item
