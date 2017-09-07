@@ -1,6 +1,7 @@
 {% assign css_url = '/' | prepend: site.css_dir | prepend: '/' | prepend: include.site_url %}
 {% assign fonts_url = '/' | prepend: site.fonts_dir | prepend: '/' %}
 {% assign js_url = '/' | prepend: site.js_dir | prepend: '/' | prepend: include.site_url %}
+{% assign images_url = '/' | prepend: site.images_dir | prepend: '/' | prepend: include.site_url %}
 <style>
   @font-face {
     font-family: 'slate';
@@ -18,6 +19,7 @@
 </style>
 <link href="{{ 'screen.css' | prepend: css_url }}" media="screen" rel="stylesheet" type="text/css">
 <link href="{{ 'print.css' | prepend: css_url }}" media="print" rel="stylesheet" type="text/css">
+<link rel="icon" type="image/x-icon" href="{{'favicon.ico' | prepend: images_url }}">
 
 <script src="{{ 'lib/energize.js' | prepend: js_url }}"></script>
 <script src="{{ 'lib/jquery.js' | prepend: js_url }}"></script>

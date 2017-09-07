@@ -24,6 +24,8 @@ There is a single method to render a block that has been defined, regardless of 
 
 The name of the block being rendered can be a symbol or a string. The underlying system treats symbols and strings the same. Therefore, any block that is defined with a String name can be rendered with its corresponding symbol name and vice-versa.
 
+<img src="{{'/render_strategies.png' | prepend: site.images_dir | prepend: '/'}}" />
+
 ## With no Corresponding Definition
 
 If a block is rendered without a definition, it doesn't output anything (unless there are hooks or wrappers for the specified block), but it doesn't fail either.
