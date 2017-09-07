@@ -1,3 +1,10 @@
+3.0.0 ()
+* Complete rewrite of the blocks gem
+* Extensive test coverage added
+* Jenkins CI integration
+* Extensive documentation added: http://hunterae.github.io/blocks/
+* Blocks branding and documentation styling applied: Thanks [Alexis Gormley](https://github.com/n2diving)
+
 2.8.0 (January 21, 2016)
 * When rendering a collection of blocks through blocks.render BLOCK_NAME, collection: COLLECTION,
 current_index will now be passed as a param for the options hash passed to the block. Example:
