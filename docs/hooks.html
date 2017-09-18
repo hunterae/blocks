@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html ng-app="MainApp">
+
+<head>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css" />
+  <link rel="stylesheet/less" type="text/css" href="assets/stylesheets/formChanges.less" />
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
+  <link rel="stylesheet/less" type="text/css" href="assets/stylesheets/script.css" />
+
+  <script src="//cdnjs.cloudflare.com/ajax/libs/less.js/1.7.3/less.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.15/angular.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.15/angular-animate.js"></script>
+  <script src="assets/javascripts/script.js"></script>
+</head>
+
+<body ng-controller="MainCtrl" ng-init="icons = 'glyph'; side = 'right'; useLabel = true; inputSize = 'reg'; formType = 'basic'; validation = 'none';">
+  <div class="container">
+
+    <h2>Settings</h2>
+
+    <form class="form-horizontal settingsForm" role="form">
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Icon Side:</label>
+        <div class="col-xs-10">
+          <label class="radio-inline">
+            <input type="radio" name="side" ng-model="side" value="left" >Left
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="side" ng-model="side" value="right" >Right
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Icon Set:</label>
+        <div class="col-xs-10">
+          <label class="radio-inline">
+            <input type="radio" name="icons" ng-model="icons" value="glyph" >Glypicon
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="icons" ng-model="icons" value="fa">Font Awesome
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Has Label:</label>
+        <div class="col-xs-10">
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" ng-model="useLabel"> Use a Label
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Control Size:</label>
+        <div class="col-xs-10">
+          <label class="radio-inline">
+            <input type="radio" name="inputSize" ng-model="inputSize" value="reg" >default
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="inputSize" ng-model="inputSize" value="sm" >input-sm
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="inputSize" ng-model="inputSize" value="lg" >input-lg
+          </label>
+          <label class="radio-inline" title="For Horizontal Form">
+            <input type="radio" name="inputSize" ng-model="inputSize" value="frm-sm" ng-disabled="formType != 'horizontal'" >form-sm
+          </label>
+          <label class="radio-inline" title="For Horizontal Form">
+            <input type="radio" name="inputSize" ng-model="inputSize" value="frm-lg" ng-disabled="formType != 'horizontal'">form-lg
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Form Type:</label>
+        <div class="col-xs-10">
+          <label class="radio-inline">
+            <input type="radio" name="formType" ng-model="formType" value="basic"
+                   ng-click="CheckControlSize();">Basic
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="formType" ng-model="formType" value="horizontal" >Horizontal
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="formType" ng-model="formType" value="inline"
+                   ng-click="CheckControlSize();">Inline
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="icons" class="col-xs-2 control-label">Validation State:</label>
+        <div class="col-xs-10">
+          <label class="radio-inline">
+            <input type="radio" name="validation" ng-model="validation" value="none" >None
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="validation" ng-model="validation" value="success" >has-success
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="validation" ng-model="validation" value="warning" >has-warning
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="validation" ng-model="validation" value="error" >has-error
+          </label>
+        </div>
+      </div>
+    </form>
+
+
+
+    <h2>Demo</h2>
+
+    <div class="well demo-space">
+      <form role="form" ng-class="{'form-horizontal' : formType == 'horizontal', 'form-inline' : formType == 'inline'}">
+        <div class="form-group has-feedback"
+             ng-class="{'has-feedback-left' : side == 'left', 'form-group-sm' : inputSize == 'frm-sm', 'form-group-lg' : inputSize == 'frm-lg', 'has-success' : validation == 'success', 'has-warning' : validation == 'warning', 'has-error' : validation == 'error'}">
+          <label class="control-label"
+                 ng-class="{'sr-only' : useLabel == false , 'col-sm-2' : formType == 'horizontal' && useLabel == true }">Username</label>
+          <div ng-class="{'inline-feedback' : formType == 'inline', 'col-sm-10' : formType == 'horizontal' && useLabel == true, 'col-sm-12' : formType == 'horizontal' && useLabel == false}">
+            <input type="text" class="form-control" placeholder="Username"
+                   ng-class="{'input-sm' : inputSize == 'sm', 'input-lg' : inputSize == 'lg'}"/>
+            <i class="form-control-feedback" ng-class="{'glyphicon glyphicon-user' : icons == 'glyph', 'fa fa-user': icons == 'fa' } "></i>
+          </div>
+        </div>
+      </form>
+    </div>
+
+
+    <h2>Code</h2>
+
+    <pre class="prettyprint"><code>&lt;form role=&quot;form&quot;<span class="animate-show" ng-show="formType == 'horizontal'" > class="form-horizontal"</span><span class="animate-show" ng-show="formType == 'inline'" > class="form-inline"</span>&gt;
+  &lt;div class=&quot;form-group has-feedback<span class="animate-show" ng-show="validation == 'success'" > has-success</span><span class="animate-show" ng-show="validation == 'warning'" > has-warning</span><span class="animate-show" ng-show="validation == 'error'" > has-error</span><span class="animate-show" ng-show="side == 'left'" > has-feedback-left</span><span class="animate-show" ng-show="inputSize == 'frm-sm'" > form-group-sm</span><span class="animate-show" ng-show="inputSize == 'frm-lg'" > form-group-lg</span>&quot;&gt;
+    &lt;label class=&quot;control-label<span class="animate-show" ng-show="useLabel == false" > sr-only</span><span class="animate-show" ng-show="formType == 'horizontal' && useLabel == true" > col-sm-2</span>&quot;&gt;Username&lt;/label&gt;<span class="animate-show" ng-show="formType == 'horizontal'" >
+    &lt;div class=&quot;<span class="animate-show" ng-show="useLabel == true" > col-sm-10</span><span class="animate-show" ng-show="useLabel == false" > col-sm-12</span>&quot;&gt;</span><span class="animate-show" ng-show="formType == 'inline' && side == 'left'" >
+    &lt;div class=&quot;inline-feedback&quot;&gt;</span>
+    <span class="animate-show" ng-show="formType == 'horizontal' || (formType == 'inline' && side == 'left')" >  </span>&lt;input type=&quot;text&quot; class=&quot;form-control<span class="animate-show" ng-show="inputSize == 'sm'" > input-sm</span><span class="animate-show" ng-show="inputSize == 'lg'" > input-lg</span>&quot; placeholder=&quot;Username&quot; /&gt;
+    <span class="animate-show" ng-show="formType == 'horizontal' || (formType == 'inline' && side == 'left')" >  </span>&lt;i class=&quot;form-control-feedback<span class="animate-show" ng-show="icons == 'glyph'" > glyphicon glyphicon-user</span><span class="animate-show" ng-show="icons == 'fa'" > fa fa-user</span>&quot;&gt;&lt;/i&gt;<span class="animate-show" ng-show="formType == 'horizontal' || (formType == 'inline' && side == 'left')" >
+    &lt;/div&gt;</span>
+  &lt;/div&gt;
+&lt;/form&gt;</code></pre>
+
+
+
+
+
+  </div>
+</body>
+
+</html>

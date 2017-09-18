@@ -17,14 +17,18 @@ Hooks may be registered for a specific block that render additional code in rela
 
 There is no limit to the number of hooks that may be registered for a block, and multiple hooks may be registered of the same hook type for a block.
 
+<aside class="notice">
+  Hooks will still render even if there is no associated block to be rendered.
+</aside>
+
 Hooks fall into three categories:
 
-## "Before" Hooks
+## Before Hooks
 
-"Before" hooks render code before their corresponding block renders.
+Before hooks render code before their corresponding block renders.
 
 <aside class="warning">
-  All "Before" hooks of a given type will render in reverse order from the order in which they are registered.
+  All Before hooks of a given type will render in reverse order from the order in which they are registered.
 </aside>
 
 There are three levels of "before" hooks:
@@ -341,9 +345,9 @@ end
   Take note that the second "before_all" call content rendered first before anything else including the "around_all" hook.
 </aside>
 
-## "After" Hooks
+## After Hooks
 
-"After" hooks render code before their corresponding block renders.
+After hooks render code before their corresponding block renders.
 
 <aside class="warning">
   Unlike "Before" and "Around" hooks, "After" hooks of a given type will render in the order in which they are registered.
@@ -663,21 +667,21 @@ end
   Take note that the second "after_all" call content rendered after everything else.
 </aside>
 
-## "Around" Hooks
+## Around Hooks
 
-"Around" hooks render code around their corresponding block, allowing the hook to render code before the block renders, pass control over to the rendering block, and then regain control once the block has rendered.
+Around hooks render code around their corresponding block, allowing the hook to render code before the block renders, pass control over to the rendering block, and then regain control once the block has rendered.
 
 <aside class="warning">
   Around hooks are expected to be provided a block which takes a block as its first argument. They should "call" that block when they are ready to pass control to the content they are surrounding.
 </aside>
 
 <aside class="warning">
-  All "around" hooks of a given type will render in reverse order from the order in which they are registered.
+  All around hooks of a given type will render in reverse order from the order in which they are registered.
 </aside>
 
-There are three levels of "around" hooks:
+There are three levels of around hooks:
 
-### "Surround" Hooks
+### "surround" Hooks
 
 ```erb
 <% blocks.prepend :my_block do %>
@@ -823,7 +827,7 @@ end
   Take note that the second "surround" call content rendered around the first.
 </aside>
 
-### "Around" Hooks
+### "around" Hooks
 
 ```erb
 <% blocks.before :my_block do %>
@@ -964,7 +968,7 @@ end
   Take note that the second "around" call content rendered around the first.
 </aside>
 
-### "Around All" Hooks
+### "around_all" Hooks
 
 ```erb
 <% blocks.before :my_block do %>

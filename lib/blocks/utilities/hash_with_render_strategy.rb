@@ -23,6 +23,9 @@ module Blocks
       self.clone.tap {|cloned| cloned.add_options(options) }
     end
 
+    # TODO: need to implement either merge or update to update
+    #  both the hash and the callers hash
+
     def add_options(*args, &block)
       options = args.extract_options!
       if !options.is_a?(HashWithIndifferentAccess)
