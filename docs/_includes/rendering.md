@@ -320,7 +320,111 @@ When the block definition and the render options share a duplicate key with hash
 
 ## With Parameters
 
-TODO
+```erb
+<% blocks.define :my_block do |param_1, param_2, param_3, param_4| %>
+  Param 1: <%= param_1.inspect %>
+  <br>
+  Param 2: <%= param_2.inspect %>
+  <br>
+  Param 3: <%= param_3.inspect %>
+  <br>
+  Param 4: <%= param_4.inspect %>
+  <br>
+<% end %>
+
+Without a Collection:
+<br>
+<%= blocks.render :my_block,
+  "foo", "bar", a: 1, b: 2 %>
+<br>
+With a Collection:
+<br>
+<%= blocks.render :my_block,
+  "foo", "bar", a: 1, b: 2,
+  collection: ["Item1", "Item2"] %>
+```
+
+```haml
+- blocks.define :my_block do |param_1,
+    param_2, param_3, param_4|
+  Param 1:
+  = param_1.inspect
+  %br
+  Param 2:
+  = param_2.inspect
+  %br
+  Param 3:
+  = param_3.inspect
+  %br
+  Param 4:
+  = param_4.inspect
+  %br
+
+Without a Collection:
+%br
+= blocks.render :my_block,
+  "foo", "bar", a: 1, b: 2
+%br
+With a Collection:
+%br
+= blocks.render :my_block,
+  "foo", "bar", a: 1, b: 2,
+  collection: ["Item1", "Item2"]
+```
+
+```ruby
+# where builder is an instance
+#  of Blocks::Builder
+builder.define :my_block do |param_1,
+    param_2, param_3, param_4|
+  "Param 1: #{param_1.inspect}<br>".html_safe +
+  "Param 2: #{param_2.inspect}<br>".html_safe +
+  "Param 3: #{param_3.inspect}<br>".html_safe +
+  "Param 4: #{param_4.inspect}".html_safe +
+end
+
+"Without a Collection:<br>".html_safe +
+builder.render(:my_block,
+  "foo", "bar", a: 1, b: 2) +
+"<br>With a Collection:<br>".html_safe +
+builder.render(:my_block,
+  "foo", "bar", a: 1, b: 2,
+  collection: ["Item1", "Item2"])
+```
+
+> This will produce the following output
+
+```
+Without a Collection:
+Param 1: "foo"
+Param 2: "bar"
+Param 3: {"a"=>1, "b"=>2}
+Param 4: nil
+
+With a Collection:
+Param 1: "Item1"
+Param 2: "foo"
+Param 3: "bar"
+Param 4: {"a"=>1, "b"=>2, "object"=>"Item1", "current_index"=>0}
+Param 1: "Item2"
+Param 2: "foo"
+Param 3: "bar"
+Param 4: {"a"=>1, "b"=>2, "object"=>"Item2", "current_index"=>1}
+```
+
+Blocks are also capable of taking additional parameters besides potentially the options and the item if a collection is being rendered.
+
+Though this concept is still relatively limited in its potential uses at this time (and some additional use cases probably still need to be hammered out), it can be used to pass an arbitrary number of additional parameters to a defined block.
+
+At this time, this will not do anything meaningful if the Block is defined to render a partial. However, if the Block is defined to be a Ruby block or a Proxy to a Block defined with a Ruby block, Blocks will attempt to match up the number of arguments the block expects with the number of arguments that could be sent to it from the render call.
+
+Remember, options will always be the last argument, and if rendering a collection, item will be the first. Any additional params passed to the render call will then be sent as the second argument onward, followed by the options hash. However, if less arguments are expected by the block than are to be sent, Blocks will send the less number of arguments.
+
+See the example to the right to make better sense out of what is being explained here.
+
+<aside class="notice">
+  Take note that passing a collection into the render call changes the first parameter to the block to the item in the collection and shifts the rest of the arguments over.
+</aside>
 
 ## With a Collection
 
