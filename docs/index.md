@@ -21,9 +21,9 @@ includes:
   - templating
   - configuration
   - custom-builders
-  - option-merging
-  - caller-id
-  - use-cases
+  #- option-merging
+  #- caller-id
+  #- use-cases
   - acknowledgements
 
 search: true

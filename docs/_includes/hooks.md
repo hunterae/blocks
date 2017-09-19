@@ -1111,7 +1111,63 @@ end
 
 ## With Options
 
-TODO
+```erb
+<% blocks.define :my_block,
+  a: "Block def",
+  b: "Block def" %>
+
+<% blocks.around :my_block,
+  a: "Hook def",
+  c: "Hook def" do |block, options| %>
+  Options are <%= options.inspect %>
+  <%= block.call %>
+<% end %>
+
+<%= blocks.render :my_block %>
+```
+
+```haml
+- blocks.define :my_block,
+  a: "Block def",
+  b: "Block def"
+
+- blocks.around :my_block,
+  a: "Hook def",
+  c: "Hook def" do |block, options|
+  Options are
+  = options.inspect
+  = block.call
+
+= blocks.render :my_block
+```
+
+```ruby
+# where builder is an instance
+#  of Blocks::Builder
+builder.define :my_block,
+  a: "Block def",
+  b: "Block def"
+
+builder.around :my_block,
+  a: "Hook def",
+  c: "Hook def" do |block, options|
+
+  "Options are #{options.inspect} #{block.call}"
+end
+builder.render :my_block
+```
+
+> When rendered, this will produce the following output:
+
+```
+Options are {
+  "a"=>"Hook def",
+  "c"=>"Hook def",
+  "b"=>"Block def"
+}
+```
+
+Just as Blocks may be defined with options, so too may hooks be defined with options. When the hook is rendered, these options will take a higher merge precedence than the options that were defined on the block itself. They will however take a lower merge precedence than any render items that were specified when the render call was made for the block being hooked (however, any of the reserved-keywords that are sent to the render call will have already been stripped out).
 
 ## With a Partial
 

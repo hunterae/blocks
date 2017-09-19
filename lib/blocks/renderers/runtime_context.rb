@@ -140,7 +140,7 @@ module Blocks
         [
           parent_runtime_context.render_options_set.clone,
           block_options_set,
-          parent_runtime_context.block_options_set.clone,
+          parent_runtime_context.block_options_set.try(:clone),
           # TODO: figure out how to deal with these - they don't technically belong here
           parent_runtime_context.proxy_options_set.clone,
           builder_options_set,
