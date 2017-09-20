@@ -7,7 +7,12 @@ module Blocks
       overrides_and_provided_content = capture(builder, options, &block) if block_given?
       locals = options.merge(
         (options[:builder_variable] || :builder) => builder,
-      ).symbolize_keys
+      )
+      locals = if locals.respond_to?(:deep_symbolize_keys)
+        locals.deep_symbolize_keys
+      else
+        locals.symbolize_keys
+      end
       locals[:options] = options
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
