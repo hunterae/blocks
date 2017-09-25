@@ -354,7 +354,6 @@ builder.render(:my_block,
 
 ```
 With Collection:
-With Collection:
 Wrap All Start
 Wrap Each Start a
 Around Start
