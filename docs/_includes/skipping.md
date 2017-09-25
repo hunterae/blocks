@@ -180,7 +180,7 @@ end
 Blocks may be skipped from rendering, such that whenever a render call occurs, no content will be rendered.
 
 <aside class="notice">
-  The code to the right is prerequistive code to the "Skipping Blocks" examples that follow
+  The code to the right is prerequesite code to the "Skipping Blocks" examples that follow
 </aside>
 
 Skips come in two forms: skipping a block only, and skipping a block with all of its hooks and wrappers.
