@@ -418,7 +418,7 @@ Though this concept is still relatively limited in its potential uses at this ti
 
 At this time, this will not do anything meaningful if the Block is defined to render a partial. However, if the Block is defined to be a Ruby block or a Proxy to a Block defined with a Ruby block, Blocks will attempt to match up the number of arguments the block expects with the number of arguments that could be sent to it from the render call.
 
-Remember, options will always be the last argument, and if rendering a collection, item will be the first. Any additional params passed to the render call will then be sent as the second argument onward, followed by the options hash. However, if less arguments are expected by the block than are to be sent, Blocks will send the less number of arguments.
+Remember, options will always be the last argument, and if rendering a collection, item will be the first. Any additional params passed to the render call will then be sent as the second argument onward, followed by the options hash. However, if fewer arguments are expected by the block than are sent, Blocks will send the lesser number of arguments.
 
 See the example to the right to make better sense out of what is being explained here.
 
