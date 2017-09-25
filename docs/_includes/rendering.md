@@ -674,12 +674,12 @@ If the block being rendered is not a partial, it will store "object" as a key in
 <%= blocks.render a: 1, b: 2,
   partial: "a_partial" %>
 
--# and a collection
+<!-- and a collection -->
 <%= blocks.render a: 1, b: 2,
   partial: "a_partial",
   collection: [1, 2, 3] %>
 
--# rendering with a proxy
+<!-- rendering with a proxy -->
 <%= blocks.render with:
   :some_proxy %>
 ```
