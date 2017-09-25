@@ -582,7 +582,7 @@ end
 My options are { a: 1 }
 ```
 
-Every block that are defined with a Ruby block or a proxy to a Block that is defined with a Ruby block (or a proxy to a proxy to ... to a block that is defined with a Ruby block) can optionally receive the merged options as a parameter.
+Every block that is defined with a Ruby block - or a proxy to a Block that is defined with a Ruby block, etc. - can optionally receive the merged options as a parameter.
 
 ## Without a Name
 
