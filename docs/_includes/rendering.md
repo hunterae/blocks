@@ -198,13 +198,13 @@ end
 }
 ```
 
-Just as options can be set for a block when the block is defined, they can also be applied at render time.
+Just as options can be set for a block when the block is defined, they can also be applied at render.
 
 Options provided to the render call can be either runtime options or default options (unlike defining blocks, there is no concept for render standard options).
 
 Default options are specified within a nested hash under the key "defaults".
 
-All other options are considered to be runtime options. Runtime options provided to the render call will take precedence over all other options included runtime options set on the block definition.
+All other options are considered to be runtime options. Runtime options provided to the render call will take precedence over all other options, including runtime options set on the block definition.
 
 ### Indifferent Access
 
