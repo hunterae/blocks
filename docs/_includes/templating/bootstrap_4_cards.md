@@ -124,9 +124,9 @@ If you look at the sample markup for a card, hopefully you notice a pattern. It'
 
 While not every Bootstrap 4 card will follow this exact pattern, it is a good starting point for beginning to break down a card into pieces.
 
-The code to the right breaks down the main :card block into pieces. Now, the :card block defines the card element and renders its two components: :card_image and :card_card.
+The code to the right defines the card element and breaks the main :card block into its two components: :card_image and :card_content.
 
-The :card_image block renders the hardcoded image tag and the :card_content block sets itself up to proxy to the :card_block block. This is done in anticipation (based on having read ahead in the Bootstrap 4 Card documentation) of using something of than a card-block for the content of the card (more on this shortly).
+The :card_image block renders the hardcoded image tag and the :card_content block sets itself up to proxy to the :card_block block. This is done in anticipation (based on having read ahead in the Bootstrap 4 Card documentation) of using something other than a card-block for the content of the card (more on this shortly).
 
 ### Extracting out the Wrappers
 

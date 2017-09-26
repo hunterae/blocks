@@ -962,7 +962,7 @@ end
 "around_all" call after
 ```
 
-"around" hooks render content that surrounds the combination of "before" hooks, "surround" content, and "after" hooks. They can be surround by "around_all" hooks.
+"around" hooks render content that surrounds the combination of "before" hooks, "surround" content, and "after" hooks. They can be surrounded by "around_all" hooks.
 
 <aside class="notice">
   Take note that the second "around" call content rendered around the first.

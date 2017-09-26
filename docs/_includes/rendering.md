@@ -198,13 +198,13 @@ end
 }
 ```
 
-Just as options can be set for a block when the block is defined, they can also be applied at render time.
+Just as options can be set for a block when the block is defined, they can also be applied at render.
 
 Options provided to the render call can be either runtime options or default options (unlike defining blocks, there is no concept for render standard options).
 
 Default options are specified within a nested hash under the key "defaults".
 
-All other options are considered to be runtime options. Runtime options provided to the render call will take precedence over all other options included runtime options set on the block definition.
+All other options are considered to be runtime options. Runtime options provided to the render call will take precedence over all other options, including runtime options set on the block definition.
 
 ### Indifferent Access
 
@@ -418,7 +418,7 @@ Though this concept is still relatively limited in its potential uses at this ti
 
 At this time, this will not do anything meaningful if the Block is defined to render a partial. However, if the Block is defined to be a Ruby block or a Proxy to a Block defined with a Ruby block, Blocks will attempt to match up the number of arguments the block expects with the number of arguments that could be sent to it from the render call.
 
-Remember, options will always be the last argument, and if rendering a collection, item will be the first. Any additional params passed to the render call will then be sent as the second argument onward, followed by the options hash. However, if less arguments are expected by the block than are to be sent, Blocks will send the less number of arguments.
+Remember, options will always be the last argument, and if rendering a collection, item will be the first. Any additional params passed to the render call will then be sent as the second argument onward, followed by the options hash. However, if fewer arguments are expected by the block than are sent, Blocks will send the lesser number of arguments.
 
 See the example to the right to make better sense out of what is being explained here.
 
@@ -674,12 +674,12 @@ If the block being rendered is not a partial, it will store "object" as a key in
 <%= blocks.render a: 1, b: 2,
   partial: "a_partial" %>
 
--# and a collection
+<!-- and a collection -->
 <%= blocks.render a: 1, b: 2,
   partial: "a_partial",
   collection: [1, 2, 3] %>
 
--# rendering with a proxy
+<!-- rendering with a proxy -->
 <%= blocks.render with:
   :some_proxy %>
 ```
