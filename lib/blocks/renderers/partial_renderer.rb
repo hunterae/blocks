@@ -13,6 +13,7 @@ module Blocks
       else
         locals.symbolize_keys
       end
+      partial = partial.to_partial_path if partial.respond_to?(:to_partial_path)
       locals[:options] = options
       view.render(layout: partial, locals: locals) do |*args|
         if overrides_and_provided_content
