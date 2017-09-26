@@ -11,3 +11,4 @@ Special thanks to the following people for helping advance this gem and its corr
 * [Various people and teams at LivingSocial](https://www.livingsocial.com/) - For allowing and believing in me to run with an experimental and unproven technology to help my gem start to take shape into what it is today.
 * [Various people at MobileCause](https://www.mobilecause.com/) - For helping me to advance my vision for this gem into what it is today and what is being documented here.
 * [Alexis Gormley](https://github.com/n2diving) - For suggesting the [Slate theme](https://github.com/lord/slate) for the documentation, designing the gem's branding, and proofing the documentation.
+* [Vaughn Weiss](https://github.com/VonTeacher) - For reviewing and revising the Blocks Docs.
