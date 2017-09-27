@@ -13,7 +13,7 @@ It acts as:
 
 Essentially, this all boils down to the following: Blocks makes it easy to define blocks of code that can be rendered either verbatim or with replacements and modifications at some later point in time.
 
-[![Build Status](https://travis-ci.org/hunterae/blocks.svg?branch=3-0-stable)](https://travis-ci.org/hunterae/blocks)
+[![Build Status](https://travis-ci.org/hunterae/blocks.svg)](https://travis-ci.org/hunterae/blocks)
 
 ## Usage
 
@@ -43,7 +43,7 @@ After checking out the repo, run `bundle install` (and possibly `gem install bun
 
 The documentation is generated using [Jekyll](https://jekyllrb.com/) and hosted on the [Blocks gh-pages branch](https://github.com/hunterae/blocks/tree/gh-pages).
 
-The static content is generated based on the source code within the [docs directory](https://github.com/hunterae/blocks/tree/3-0-stable/docs).
+The static content is generated based on the source code within the [docs directory](https://github.com/hunterae/blocks/tree/master/docs).
 
 To run the documentation locally or make changes for a corresponding pull request, follow the steps in the [Development Section above](#development). Then run `jekyll serve` and visit http://127.0.0.1:4000/blocks/.
 
