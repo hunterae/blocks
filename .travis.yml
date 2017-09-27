@@ -44,7 +44,9 @@ matrix:
       gemfile: gemfiles/Gemfile.rails-5-0-stable
     - rvm: 2.1.10
       gemfile: Gemfile
-script: 'bundle exec rake'
+script:
+  - 'bundle exec rake'
+  - "./bin/deploy_docs"
 
 notifications:
   email:
