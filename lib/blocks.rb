@@ -1,26 +1,47 @@
-require "action_view"
-require "action_controller"
-require "call_with_params"
-require "hashie"
+require 'active_support/core_ext/hash'
+require 'active_support/hash_with_indifferent_access'
+require 'blocks/action_view_extensions/view_extensions'
 
 module Blocks
-  autoload :Base,          "blocks/base"
-  autoload :Container,     "blocks/container"
-  autoload :ViewAdditions, "blocks/view_additions"
-  autoload :ControllerAdditions, "blocks/controller_additions"
+  extend ActiveSupport::Autoload
 
-  mattr_accessor :config
-  @@config = Hashie::Mash.new
-  @@config.wrap_before_and_after_blocks = false
-  @@config.use_partials = false
-  @@config.partials_folder = "blocks"
-  @@config.skip_applies_to_surrounding_blocks = false
+  eager_autoload do
+    autoload_under 'renderers' do
+      autoload :Renderer
+      autoload :RuntimeContext
+      autoload :AbstractRenderer
+      autoload :PartialRenderer
+      autoload :BlockWithHooksRenderer
+      autoload :AdjacentBlocksRenderer
+      autoload :NestingBlocksRenderer
+      autoload :CollectionRenderer
+      autoload :WrapperRenderer
+      autoload :BlockRenderer
+      autoload :BlockPlaceholder
+    end
 
-  # Default way to setup Blocks
-  def self.setup
-    yield config
+    autoload_under 'builders' do
+      autoload :HookDefinition
+      autoload :BlockDefinition
+      autoload :Builder
+    end
+
+    autoload_under 'utilities' do
+      autoload :DynamicConfiguration
+      autoload :Configurator
+      autoload :OptionsSet
+      autoload :HashWithRenderStrategy
+      autoload :HashWithCaller
+    end
   end
-end
 
-ActionView::Base.send :include, Blocks::ViewAdditions
-ActionController::Base.send :include, Blocks::ControllerAdditions
+  # WIP
+  # autoload_under 'experimental' do
+  #   autoload :BuilderPermissions
+  #   autoload :InvalidPermissionsHandler
+  # end
+
+  autoload :Version
+
+  include Configurator
+end

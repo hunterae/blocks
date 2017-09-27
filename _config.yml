@@ -1,1 +1,20 @@
-theme: jekyll-theme-slate
+title: Blocks Docs
+email: hunterae@gmail.com
+description: Blocks gives you total control over how your blocks of code render.
+baseurl: "/blocks" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+github_username: hunterae
+google_analytics: "UA-104699666-1"
+markdown: kramdown
+source: docs
+destination: _site
+plugins:
+  - jekyll-feed
+  - jekyll-coffeescript
+sass:
+  sass_dir: _sass
+  style: compressed
+css_dir: blocks/stylesheets
+js_dir: blocks/javascripts
+images_dir: blocks/images
+fonts_dir: blocks/fonts

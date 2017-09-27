@@ -1,7 +1,9 @@
-*.log
-*.sqlite3
 /pkg/*
 .bundle
-.rvmrc
+.ruby-gemset
 Gemfile.lock
-spec/database.yml
+.byebug_history
+coverage/
+_site/
+.sass-cache/
+.idea/

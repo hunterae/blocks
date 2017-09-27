@@ -1,0 +1,154 @@
+<% if hooks %>
+  <% blocks.append :test_block do |item|%>
+    <div class="bg-primary">First Appended block <%= item if !item.is_a?(Hash) %></div>
+  <% end %>
+
+  <% blocks.append :test_block do |item| %>
+    <div class="bg-primary">Second Appended block <%= item if !item.is_a?(Hash) %></div>
+  <% end %>
+
+  <% blocks.prepend :test_block do |item| %>
+    <div class="bg-primary">First Prepended block <%= item if !item.is_a?(Hash) %></div>
+  <% end %>
+
+  <% blocks.prepend :test_block do |item| %>
+    <div class="bg-primary">Second Prepended block <%= item if !item.is_a?(Hash) %></div>
+  <% end %>
+
+  <% blocks.surround :test_block do |content_block, item| %>
+    <div class="bg-info">
+      First Surround for item <%= item if !item.is_a?(Hash) %>
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.surround :test_block do |content_block, item| %>
+    <div class="bg-success">
+      Second Surround for item <%= item if !item.is_a?(Hash) %>
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.around :test_block do |content_block, item| %>
+    <div class="bg-info">
+      First Around for item <%= item if !item.is_a?(Hash) %>
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.around :test_block do |content_block, item| %>
+    <div class="bg-success">
+      Second Around for item <%= item if !item.is_a?(Hash) %>
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.before :test_block do |item| %>
+    <div class="bg-success">
+      First Before for item <%= item if !item.is_a?(Hash) %>
+    </div>
+  <% end %>
+
+  <% blocks.before :test_block do |item| %>
+    <div class="bg-success">
+      Second Before for item <%= item if !item.is_a?(Hash) %>
+    </div>
+  <% end %>
+
+  <% blocks.after :test_block do |item| %>
+    <div class="bg-success">
+      First After for item <%= item if !item.is_a?(Hash) %>
+    </div>
+  <% end %>
+
+  <% blocks.after :test_block do |item| %>
+    <div class="bg-success">
+      Second After for item <%= item if !item.is_a?(Hash) %>
+    </div>
+  <% end %>
+
+  <% blocks.around_all :test_block do |content_block| %>
+    <div class="bg-warning">
+      First Around All
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.around_all :test_block do |content_block| %>
+    <div class="bg-danger">
+      Second Around All
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.before_all :test_block do %>
+    <div class="bg-danger">
+      First Before All
+    </div>
+  <% end %>
+
+  <% blocks.before_all :test_block do %>
+    <div class="bg-danger">
+      Second Before All
+    </div>
+  <% end %>
+
+  <% blocks.after_all :test_block do %>
+    <div class="bg-danger">
+      First After All
+    </div>
+  <% end %>
+
+  <% blocks.after_all :test_block do %>
+    <div class="bg-danger">
+      Second After All
+    </div>
+  <% end %>
+<% end %>
+
+<% if wrappers %>
+  <% blocks.define :test_block_wrapper do |content_block, item| %>
+    <div class="bg-info">
+      Test Block Wrapper for item <%= item if !item.is_a?(Hash) %>
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.define :test_block_item_wrapper do |content_block| %>
+    <div class="bg-info">
+      Test Block Wrapper for each item
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.define :test_block_all_wrapper do |content_block| %>
+    <div class="bg-info">
+      Test Block Wrapper for all
+      <%= content_block.call %>
+    </div>
+  <% end %>
+
+  <% blocks.define :test_block,
+                    wrap_with: :test_block_wrapper,
+                    wrap_each: :test_block_item_wrapper,
+                    wrap_all: :test_block_all_wrapper %>
+<% end %>
+
+<% blocks.define :some_other_block do |item| %>
+  <div class="bg-primary">Some other block <%= item if !item.is_a?(Hash) %></div>
+<% end %>
+
+<% if render_with_different_block %>
+  <% blocks.define :test_block, with: :some_other_block %>
+<% end %>
+
+<% case block_or_partial %>
+<% when Symbol %>
+  <% blocks.define :test_block do |item| %>
+    <div class="bg-primary">Actual block <%= item if !item.is_a?(Hash) %></div>
+  <% end %>
+<% when String %>
+  <% blocks.define :test_block, partial: block_or_partial %>
+<% end %>
+
+<%= blocks.render :test_block, collection: collection %>

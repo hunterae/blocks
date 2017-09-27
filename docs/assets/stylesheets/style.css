@@ -1,0 +1,46 @@
+/* Styles for Demo */
+body {
+  background: #FAFCFF;
+  background-image: url('http://i.imgur.com/57EjZOf.png');
+}
+pre.prettyprint {
+	width: 600px;
+	overflow: auto;
+}
+pre.prettyprint > code {
+	width: initial;
+	word-wrap: normal;
+	white-space: pre;
+}
+
+/* fix height so won't jump around page */
+.demo-space {
+  height: 100px;
+}
+
+.animate-show {
+  -webkit-transition:all ease-out 2s;
+     -moz-transition:all ease-out 2s;
+       -o-transition:all ease-out 2s;
+          transition:all ease-out 2s;
+
+  line-height:20px;
+  opacity:1;
+
+}
+.animate-show.ng-hide-remove.ng-hide-remove-active {
+  background: #37ff25; /* green */
+}
+.animate-show.ng-hide-add.ng-hide-add-active {
+  background: #ff2537; /* red */
+}
+
+.animate-show.ng-hide {
+  line-height:0;
+  opacity:0;
+}
+
+.settingsForm .form-group {
+  padding-bottom: 5px;
+  border-bottom: 1px solid lightgrey;
+}

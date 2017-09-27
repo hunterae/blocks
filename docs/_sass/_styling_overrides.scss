@@ -1,0 +1,31 @@
+body {
+  font-size: 14px;
+}
+
+.tocify-wrapper {
+  font-size: 14px;
+  & > img {
+    width: 80%;
+    margin: 1.8vw;
+    @media (max-width: $tablet-width) {
+      margin: 6vw;
+    }
+  }
+  & .tocify-subheader .tocify-item>a {
+    font-size: 13px;
+  }
+}
+
+.tocify-wrapper .tocify-item>a, .tocify-wrapper .toc-footer li {
+  padding: 5px $nav-padding 5px $nav-padding;
+}
+
+ul.search-results {
+  padding: 0;
+}
+
+.content > aside, aside.warning, aside.success {
+  text-shadow: none;
+  color: #FFFFFF;
+  font-weight: 500;
+}
