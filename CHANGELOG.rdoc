@@ -1,4 +1,4 @@
-3.0.0 ()
+3.0.0 (September 27, 2017)
 * Complete rewrite of the blocks gem
 * Extensive test coverage added
 * Jenkins CI integration
