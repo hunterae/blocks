@@ -20,7 +20,6 @@ gem "codeclimate-test-reporter", "~> 1.0.8"
 
 group :development, :test do
   gem "jekyll"
-  gem "jgd"
   gem "jekyll-feed", "~> 0.6"
   gem "jekyll-coffeescript"
 end
