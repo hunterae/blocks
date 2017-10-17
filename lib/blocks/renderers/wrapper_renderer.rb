@@ -1,6 +1,6 @@
 module Blocks
   class WrapperRenderer < AbstractRenderer
-    def render(wrapper, runtime_context, &block)
+    def render(wrapper, runtime_context)
       content_block = Proc.new { with_output_buffer { yield } }
       if wrapper.nil?
         yield

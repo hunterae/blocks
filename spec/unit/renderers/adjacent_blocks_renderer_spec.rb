@@ -9,6 +9,10 @@ describe Blocks::AdjacentBlocksRenderer do
     Blocks::AdjacentBlocksRenderer.new(renderer)
   end
 
+  before do
+    allow(subject).to receive(:block_renderer).and_return(Blocks::BlockRenderer.new(renderer))
+  end
+
   context '#render' do
     it "should not do anything if the block is not defined" do
       expect(subject.block_renderer).not_to receive :render

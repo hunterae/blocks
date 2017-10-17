@@ -1,6 +1,6 @@
 module Blocks
   class NestingBlocksRenderer < AbstractRenderer
-    def render(hook, runtime_context, &block)
+    def render(hook, runtime_context)
       block = block_for(runtime_context.block_name)
       hooks = block.try(:hooks_for, hook)
       if hooks.present?
@@ -19,6 +19,7 @@ module Blocks
       else
         yield
       end
+
     end
   end
 end

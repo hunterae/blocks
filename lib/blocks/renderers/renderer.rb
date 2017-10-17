@@ -29,13 +29,10 @@ module Blocks
     end
 
     AbstractRenderer::RENDERERS.each do |klass|
-      name = klass.to_s.demodulize.underscore
-
-      class_eval <<-RUBY, __FILE__, __LINE__ + 1
-        def #{name}
-          @#{name} ||= #{klass}.new(self)
-        end
-      RUBY
+      name = klass.to_s.demodulize.underscore.to_sym
+      define_method name do
+        klass.new(self)
+      end
     end
   end
 end
