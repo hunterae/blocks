@@ -121,6 +121,12 @@ module Blocks
 
         if render_strategy == RENDER_WITH_PROXY
           add_proxy_options render_item
+        elsif render_item.nil? && builder.respond_to?(proxy_block_name)
+          Proc.new do |*args|
+            options = args.extract_options!
+            runtime_block = runtime_block || options[:block]
+            builder.send(proxy_block_name, *args, options, &runtime_block)
+          end
         else
           render_item
         end
