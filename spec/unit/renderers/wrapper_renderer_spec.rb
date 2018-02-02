@@ -11,6 +11,7 @@ describe Blocks::WrapperRenderer do
   end
 
   before do
+    allow(runtime_context).to receive(:merge).and_return(runtime_context)
     allow(subject).to receive(:output_buffer).and_return(output_buffer)
     allow(subject).to receive(:with_output_buffer) do |&block|
       block.call
@@ -20,7 +21,7 @@ describe Blocks::WrapperRenderer do
 
   context '#render' do
     it "should yield if there is no wrapper provided" do
-      expect {|b| subject.render(nil, runtime_context, &b) }.to yield_with_no_args
+      expect {|b| subject.render(nil, :wrap_each, runtime_context, &b) }.to yield_with_no_args
       expect(output_buffer).to eq []
     end
 

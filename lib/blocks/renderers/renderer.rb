@@ -2,6 +2,8 @@ module Blocks
   class Renderer
     attr_accessor :builder
     delegate :render, to: :block_with_hooks_renderer
+    delegate :view, to: :builder
+    delegate :with_output_buffer, :output_buffer, to: :view
 
     def initialize(builder)
       self.builder = builder
