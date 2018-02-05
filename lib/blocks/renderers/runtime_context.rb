@@ -124,7 +124,7 @@ module Blocks
         elsif render_item.nil? && builder.respond_to?(proxy_block_name)
           Proc.new do |*args|
             options = args.extract_options!
-            runtime_block = runtime_block || options[:block]
+            runtime_block = self.runtime_block || options[:block]
             builder.send(proxy_block_name, *args, options, &runtime_block)
           end
         else
@@ -134,7 +134,7 @@ module Blocks
       elsif builder.respond_to?(proxy_block_name)
         Proc.new do |*args|
           options = args.extract_options!
-          runtime_block = runtime_block || options[:block]
+          runtime_block = self.runtime_block || options[:block]
           builder.send(proxy_block_name, *args, options, &runtime_block)
         end
       end
