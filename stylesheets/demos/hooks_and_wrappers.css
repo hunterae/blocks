@@ -1,0 +1,1 @@
+.bg-primary,.bg-warning,.bg-info,.bg-success,.bg-danger{border:3px solid black;margin:10px;padding:5px;font-size:14px !important;line-height:20px !important}#blocks div:not(.bg-primary,.bg-warning,.bg-info,.bg-success,.bg-danger,#actual_block){margin:0;padding:0;border:0;font-size:0;line-height:0}#blocks div:not(#actual_block){font-size:0}#actual_block{font-size:14px}
