@@ -49,8 +49,8 @@ module Blocks
     end
 
     # TODO: this method needs to clone without context, i.e. with render_strategy, item, etc
-    def extend_to_block_definition(block_definition)
-      RuntimeContext.new(builder, block_definition, parent_runtime_context: self).tap do |rc|
+    def extend_to_block_definition(block_definition, &runtime_block)
+      RuntimeContext.new(builder, block_definition, parent_runtime_context: self, &runtime_block).tap do |rc|
         rc.runtime_args = self.runtime_args
       end
     end
@@ -72,6 +72,8 @@ module Blocks
         description << "Renders with partial \"#{render_item}\""
       elsif render_item.is_a?(Proc)
         description << "Renders with block defined at #{render_item.source_location}"
+      elsif render_item.is_a?(Method)
+        description << "Renders with method defined at #{render_item.source_location}"
       end
 
 
@@ -122,21 +124,13 @@ module Blocks
         if render_strategy == RENDER_WITH_PROXY
           add_proxy_options render_item
         elsif render_item.nil? && builder.respond_to?(proxy_block_name)
-          Proc.new do |*args|
-            options = args.extract_options!
-            runtime_block = self.runtime_block || options[:block]
-            builder.send(proxy_block_name, *args, options, &runtime_block)
-          end
+          builder.method(proxy_block_name)
         else
           render_item
         end
 
       elsif builder.respond_to?(proxy_block_name)
-        Proc.new do |*args|
-          options = args.extract_options!
-          runtime_block = self.runtime_block || options[:block]
-          builder.send(proxy_block_name, *args, options, &runtime_block)
-        end
+        builder.method(proxy_block_name)
       end
     end
 

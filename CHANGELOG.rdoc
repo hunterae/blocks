@@ -1,3 +1,10 @@
+3.1.0
+* Added content_tag utility block, wrapping around Rails' content_tag method, which
+  may be used directly or indirectly (such as via a wrapper or hook)
+* Removed dead / outdated experimental code
+* Removed dynamic configurator (which was really just an almost copy of Rails' class_attribute)
+  of Blocks in favor of mattr_accessor
+
 3.0.0 (September 27, 2017)
 * Complete rewrite of the blocks gem
 * Extensive test coverage added

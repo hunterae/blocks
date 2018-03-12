@@ -15,8 +15,6 @@ module Blocks
 
     attr_accessor :anonymous_block_number
 
-    delegate :content_tag, to: :view
-
     delegate :render,
              :render_with_overrides,
              :deferred_render,
@@ -26,6 +24,8 @@ module Blocks
              :standard_options,
              :default_options,
              to: :options_set
+
+    delegate :with_output_buffer, :output_buffer, to: :view
 
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
 
@@ -53,14 +53,12 @@ module Blocks
       block_definitions[block_name] if block_defined?(block_name)
     end
 
-    def block_defined?(block_name)
-      block_definitions.key?(block_name)
+    def hooks_for(block_name, hook_name)
+      block_for(block_name).try(:hooks_for, hook_name) || []
     end
 
-    def define_each(collection, block_name_proc, *args, &block)
-      collection.map do |object|
-        define(call_with_params(block_name_proc, object, *args), object, *args, &block)
-      end
+    def block_defined?(block_name)
+      block_definitions.key?(block_name)
     end
 
     # Define a block, unless a block by the same name is already defined.
@@ -132,7 +130,6 @@ module Blocks
       options = call_each_hash_value_with_params(options, *args) || {}
       options2 = call_each_hash_value_with_params(options2, *args) || {}
 
-
       options.symbolize_keys.merge(options2.symbolize_keys) do |key, v1, v2|
         if v1.is_a?(String) && v2.is_a?(String)
           "#{v1} #{v2}"
@@ -142,9 +139,63 @@ module Blocks
       end
     end
 
+    # Blocks::Builder.content_tag extends ActionView's content_tag method
+    #  by allowing itself to be used as a wrapper, hook, or called directly,
+    #  while also not requiring the content tag name (defaults to :div).
+    def content_tag(*args, &block)
+      options = args.extract_options!
+      options = options.with_indifferent_access if !options.is_a?(HashWithIndifferentAccess)
+      escape = options.key?(:escape) ? options.delete(:escape) : true
+
+      if options.is_a?(Blocks::RuntimeContext)
+        if options[:wrapper_type]
+          wrapper_prefix = options[:wrapper_type]
+
+          html_option = options["#{wrapper_prefix}_html_option"]
+          wrapper_html = if html_option.is_a?(Array)
+            html_option.map do |html_attribute|
+              options[html_attribute]
+            end.compact.first
+
+          elsif html_option.present?
+            options[html_option]
+          end
+
+          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"], wrapper_html, *args, options)
+
+          wrapper_tag = options["#{wrapper_prefix}_tag"]
+
+        else
+          wrapper_tag = options[:tag]
+        end
+
+        wrapper_html ||= options["html"] || {}
+
+      else
+        wrapper_tag = options.delete(:tag)
+        wrapper_html = options.to_hash
+      end
+
+      if !wrapper_tag
+        first_arg = args.first
+        wrapper_tag = if first_arg.is_a?(String) || first_arg.is_a?(Symbol)
+          args.shift
+        else
+          :div
+        end
+      end
+
+      content_tag_args = [wrapper_tag]
+      content_tag_args << args.shift if !block_given?
+      content_tag_args << wrapper_html
+      content_tag_args << escape
+
+      view.content_tag *content_tag_args, &block
+    end
+
     protected
 
-    # TODO: move this logic elsewhere
+    # DEPRECATED
     def define_helper_blocks
       define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
         options = args.extract_options!
@@ -162,7 +213,7 @@ module Blocks
             options[options[:wrapper_html_option]]
           end
         end
-        content_tag options[:wrapper_tag],
+        view.content_tag options[:wrapper_tag],
           concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
           &content_block
       end

@@ -1,6 +1,7 @@
 module Blocks
   class PartialRenderer < AbstractRenderer
     def render(partial, options={}, &block)
+      # TODO: need to check if partial responds to #to_partial_path and call it if it does
       if !options.is_a?(Blocks::RuntimeContext)
         options = RuntimeContext.new(builder, options).to_hash.with_indifferent_access
       end

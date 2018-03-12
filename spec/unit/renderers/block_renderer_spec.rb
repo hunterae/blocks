@@ -5,7 +5,7 @@ describe Blocks::BlockRenderer do
   let(:renderer) { Blocks::Renderer.new(builder) }
   let(:output_buffer) { [] }
   let(:render_item) { nil }
-  let(:runtime_context) { double(render_item: render_item, runtime_args: []) }
+  let(:runtime_context) { double(render_item: render_item, runtime_args: [], runtime_block: nil) }
   let(:partial_renderer) { double }
 
   subject do
@@ -65,17 +65,10 @@ describe Blocks::BlockRenderer do
         expect(subject).to receive(:capture).with(:a, :b, :c, runtime_context, &render_item)
         subject.render(runtime_context)
       end
+    end
 
-      it 'should pass any extra args to the render call to the #capture call' do
-        expect(subject).to receive(:capture).with(:d, :e, :f, runtime_context, &render_item)
-        subject.render(:d, :e, :f, runtime_context)
-      end
-
-      it 'should append runtime_args to the extra args to the render call' do
-        allow(runtime_context).to receive(:runtime_args).and_return [:a, :b, :c]
-        expect(subject).to receive(:capture).with(:d, :e, :f, :a, :b, :c, runtime_context, &render_item)
-        subject.render(:d, :e, :f, runtime_context)
-      end
+    context "when the render_item is a Method" do
+      xit "should be tested"
     end
   end
 end

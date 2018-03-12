@@ -29,10 +29,6 @@ describe Blocks::Builder do
     [:runtime_options, :standard_options, :default_options].each do |field|
       it { should delegate_method(field).to(:options_set) }
     end
-
-    [:content_tag].each do |field|
-      it { should delegate_method(field).to(:view) }
-    end
   end
 
   # TODO: Move these somewhere else
@@ -40,7 +36,7 @@ describe Blocks::Builder do
     context 'Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK' do
       it 'should use #content_tag to build a div around another block' do
         content = Proc.new {}
-        expect(subject).to receive(:content_tag).with(:div, {}, &content)
+        expect(view).to receive(:content_tag).with(:div, {}, &content)
         wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
         wrapper_block = wrapper.standard_options[:block]
         wrapper_block.call(content, wrapper.default_options)
@@ -48,7 +44,7 @@ describe Blocks::Builder do
 
       it 'should allow the override of the tag and options' do
         content = Proc.new {}
-        expect(subject).to receive(:content_tag).with(:span, class: "my-class", &content)
+        expect(view).to receive(:content_tag).with(:span, class: "my-class", &content)
         wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
         wrapper_block = wrapper.standard_options[:block]
         wrapper_block.call(content, wrapper.default_options.merge(wrapper_tag: :span, wrapper_html: { class: "my-class" }))
@@ -56,7 +52,7 @@ describe Blocks::Builder do
 
       it 'should check the wrapper_html_option to check for an additional option that may set the content tag options' do
         content = Proc.new {}
-        expect(subject).to receive(:content_tag).with(:div, style: "background-color: orange", class: "my-class", &content)
+        expect(view).to receive(:content_tag).with(:div, style: "background-color: orange", class: "my-class", &content)
         wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
         wrapper_block = wrapper.standard_options[:block]
         wrapper_block.call(content, wrapper.default_options.merge(wrapper_html: { class: "my-class" }, wrapper_html_option: :other_options, other_options: { style: "background-color: orange"}))
@@ -64,7 +60,7 @@ describe Blocks::Builder do
 
       it 'should allow an array of wrapper_html_option settings and use the first one that is set' do
         content = Proc.new {}
-        expect(subject).to receive(:content_tag).with(:div, style: "background-color: orange", &content)
+        expect(view).to receive(:content_tag).with(:div, style: "background-color: orange", &content)
         wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
         wrapper_block = wrapper.standard_options[:block]
         wrapper_block.call(content,
@@ -78,7 +74,7 @@ describe Blocks::Builder do
 
       it 'should allow the wrapper_html_option to specify a hash that has Procs as its values' do
         content = Proc.new {}
-        expect(subject).to receive(:content_tag).with(:div, id: "arg1", class: "arg2", &content)
+        expect(view).to receive(:content_tag).with(:div, id: "arg1", class: "arg2", &content)
         wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
         wrapper_block = wrapper.standard_options[:block]
         wrapper_block.call(content,
@@ -124,19 +120,6 @@ describe Blocks::Builder do
     end
     it "should not create the block if it is not present" do
       expect { subject.block_defined?(:test_block) }.to_not change { subject.block_definitions.length }
-    end
-  end
-
-  context '#define_each' do
-    it "should be able to define a collection of blocks with names designated by a Proc" do
-      hash = { a: 1 }.with_indifferent_access
-      block = Proc.new {}
-      block_definitions = subject.define_each([1,2,3,4], Proc.new {|i| "item#{i}"}, a: 1, &block)
-      expect(block_definitions).to be_a Array
-      expect(block_definitions.length).to eq 4
-      expect(block_definitions.map(&:name)).to eq ["item1", "item2", "item3", "item4"]
-      hash = hash.merge(block: block)
-      expect(block_definitions.map(&:standard_options)).to eq [hash, hash, hash, hash]
     end
   end
 
@@ -256,6 +239,23 @@ describe Blocks::Builder do
     it "should treat strings and symbols for keys as the same" do
       h = subject.concatenating_merge({a: 1, class: "hello" }, { "a" => 2, "class" => "world" })
       expect(h).to eq a: 2, class: "hello world"
+    end
+  end
+
+  context '#hooks_for' do
+    it "should return all hooks of a given type for a given block" do
+      hook1 = subject.around :a, with: :something
+      hook2 = subject.around :a, with: :something2
+      hook3 = subject.before :a, with: :something3
+      hook4 = subject.prepend :a, with: :something4
+      expect(subject.hooks_for(:a, :around)).to eql [hook1, hook2]
+      expect(subject.hooks_for(:a, :before)).to eql [hook3]
+      expect(subject.hooks_for(:a, :prepend)).to eql [hook4]
+    end
+
+    it "should return an empty array and not define a block if it is not already defined" do
+      expect(subject.hooks_for(:a, :around)).to eql []
+      expect(subject.block_defined?(:a)).to be false
     end
   end
 end

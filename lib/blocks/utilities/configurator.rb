@@ -3,12 +3,13 @@ module Blocks
     extend ActiveSupport::Concern
 
     included do
-      include DynamicConfiguration
-
-      add_config :builder_class
-      add_config :renderer_class
-      add_config :global_options_set
-      add_config :lookup_caller_location, instance_predicate: true
+      mattr_accessor :builder_class
+      mattr_accessor :renderer_class
+      mattr_accessor :global_options_set
+      mattr_accessor :lookup_caller_location
+      # TODO: add default_defintions option
+      # TODO: add submodules / extensions option
+      # TODO: add option to specify render order for nesting hooks
       reset_config
     end
 
@@ -20,6 +21,10 @@ module Blocks
           config.lookup_caller_location = false
           config.global_options_set = OptionsSet.new("Global Options")
         end
+      end
+
+      def configure
+        yield self
       end
     end
   end

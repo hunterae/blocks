@@ -35,7 +35,7 @@ module Blocks
 
       caller_id = args.first.to_s.presence || ""
 
-      if !options.is_a?(HashWithCaller) && Blocks.lookup_caller_location?
+      if !options.is_a?(HashWithCaller) && Blocks.lookup_caller_location
         caller_location = caller.detect do |c|
           !c.include?("/lib/blocks") &&
           !c.include?("/lib/ruby") &&

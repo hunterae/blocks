@@ -27,19 +27,12 @@ module Blocks
     end
 
     autoload_under 'utilities' do
-      autoload :DynamicConfiguration
       autoload :Configurator
       autoload :OptionsSet
       autoload :HashWithRenderStrategy
       autoload :HashWithCaller
     end
   end
-
-  # WIP
-  # autoload_under 'experimental' do
-  #   autoload :BuilderPermissions
-  #   autoload :InvalidPermissionsHandler
-  # end
 
   autoload :Version
 
