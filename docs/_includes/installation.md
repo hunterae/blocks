@@ -1,8 +1,8 @@
 # Installation & Prerequisites
 
-Blocks requires Rails 3.0 or greater.
+Blocks requires Rails 3.0 or greater and Ruby 2.0 or greater.
 
-It has been tested with Ruby 1.9.3 through 2.4.1, and Rails 3.0 - 5.1 (as well as Edge Rails)
+It has been tested with Ruby 2.0.0 through 2.5.1, and Rails 3.0 - 5.2 (as well as Edge Rails)
 
 ```
 gem 'blocks'

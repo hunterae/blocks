@@ -2,15 +2,17 @@ language: ruby
 cache: bundler
 
 before_install:
-  - gem update bundler
+  - gem update --system
+  - gem install bundler
 
 rvm:
-  - 1.9.3
   - 2.0.0
   - 2.1.10
   - 2.2.7
   - 2.3.4
   - 2.4.1
+  - 2.5.1
+  - 2.6.0-preview1
 
 gemfile:
   - gemfiles/Gemfile.rails-3-0-stable
@@ -21,28 +23,31 @@ gemfile:
   - gemfiles/Gemfile.rails-4-2-stable
   - gemfiles/Gemfile.rails-5-0-stable
   - gemfiles/Gemfile.rails-5-1-stable
+  - gemfiles/Gemfile.rails-5-2-stable
   - Gemfile
 matrix:
   allow_failures:
     - rvm: ruby-head
   exclude:
-    - rvm: 1.9.3
+    - rvm: 2.0.0
+      gemfile: gemfiles/Gemfile.rails-5-2-stable
+    - rvm: 2.0.0
       gemfile: gemfiles/Gemfile.rails-5-1-stable
-    - rvm: 1.9.3
+    - rvm: 2.0.0
       gemfile: gemfiles/Gemfile.rails-5-0-stable
-    - rvm: 1.9.3
+    - rvm: 2.1.10
+      gemfile: gemfiles/Gemfile.rails-5-2-stable
+    - rvm: 2.1.10
+      gemfile: gemfiles/Gemfile.rails-5-1-stable
+    - rvm: 2.1.10
+      gemfile: gemfiles/Gemfile.rails-5-0-stable
+    - rvm: 2.3.4
+      gemfile: Gemfile
+    - rvm: 2.2.7
+      gemfile: Gemfile
+    - rvm: 2.1.10
       gemfile: Gemfile
     - rvm: 2.0.0
-      gemfile: gemfiles/Gemfile.rails-5-1-stable
-    - rvm: 2.0.0
-      gemfile: gemfiles/Gemfile.rails-5-0-stable
-    - rvm: 2.0.0
-      gemfile: Gemfile
-    - rvm: 2.1.10
-      gemfile: gemfiles/Gemfile.rails-5-1-stable
-    - rvm: 2.1.10
-      gemfile: gemfiles/Gemfile.rails-5-0-stable
-    - rvm: 2.1.10
       gemfile: Gemfile
 script: 'bundle exec rake'
 
@@ -50,7 +55,7 @@ jobs:
   include:
     - stage: documentation
       script: './bin/deploy_docs'
-      rvm: 2.4.1
+      rvm: 2.5.1
       gemfile: Gemfile
 
 notifications:

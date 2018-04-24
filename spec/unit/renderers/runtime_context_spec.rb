@@ -13,7 +13,7 @@ describe Blocks::RuntimeContext do
     xit "TODO"
   end
 
-  context '#extend_to_block_definition' do
+  context '#extend_from_definition' do
     xit "TODO"
   end
 end

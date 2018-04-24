@@ -27,8 +27,12 @@ rescue LoadError
 end
 
 require 'rails/all'
+require 'active_support/core_ext/array'
+require 'haml'
+require 'haml/template'
 require 'blocks'
 require 'rspec'
+require 'rspec/its'
 require 'capybara/rspec'
 require 'shoulda/matchers'
 
@@ -40,6 +44,8 @@ end
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each { |f| require f }
 
 RSpec.configure do |config|
+  config.include RenderingSupport
+
   config.after do
     Blocks.reset_config
   end

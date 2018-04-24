@@ -14,13 +14,17 @@ module Blocks
         # builder = builder.clone
         # TODO: figure out what to do here
       else
-        # TODO: options shouldn't have to be passed both here and to the render_with_overrides call below - need it to be just one place
+        # TODO: options shouldn't have to be passed both here and to the render call below - need it to be just one place
         builder = Blocks.builder_class.new(self, options)
       end
-      builder.render_with_overrides(options.merge(partial: partial), &block)
+      builder.render(options.merge(partial: partial), &block)
     end
-    alias_method :with_template, :render_with_overrides
 
+    # <b>DEPRECATED:</b> Please use <tt>render_with_overrides</tt> instead.
+    def with_template(*args, &block)
+      warn "[DEPRECATION] `with_template` is deprecated.  Please use `render_with_overrides` instead."
+      render_with_overrides(*args, &block)
+    end
   end
 end
 

@@ -55,7 +55,7 @@ Templating is best demonstrated through example. In the following set of iterati
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial: "shared/card"
+builder.render partial: "shared/card"
 # Since no overrides block is provided, this
 #  call is synonymous with:
 builder.render partial: "shared/card"
@@ -348,7 +348,7 @@ builder = Blocks::Builder.new(view_context,
   card_text: "My Text",
   card_action_path: 'http://mobilecause.com',
   card_image: "my-image.png")
-builder.render_with_overrides partial: "shared/card"
+builder.render partial: "shared/card"
 ```
 
 > The above code will output the following:
@@ -439,7 +439,7 @@ Now that the template is defined, we can start rendering it with actual override
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-text = builder.render_with_overrides partial:
+text = builder.render partial:
   "shared/card" do |builder|
   builder.define :card do
     "I am a complete replacement for the card"
@@ -447,7 +447,7 @@ text = builder.render_with_overrides partial:
 end
 
 builder = Blocks::Builder.new(view_context)
-text2 = builder.render_with_overrides partial:
+text2 = builder.render partial:
   "shared/card" do |builder|
   # Change card_title's tag to h2
   builder.define :card_title,
@@ -607,7 +607,7 @@ Finding the option overrides aren't enough? There's always block overrides. Any 
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial:
+builder.render partial:
   "shared/card" do |builder|
   builder.skip :card_image
   builder.after :card_title do
@@ -662,7 +662,7 @@ We also have access to the full arsenal of hooks, wrapper with relation to the v
 > Assume the following partial exists in /app/views/shared/\_team_card.html.erb:
 
 {% highlight erb %}
-<%= builder.render_with_overrides partial:
+<%= builder.render partial:
   "shared/card" do |builder| %>
   <% builder.define :card_title,
     card_title: team.name %>
@@ -708,7 +708,7 @@ team = OpenStruct.new(
   description: "Donate money"
 )
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial:
+builder.render partial:
   "shared/team_card",
   team: team do |builder|
     builder.after :card_title do
@@ -749,5 +749,5 @@ An example might be create new templates that render different versions of a car
 In the example to the right, a team-specific version of card is created as a template. Code then renders this new template with some overrides of if its own. The overrides have been kept very basic in order to clearly demonstrate how to setup a template that extends another template.
 
 <aside class="warning">
-  Take note that with the team_card template, builder.render_with_overrides is used instead of just render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
+  Take note that with the team_card template, builder.render is used instead of render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
 </aside>

@@ -91,5 +91,9 @@ module Blocks
     def nested_under_indifferent_access
       self
     end
+
+    def with_indifferent_access
+      self
+    end
   end
 end

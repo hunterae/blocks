@@ -1,21 +1,22 @@
 module Blocks
   class WrapperRenderer < AbstractRenderer
     def render(wrapper, wrapper_type, runtime_context)
-      content_block = Proc.new { with_output_buffer { yield } }
-      runtime_context = runtime_context.merge(wrapper_type: wrapper_type)
       if wrapper.nil?
         yield
+
       elsif wrapper.is_a?(Proc)
-        output_buffer << capture(content_block, *(runtime_context.runtime_args), runtime_context, &wrapper)
-      elsif block_definition = block_for(wrapper)
-        runtime_context = runtime_context.extend_to_block_definition(block_definition, &content_block)
-        block_renderer.render(runtime_context)
-      elsif builder.respond_to?(wrapper)
-        output_buffer << capture do
-          builder.send(wrapper, runtime_context, &content_block)
-        end
+        output_buffer << capture(
+          Proc.new { with_output_buffer { yield } },
+          *(runtime_context.runtime_args),
+          runtime_context.merge(wrapper_type: wrapper_type),
+          &wrapper
+        )
+
       else
-        yield
+        runtime_context = runtime_context.extend_from_definition(wrapper, wrapper_type: wrapper_type) do
+          with_output_buffer { yield }
+        end
+        output_buffer << block_with_hooks_renderer.render(runtime_context)
       end
     end
   end

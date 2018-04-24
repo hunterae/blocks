@@ -20,7 +20,7 @@
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial:
+builder.render partial:
   "PATH_TO_PARTIAL" do |builder|
   # Perform overrides here
   #  using the builder.

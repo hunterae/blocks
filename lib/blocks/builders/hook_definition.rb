@@ -1,5 +1,5 @@
 module Blocks
-  class HookDefinition < OptionsSet
+  class HookDefinition < HashWithRenderStrategy
     BEFORE_ALL = :before_all
     AROUND_ALL = :around_all
     BEFORE = :before
@@ -14,12 +14,24 @@ module Blocks
              AROUND_ALL, AROUND, SURROUND,
              APPEND, AFTER, AFTER_ALL]
 
-    attr_accessor :block_definition, :hook_type
+    attr_accessor :block_definition, :hook_type, :name, :runtime_block
 
-    def initialize(block_definition, hook_type, *args, &block)
+    def initialize(block_definition, hook_type, options, &block)
       self.block_definition = block_definition
       self.hook_type = hook_type
-      super "#{hook_type} #{block_definition.name} options", *args, &block
+      super &nil
+      add_options options
+      self.name = self[:render] || self[:with] || "#{hook_type} #{block_definition.name} options"
+      # name = self[:render] || "#{hook_type} #{block_definition.name} options"
+      # super name, *args, &block
+
+      if block
+        if render_strategy
+          self.runtime_block = block
+        else
+          add_options block: block
+        end
+      end
     end
   end
 end

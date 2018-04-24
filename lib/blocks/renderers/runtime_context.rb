@@ -21,7 +21,7 @@ module Blocks
 
     delegate :skip_content, :skip_completely, to: :block_options_set, allow_nil: true
 
-    delegate :block_definitions, :block_defined?, to: :builder
+    delegate :block_definitions, :block_defined?, :block_for, to: :builder
 
     delegate :runtime_options,
              :standard_options,
@@ -49,8 +49,8 @@ module Blocks
     end
 
     # TODO: this method needs to clone without context, i.e. with render_strategy, item, etc
-    def extend_to_block_definition(block_definition, &runtime_block)
-      RuntimeContext.new(builder, block_definition, parent_runtime_context: self, &runtime_block).tap do |rc|
+    def extend_from_definition(block_definition, options={}, &runtime_block)
+      RuntimeContext.new(builder, block_definition, options.merge(parent_runtime_context: self), &runtime_block).tap do |rc|
         rc.runtime_args = self.runtime_args
       end
     end
@@ -79,7 +79,7 @@ module Blocks
 
       CONTROL_VARIABLES.each do |control_variable, *|
         if value = send(control_variable)
-          description << "#{control_variable}: #{value} [#{callers[control_variable]}]"
+          # description << "#{control_variable}: #{value} [#{callers[control_variable]}]"
         end
       end
 
@@ -101,15 +101,24 @@ module Blocks
       )
     end
 
-    def identify_block(block_identifier)
-      self.block_name, self.block_options_set = if block_identifier.is_a?(OptionsSet)
-        [block_identifier.name, block_identifier]
-      elsif block_defined?(block_identifier)
-        [block_identifier, block_definitions[block_identifier]]
-      elsif block_identifier.is_a?(Proc)
+    def identify_block(identifier)
+      self.block_name, self.block_options_set = if identifier.is_a?(HookDefinition)
+        definition = BlockDefinition.new(identifier.name, runtime: identifier)
+        original_definition = block_for(identifier.name)
+        if original_definition
+          definition.add_options(original_definition)
+          definition.skip_content = original_definition.skip_content
+          definition.skip_completely = original_definition.skip_completely
+        end
+        [definition.name, definition]
+      elsif identifier.is_a?(OptionsSet)
+        [identifier.name, identifier]
+      elsif block_defined?(identifier)
+        [identifier, block_definitions[identifier]]
+      elsif identifier.is_a?(Proc)
         # TODO: figure out how to do this
       else
-        [block_identifier, nil]
+        [identifier, nil]
       end
     end
 
@@ -136,27 +145,22 @@ module Blocks
 
     def merge_options_and_identify_render_item
       determined_render_item = false
-      all_options_sets = if parent_runtime_context
-        [
-          parent_runtime_context.render_options_set.clone,
-          block_options_set,
-          parent_runtime_context.block_options_set.try(:clone),
-          # TODO: figure out how to deal with these - they don't technically belong here
-          parent_runtime_context.proxy_options_set.clone,
-          builder_options_set,
-          Blocks.global_options_set
-        ].compact
-      else
-        [
-          render_options_set,
-          block_options_set,
-          # TODO: consider having the runtime_block be merged into the
-          #  default render options set
-          OptionsSet.new("Runtime Block", block: self.runtime_block),
-          builder_options_set,
-          Blocks.global_options_set
-        ].compact
-      end
+
+      all_options_sets = [
+        render_options_set,
+        block_options_set,
+        (OptionsSet.new("Runtime Method", with: self.block_name) if self.block_name && builder.respond_to?(block_name)),
+        parent_runtime_context.try(:render_options_set).try(:clone),
+        parent_runtime_context.try(:block_options_set).try(:clone),
+
+        # TODO: figure out how to deal with these - they don't technically belong here
+        parent_runtime_context.try(:proxy_options_set).try(:clone),
+
+        # TODO: consider having the runtime_block be merged into the
+        OptionsSet.new("Runtime Block", block: self.runtime_block),
+        builder_options_set,
+        Blocks.global_options_set
+      ].compact
 
       options_set_with_render_strategy_index = nil
       all_options_sets.
@@ -173,6 +177,8 @@ module Blocks
 
       if self.render_strategy == RENDER_WITH_PROXY
         self.render_item = add_proxy_options render_item
+      elsif self.render_strategy.nil? && block_name.present?
+        self.render_item = add_proxy_options block_name
       end
 
       [:runtime_options, :standard_options, :default_options].each do |option_level|
@@ -195,8 +201,10 @@ module Blocks
     def extract_control_options
       CONTROL_VARIABLES.each do |control_variable, synonyms|
         variant = (Array(synonyms) + Array(control_variable)).detect {|variant| key?(variant)}
-        value = delete(variant)
-        callers[control_variable] = callers[variant] if value
+        if variant
+          value = delete(variant)
+          # callers[control_variable] = callers[variant] if value
+        end
         self.send("#{control_variable}=", value)
       end
 

@@ -3,6 +3,7 @@ require 'call_with_params'
 module Blocks
   class Builder
     include CallWithParams
+    prepend LegacyBuilders
 
     # A pointer to the view context
     attr_accessor :view
@@ -27,22 +28,13 @@ module Blocks
 
     delegate :with_output_buffer, :output_buffer, to: :view
 
-    CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper
-
     def initialize(view, options={})
-      if defined?(::Haml) && !view.instance_variables.include?(:@haml_buffer)
-        class << view
-          include Haml::Helpers
-        end
-        view.init_haml_helpers
-      end
       self.view = view
       self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
         hash[key] = BlockDefinition.new(key); hash[key]
       end
       self.anonymous_block_number = 0
       self.options_set = OptionsSet.new("Builder Options", options)
-      define_helper_blocks
     end
 
     def renderer
@@ -139,15 +131,14 @@ module Blocks
       end
     end
 
-    # Blocks::Builder.content_tag extends ActionView's content_tag method
+    # Blocks::Builder#content_tag extends ActionView's content_tag method
     #  by allowing itself to be used as a wrapper, hook, or called directly,
     #  while also not requiring the content tag name (defaults to :div).
     def content_tag(*args, &block)
       options = args.extract_options!
       options = options.with_indifferent_access if !options.is_a?(HashWithIndifferentAccess)
       escape = options.key?(:escape) ? options.delete(:escape) : true
-
-      if options.is_a?(Blocks::RuntimeContext)
+      if options.is_a?(RuntimeContext)
         if options[:wrapper_type]
           wrapper_prefix = options[:wrapper_type]
 
@@ -161,62 +152,40 @@ module Blocks
             options[html_option]
           end
 
-          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"], wrapper_html, *args, options)
+          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"], wrapper_html, options)
 
           wrapper_tag = options["#{wrapper_prefix}_tag"]
 
         else
+          wrapper_html = call_each_hash_value_with_params(options[:html], options)
           wrapper_tag = options[:tag]
         end
 
-        wrapper_html ||= options["html"] || {}
+        wrapper_html ||= {}
+        wrapper_tag ||= :div
 
       else
         wrapper_tag = options.delete(:tag)
         wrapper_html = options.to_hash
-      end
 
-      if !wrapper_tag
-        first_arg = args.first
-        wrapper_tag = if first_arg.is_a?(String) || first_arg.is_a?(Symbol)
-          args.shift
-        else
-          :div
+        if !wrapper_tag
+          first_arg = args.first
+          wrapper_tag = if first_arg.is_a?(String) || first_arg.is_a?(Symbol)
+            args.shift
+          else
+            :div
+          end
         end
       end
 
       content_tag_args = [wrapper_tag]
-      content_tag_args << args.shift if !block_given?
+      if !block_given?
+        content_tag_args << (wrapper_html.delete("content") || options[:content] || args.shift)
+      end
       content_tag_args << wrapper_html
       content_tag_args << escape
 
       view.content_tag *content_tag_args, &block
-    end
-
-    protected
-
-    # DEPRECATED
-    def define_helper_blocks
-      define CONTENT_TAG_WRAPPER_BLOCK, defaults: { wrapper_tag: :div } do |content_block, *args|
-        options = args.extract_options!
-        wrapper_options = if options[:wrapper_html_option]
-          if options[:wrapper_html_option].is_a?(Array)
-            wrapper_attribute = nil
-            options[:wrapper_html_option].each do |attribute|
-              if options[attribute].present?
-                wrapper_attribute = attribute
-                break
-              end
-            end
-            options[wrapper_attribute]
-          else
-            options[options[:wrapper_html_option]]
-          end
-        end
-        view.content_tag options[:wrapper_tag],
-          concatenating_merge(options[:wrapper_html], wrapper_options, *args, options),
-          &content_block
-      end
     end
   end
 end

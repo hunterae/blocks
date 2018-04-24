@@ -8,9 +8,9 @@ describe Blocks::Builder do
     it "should convert init options into an OptionsSet" do
       builder = Blocks::Builder.new(view, a: 1, runtime: { b: 2 }, defaults: { c: 3 })
       expect(builder.options_set).to be_a Blocks::OptionsSet
-      expect(builder.standard_options).to eq "a" => 1
-      expect(builder.runtime_options).to eq "b" => 2
-      expect(builder.default_options).to eq "c" => 3
+      expect(builder.standard_options).to eq :a => 1
+      expect(builder.runtime_options).to eq :b => 2
+      expect(builder.default_options).to eq :c => 3
     end
     it "should define a utility wrapper block Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK" do
       expect(subject.block_defined?(Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK)).to be true
@@ -28,67 +28,6 @@ describe Blocks::Builder do
 
     [:runtime_options, :standard_options, :default_options].each do |field|
       it { should delegate_method(field).to(:options_set) }
-    end
-  end
-
-  # TODO: Move these somewhere else
-  context 'Helper Blocks' do
-    context 'Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK' do
-      it 'should use #content_tag to build a div around another block' do
-        content = Proc.new {}
-        expect(view).to receive(:content_tag).with(:div, {}, &content)
-        wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
-        wrapper_block = wrapper.standard_options[:block]
-        wrapper_block.call(content, wrapper.default_options)
-      end
-
-      it 'should allow the override of the tag and options' do
-        content = Proc.new {}
-        expect(view).to receive(:content_tag).with(:span, class: "my-class", &content)
-        wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
-        wrapper_block = wrapper.standard_options[:block]
-        wrapper_block.call(content, wrapper.default_options.merge(wrapper_tag: :span, wrapper_html: { class: "my-class" }))
-      end
-
-      it 'should check the wrapper_html_option to check for an additional option that may set the content tag options' do
-        content = Proc.new {}
-        expect(view).to receive(:content_tag).with(:div, style: "background-color: orange", class: "my-class", &content)
-        wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
-        wrapper_block = wrapper.standard_options[:block]
-        wrapper_block.call(content, wrapper.default_options.merge(wrapper_html: { class: "my-class" }, wrapper_html_option: :other_options, other_options: { style: "background-color: orange"}))
-      end
-
-      it 'should allow an array of wrapper_html_option settings and use the first one that is set' do
-        content = Proc.new {}
-        expect(view).to receive(:content_tag).with(:div, style: "background-color: orange", &content)
-        wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
-        wrapper_block = wrapper.standard_options[:block]
-        wrapper_block.call(content,
-          wrapper.default_options.merge(
-            wrapper_html_option: [:other_options_missing, :other_options_first, :other_options_last],
-            other_options_first: { style: "background-color: orange"},
-            other_options_last: { style: "background-color: green"},
-          )
-        )
-      end
-
-      it 'should allow the wrapper_html_option to specify a hash that has Procs as its values' do
-        content = Proc.new {}
-        expect(view).to receive(:content_tag).with(:div, id: "arg1", class: "arg2", &content)
-        wrapper = subject.block_definitions[Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK]
-        wrapper_block = wrapper.standard_options[:block]
-        wrapper_block.call(content,
-          "arg1",
-          "arg2",
-          wrapper.default_options.merge(
-            wrapper_html_option: :other_options,
-            other_options: {
-              id: Proc.new {|arg1| arg1 },
-              class: Proc.new {|arg1, arg2| arg2 }
-            }
-          )
-        )
-      end
     end
   end
 
@@ -125,7 +64,7 @@ describe Blocks::Builder do
 
   context '#define' do
     it "should build a Blocks::BlockDefinition" do
-      hash = { a: 1 }.with_indifferent_access
+      hash = { a: 1 }
       block = Proc.new {}
       block_definition = subject.define(:test_block, hash, &block)
       expect(block_definition).to be_a Blocks::BlockDefinition
@@ -134,8 +73,8 @@ describe Blocks::Builder do
     end
 
     it "should add options if a block if repeatedly defined" do
-      hash1 = { a: 1 }.with_indifferent_access
-      hash2 = { a: 2, b: 3 }.with_indifferent_access
+      hash1 = { a: 1 }
+      hash2 = { a: 2, b: 3 }
       block_definition1 = subject.define :test_block, hash1
       block_definition2 = subject.define :test_block, hash2
 
@@ -155,7 +94,7 @@ describe Blocks::Builder do
       block1 = Proc.new {}
       block_definition = subject.define a: 1, b: 2, &block1
       expect(block_definition.name).to eql "anonymous_block_1"
-      expect(block_definition.standard_options).to eq "a" => 1, "b" => 2, "block" => block1
+      expect(block_definition.standard_options).to eq :a => 1, :b => 2, :block => block1
     end
   end
 
@@ -166,12 +105,12 @@ describe Blocks::Builder do
       end
       subject.replace :test_block, b: 1, partial: "some_partial"
       test_block = subject.block_definitions[:test_block]
-      expect(test_block.standard_options).to eql "b" => 1, "partial" => "some_partial"
+      expect(test_block.standard_options).to eql :b => 1, :partial => "some_partial"
     end
     it 'should not fail if a block is not defined' do
       subject.replace :test_block, a: 1, b: 2
       test_block = subject.block_definitions[:test_block]
-      expect(test_block.standard_options).to eql "a" => 1, "b" => 2
+      expect(test_block.standard_options).to eql :a => 1, :b => 2
     end
   end
 

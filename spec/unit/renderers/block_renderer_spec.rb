@@ -1,11 +1,16 @@
 require 'spec_helper'
 
 describe Blocks::BlockRenderer do
+  # class BuilderWithMethods < Blocks::Builder
+  #
+  # end
+
   let(:builder) { Blocks::Builder.new(instance_double("ActionView::Base")) }
   let(:renderer) { Blocks::Renderer.new(builder) }
   let(:output_buffer) { [] }
   let(:render_item) { nil }
-  let(:runtime_context) { double(render_item: render_item, runtime_args: [], runtime_block: nil) }
+  let(:runtime_block) { nil }
+  let(:runtime_context) { double(render_item: render_item, runtime_args: [], runtime_block: runtime_block) }
   let(:partial_renderer) { double }
 
   subject do
@@ -68,7 +73,77 @@ describe Blocks::BlockRenderer do
     end
 
     context "when the render_item is a Method" do
-      xit "should be tested"
+      let(:runtime_block) { Proc.new {} }
+
+      def method_with_no_args
+      end
+
+      def method_with_one_arg(arg1)
+      end
+
+      def method_with_two_args(arg1, arg2)
+      end
+
+      def method_with_indeterminate_args(*args)
+      end
+
+      def method_with_optional_args(arg1, arg2=nil)
+      end
+
+      before do
+        expect(subject).to receive(:capture) do |&block|
+          block.call
+        end
+      end
+
+      it "call the method with the runtime_block" do
+        render_item = method(:method_with_no_args)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call) do |&block|
+          expect(block).to eql runtime_block
+        end
+        subject.render(runtime_context)
+      end
+
+      it "should pass the runtime_context in as the last argument if the method can take enough arguments" do
+        render_item = method(:method_with_one_arg)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call).with(runtime_context).and_return("Rendered")
+        subject.render(runtime_context)
+        expect(output_buffer).to eql ["Rendered"]
+      end
+
+      it "should prioritize passing in arguments over the runtime context" do
+        render_item = method(:method_with_one_arg)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call).with(:a).and_return("Rendered")
+        expect(runtime_context).to receive(:runtime_args).and_return [:a]
+        subject.render(runtime_context)
+      end
+
+      it "should only pass in the number of runtime arguments that a method takes" do
+        render_item = method(:method_with_two_args)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call).with(:a, :b).and_return("Rendered")
+        expect(runtime_context).to receive(:runtime_args).and_return [:a, :b, :c, :d]
+        subject.render(runtime_context)
+      end
+
+      it "should pass in all the arguments and the runtime_context if the method has optional arguments" do
+        render_item = method(:method_with_optional_args)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call).with(:a, :b, :c, :d, runtime_context).and_return("Rendered")
+        expect(runtime_context).to receive(:runtime_args).and_return [:a, :b, :c, :d]
+        subject.render(runtime_context)
+      end
+
+      it "should pass in all the arguments and the runtime_context if the method can take an indeterminate number of arguments" do
+        render_item = method(:method_with_indeterminate_args)
+        expect(runtime_context).to receive(:render_item).and_return(render_item)
+        expect(render_item).to receive(:call).with(:a, :b, :c, :d, runtime_context).and_return("Rendered")
+        expect(runtime_context).to receive(:runtime_args).and_return [:a, :b, :c, :d]
+        subject.render(runtime_context)
+      end
     end
   end
 end

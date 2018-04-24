@@ -40,10 +40,26 @@ describe Blocks::Renderer do
   end
 
   context '#render_with_overrides' do
-    xit "TODO"
+    it 'should issue a warning and call render' do
+      expect(subject).to receive(:warn)
+      expect(subject).to receive(:render).with(:a, :b, :c, :d) do |*args, &block|
+        expect(block).to be_present
+      end
+      subject.render_with_overrides(:a, :b, :c, :d) do
+      end
+    end
   end
 
   context '#deferred_render' do
-    xit "TODO"
+    it "should define the block and return a Blocks::BlockPlaceholder" do
+      block_definition = instance_double(Blocks::BlockDefinition)
+      expect(builder).to receive(:define).with(:a, :b, :c) do |*args, &block|
+        expect(block).to be_present
+        block_definition
+      end
+      expect(Blocks::BlockPlaceholder).to receive(:new).with(block_definition)
+      subject.deferred_render(:a, :b, :c) do
+      end
+    end
   end
 end

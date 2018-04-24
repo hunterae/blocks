@@ -2,7 +2,9 @@ module Blocks
   class PartialRenderer < AbstractRenderer
     def render(partial, options={}, &block)
       # TODO: need to check if partial responds to #to_partial_path and call it if it does
-      if !options.is_a?(Blocks::RuntimeContext)
+      if options.is_a?(RuntimeContext)
+        options = options.to_hash.with_indifferent_access
+      else
         options = RuntimeContext.new(builder, options).to_hash.with_indifferent_access
       end
       overrides_and_provided_content = capture(builder, options, &block) if block_given?

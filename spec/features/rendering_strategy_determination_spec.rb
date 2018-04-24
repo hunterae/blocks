@@ -15,7 +15,6 @@ feature "Rendering Strategy Determination" do
   let(:proxy_block_2_name) { :proxy_block_2 }
   let(:proxy_block_3_name) { :proxy_block_3 }
   let(:proxy_block_4_name) { :proxy_block_4 }
-  let(:builder) { Blocks::Builder.new(view) }
   let(:runtime_context) { Blocks::RuntimeContext.new(builder, block_name) }
 
   it 'give precedence to the render options strategy over the block runtime options strategy' do

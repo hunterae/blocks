@@ -18,7 +18,7 @@ describe Blocks::AbstractRenderer do
     end
     it { should delegate_method(:builder).to(:main_renderer) }
 
-    [:block_definitions, :view, :block_for].each do |field|
+    [:block_definitions, :view, :block_for, :hooks_for].each do |field|
       it { should delegate_method(field).to(:builder) }
     end
 
@@ -34,6 +34,44 @@ describe Blocks::AbstractRenderer do
   end
 
   context '#capture' do
-    xit "TODO"
+    before do
+      expect(subject).to receive(:output_buffer).and_return("")
+      expect(subject).to receive(:with_output_buffer) do |&block|
+        block.call
+      end
+    end
+
+    context "when HAML is in play"
+    context "when HAML is not in play" do
+      before do
+        allow(subject).to receive(:without_haml_interference) do |&block|
+          block.call
+        end
+      end
+
+      it "should use the view's capture method" do
+        p = Proc.new {|a, b, c| "a: #{a}, b: #{b}, c: #{c}" }
+        expect(subject.view).to receive(:capture).with(1, 2, 3) do |*args, &block|
+          block.call(*args)
+        end
+        expect(subject.capture(1, 2, 3, &p)).to eql "a: 1, b: 2, c: 3"
+      end
+
+      it "should not pass more arguments than the block takes" do
+        p = Proc.new {|a, b| "a: #{a}, b: #{b}" }
+        expect(subject.view).to receive(:capture).with(1, 2) do |*args, &block|
+          block.call(*args)
+        end
+        expect(subject.capture(1, 2, 3, &p)).to eql "a: 1, b: 2"
+      end
+
+      it "should be able to handle optional parameters" do
+        p = Proc.new{|a, b=2, *c| "a: #{a}, b: #{b}, c: #{c}" }
+        expect(subject.view).to receive(:capture).with(1,2,3,4,5,6,7,8) do |*args, &block|
+          block.call(*args)
+        end
+        expect(subject.capture(1, 2, 3, 4, 5, 6, 7, 8, &p)).to eql "a: 1, b: 2, c: [3, 4, 5, 6, 7, 8]"
+      end
+    end
   end
 end

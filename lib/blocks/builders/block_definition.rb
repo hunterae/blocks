@@ -49,17 +49,17 @@ module Blocks
 
       strategy = options.try(:render_strategy)
       render_strategy_name = if strategy == HashWithRenderStrategy::RENDER_WITH_PROXY
-        caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_PROXY]
+        # caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_PROXY]
         "proxy block \"#{options[strategy]}\""
       elsif strategy == HashWithRenderStrategy::RENDER_WITH_BLOCK
-        caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_BLOCK]
+        # caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_BLOCK]
         "block defined at #{options[strategy].source_location}"
       elsif strategy == HashWithRenderStrategy::RENDER_WITH_PARTIAL
-        caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_PARTIAL]
+        # caller_id = options.callers[HashWithRenderStrategy::RENDER_WITH_PARTIAL]
         "partial \"#{options[strategy]}\""
       end
       if render_strategy_name
-        description << "Renders with #{render_strategy_name} [#{caller_id}]"
+        # description << "Renders with #{render_strategy_name} [#{caller_id}]"
       end
 
       description.join("\n")

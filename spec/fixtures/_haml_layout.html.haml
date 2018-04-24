@@ -1,0 +1,4 @@
+= options[:before_layout_content] || "BEFORE_LAYOUT_CONTENT"
+= yield
+= builder.render :partial_block
+= options[:after_layout_content] || "AFTER_LAYOUT_CONTENT"
