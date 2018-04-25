@@ -1,5 +1,14 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
+# >= Ruby 2.5 patch
+if !Object.respond_to?(:yaml_as)
+  class Object
+    def self.yaml_as(*args)
+      yaml_tag(*args)
+    end
+  end
+end
+
 require 'simplecov'
 SimpleCov.start do
   add_filter "/spec"
