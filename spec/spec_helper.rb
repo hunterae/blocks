@@ -9,16 +9,20 @@ if !Object.respond_to?(:yaml_as)
   end
 end
 
-require 'simplecov'
-SimpleCov.start do
-  add_filter "/spec"
-  add_filter "/lib/blocks/experimental"
-  add_group "Renderers", "/lib/blocks/renderers"
-  add_group "Builders", "/lib/blocks/builders"
-  add_group "Utilities", "/lib/blocks/utilities"
-  add_group "Rails Extensions", "/lib/blocks/action_view_extensions"
+# https://github.com/colszowka/simplecov/issues/429
+#  Disables SimpleCov unless entire test suite is being run
+if (RSpec.configuration.instance_variable_get :@files_or_directories_to_run) == ['spec']
+  require 'simplecov'
+
+  SimpleCov.start do
+    add_filter "/spec"
+    add_filter "/lib/blocks/experimental"
+    add_group "Renderers", "/lib/blocks/renderers"
+    add_group "Builders", "/lib/blocks/builders"
+    add_group "Utilities", "/lib/blocks/utilities"
+    add_group "Rails Extensions", "/lib/blocks/action_view_extensions"
+  end
 end
-# TODO: disable coverage unless running entire suite
 
 begin
   require 'debugger'

@@ -5,7 +5,7 @@ module Blocks
       with_output_buffer do
         options = args.extract_options!
         runtime_context = if !options.is_a?(RuntimeContext)
-          RuntimeContext.new(builder, *args, options, &default_definition)
+          RuntimeContext.build(builder, *args, options, &default_definition)
         else
           options
         end

@@ -5,7 +5,7 @@ module Blocks
       if options.is_a?(RuntimeContext)
         options = options.to_hash.with_indifferent_access
       else
-        options = RuntimeContext.new(builder, options).to_hash.with_indifferent_access
+        options = RuntimeContext.build(builder, options).to_hash.with_indifferent_access
       end
       overrides_and_provided_content = capture(builder, options, &block) if block_given?
       locals = options.merge(

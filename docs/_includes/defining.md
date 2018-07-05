@@ -1,14 +1,18 @@
 # Defining Blocks
 
+With Blocks, you can define a block of code for later rendering using Ruby blocks, Rails partials, and proxies to other blocks or methods.
+
+A block consists of a name, an optional hash of options, and a rendering strategy (also called its definition).
+
 ```erb
 <% blocks.define :my_block %>
-<!-- OR -->
+<!-- SAME AS -->
 <% blocks.define "my_block" %>
 ```
 
 ```haml
 - blocks.define :my_block
-#- OR
+#- SAME AS
 - blocks.define "my_block"
 ```
 
@@ -16,13 +20,9 @@
 # where builder is an instance
 #  of Blocks::Builder
 builder.define :my_block
-# OR
+# SAME AS
 builder.define "my_block"
 ```
-
-With Blocks, you can define a block of code for later rendering using Ruby blocks, Rails partials, and proxies to other blocks.
-
-A block consists of a name, a hash of options, and a rendering strategy (also called its definition).
 
 A block's name can be a symbol or a string. The underlying system treats symbols and strings the same. Therefore, any block that is defined with a String name can be accessed with its corresponding symbol name and vice-versa.
 

@@ -15,25 +15,25 @@ feature "Rendering Strategy Determination" do
   let(:proxy_block_2_name) { :proxy_block_2 }
   let(:proxy_block_3_name) { :proxy_block_3 }
   let(:proxy_block_4_name) { :proxy_block_4 }
-  let(:runtime_context) { Blocks::RuntimeContext.new(builder, block_name) }
+  let(:runtime_context) { Blocks::RuntimeContext.build(builder, block_name) }
 
   it 'give precedence to the render options strategy over the block runtime options strategy' do
     builder.define block_name, runtime: unexpected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name, expected_strategy_options
+    runtime_context = Blocks::RuntimeContext.build builder, block_name, expected_strategy_options
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to block runtime options over builder runtime options' do
     builder = Blocks::Builder.new(view, runtime: unexpected_strategy_options)
     builder.define block_name, runtime: expected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to builder runtime options over global runtime options' do
     Blocks.global_options_set.add_options runtime: unexpected_strategy_options
     builder = Blocks::Builder.new(view, runtime: expected_strategy_options)
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
@@ -46,47 +46,47 @@ feature "Rendering Strategy Determination" do
   it 'should merge and give precedence to block standard options over builder standard options' do
     builder = Blocks::Builder.new(view, unexpected_strategy_options)
     builder.define block_name, expected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to builder standard options over global standard options' do
     Blocks.global_options_set.add_options unexpected_strategy_options
     builder = Blocks::Builder.new(view, expected_strategy_options)
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to global standard options over render default options' do
     Blocks.global_options_set.add_options expected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name, defaults: unexpected_strategy_options
+    runtime_context = Blocks::RuntimeContext.build builder, block_name, defaults: unexpected_strategy_options
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to render default options over block default options' do
     builder.define block_name, defaults: unexpected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name, defaults: expected_strategy_options
+    runtime_context = Blocks::RuntimeContext.build builder, block_name, defaults: expected_strategy_options
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to block default options over builder default options' do
     builder = Blocks::Builder.new(view, defaults: unexpected_strategy_options)
     builder.define block_name, defaults: expected_strategy_options
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 
   it 'should merge and give precedence to builder default options over global default options' do
     Blocks.global_options_set.add_options defaults: unexpected_strategy_options
     builder = Blocks::Builder.new(view, defaults: expected_strategy_options)
-    runtime_context = Blocks::RuntimeContext.new builder, block_name
+    runtime_context = Blocks::RuntimeContext.build builder, block_name
     expect(runtime_context.render_item).to eql expected_render_item
   end
 end
 #   block_name = :test_block
 #
 #   let(:builder) { Blocks::Builder.new(view) }
-#   let(:runtime_context) { Blocks::RuntimeContext.new(builder, block_name) }
+#   let(:runtime_context) { Blocks::RuntimeContext.build(builder, block_name) }
 #
 #   describe "when there are only default options set" do
 #     context "when there is a global default render strategy provided" do
@@ -140,7 +140,7 @@ end
 #
 #           context "when there is also a render option default strategy provided" do
 #             let(:runtime_context) {
-#               Blocks::RuntimeContext.new(builder, block_name, defaults: {
+#               Blocks::RuntimeContext.build(builder, block_name, defaults: {
 #                 partial: "test_render_partial"
 #               })
 #             }
@@ -152,7 +152,7 @@ end
 #             context "when there is also a default runtime block provided" do
 #               let(:default_block) { Proc.new {} }
 #               let(:runtime_context) {
-#                 Blocks::RuntimeContext.new(builder, block_name, defaults: {
+#                 Blocks::RuntimeContext.build(builder, block_name, defaults: {
 #                   partial: "test_render_partial"
 #                 }, &default_block)
 #               }
@@ -220,7 +220,7 @@ end
 #           context "when there is also a default runtime block provided" do
 #             let(:default_block) { Proc.new {} }
 #             let(:runtime_context) {
-#               Blocks::RuntimeContext.new(builder, block_name, &default_block)
+#               Blocks::RuntimeContext.build(builder, block_name, &default_block)
 #             }
 #
 #             it "should not set its render_item to the default block" do

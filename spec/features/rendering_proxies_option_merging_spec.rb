@@ -8,7 +8,7 @@ feature "Rendering Proxies Option Merging" do
   let(:proxy_block_4_name) { :proxy_block_4 }
 
   let(:builder) { Blocks::Builder.new(view, builder_options) }
-  let(:runtime_context) { Blocks::RuntimeContext.new(builder, block_name, render_options) }
+  let(:runtime_context) { Blocks::RuntimeContext.build(builder, block_name, render_options) }
 
   let(:render_options) { {} }
   let(:builder_options) { {} }
@@ -127,7 +127,7 @@ feature "Rendering Proxies Option Merging" do
           builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
           builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
           builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
-          runtime_context = Blocks::RuntimeContext.new(builder, block_name)
+          runtime_context = Blocks::RuntimeContext.build(builder, block_name)
           expect(runtime_context).to eql({ shared: 1, run: 1, std: 1, def: 1, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
         end
 
@@ -178,7 +178,7 @@ feature "Rendering Proxies Option Merging" do
           builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
           builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
           builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
-          runtime_context = Blocks::RuntimeContext.new(builder)
+          runtime_context = Blocks::RuntimeContext.build(builder)
           expect(runtime_context).to eql({ shared: 1, run: 1, std: 1, def: 1, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
         end
       end
@@ -232,7 +232,7 @@ feature "Rendering Proxies Option Merging" do
       shared: 15, o: 15, def: 5
     }
 
-    runtime_context = Blocks::RuntimeContext.new builder, block_name,
+    runtime_context = Blocks::RuntimeContext.build builder, block_name,
       shared: 16, p: 16, run: 6, defaults: {
         shared: 17, q: 17, def: 6
       }

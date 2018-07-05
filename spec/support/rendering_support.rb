@@ -93,19 +93,6 @@ shared_examples RENDERABLE do |template: nil, block_identifier: nil, options: {}
       expect(content).to eql sanitize_html(template.call)
     end
 
-    it "will render with hooks and wrappers that were applied to the alias and ignore those applied to #{block_identifier}" do
-      builder.apply_hooks_to_block(block_identifier)
-      builder.apply_wrappers_to_block(block_identifier)
-      results = builder.apply_hooks_and_wrappers_to_block_and_render(
-        :my_alias,
-        content: template.call,
-        options: options.merge(with: block_identifier),
-        &runtime_block
-      )
-
-      expect(results[:actual]).to eql results[:expected]
-    end
-
     # TODO: should hooks also be applied when no block name is provided? I'm thinking so.
     it "will fallback to wrappers applied to #{block_identifier} when not defined for the alias" do
       builder.apply_hooks_to_block(block_identifier) # these won't get rendered

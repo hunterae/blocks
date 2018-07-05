@@ -14,10 +14,8 @@ module Blocks
                   :builder,
                   :render_item,
                   :runtime_args,
-                  :render_options_set,
                   :block_options_set,
-                  :proxy_options_set,
-                  :parent_runtime_context
+                  :merged_options_set
 
     delegate :skip_content, :skip_completely, to: :block_options_set, allow_nil: true
 
@@ -30,71 +28,100 @@ module Blocks
              prefix: :builder,
              to: :builder
 
-    def initialize(builder, *runtime_args, &runtime_block)
-      super(&nil)
+    def self.build(builder, *runtime_args, &runtime_block)
+      new(builder).tap do |runtime_context|
+        runtime_context.runtime_block = runtime_block
+        runtime_context.compute(*runtime_args)
+      end
+    end
 
+    def initialize(builder)
       self.builder = builder
-      self.runtime_block = runtime_block
-      self.proxy_options_set = OptionsSet.new("Proxy Options Set")
+      super
+    end
 
-      render_options = runtime_args.extract_options!
-      block_name = runtime_args.shift
+    def compute(*runtime_args)
+      render_options = runtime_args.extract_options!.with_indifferent_access
 
-      convert_render_options(render_options)
-      identify_block(block_name)
+      identify_block(runtime_args.shift)
+      if runtime_args.first.is_a?(RuntimeContext)
+        parent_runtime_context = runtime_args.shift
+      end
 
       self.runtime_args = runtime_args
-      merge_options_and_identify_render_item
+
+      all_options_sets = ordered_option_sets(render_options, parent_runtime_context)
+      merge_options_and_identify_render_item(all_options_sets)
       extract_control_options
     end
 
-    # TODO: this method needs to clone without context, i.e. with render_strategy, item, etc
-    def extend_from_definition(block_definition, options={}, &runtime_block)
-      RuntimeContext.new(builder, block_definition, options.merge(parent_runtime_context: self), &runtime_block).tap do |rc|
-        rc.runtime_args = self.runtime_args
-      end
+    def extend_from_definition(block_identifier, options={}, &runtime_block)
+      RuntimeContext.build(
+        builder,
+        block_identifier,
+        self,
+        *runtime_args,
+        options,
+        &runtime_block
+      )
     end
 
     # TODO: this method needs to be rewritten to output a proper hash
-    def to_s
-      description = []
-      if block_name
-        block_name = self.block_name.to_s
-        if block_name.include?(" ")
-          block_name = ":\"#{block_name}\""
-        else
-          block_name = ":#{block_name}"
-        end
-        description << "Block Name: #{block_name}"
-      end
-
-      if render_item.is_a?(String)
-        description << "Renders with partial \"#{render_item}\""
-      elsif render_item.is_a?(Proc)
-        description << "Renders with block defined at #{render_item.source_location}"
-      elsif render_item.is_a?(Method)
-        description << "Renders with method defined at #{render_item.source_location}"
-      end
-
-
-      CONTROL_VARIABLES.each do |control_variable, *|
-        if value = send(control_variable)
-          # description << "#{control_variable}: #{value} [#{callers[control_variable]}]"
-        end
-      end
-
-      description << super
-      description.join("\n")
-    end
+    # def to_s
+    #   description = []
+    #   if block_name
+    #     block_name = self.block_name.to_s
+    #     if block_name.include?(" ")
+    #       block_name = ":\"#{block_name}\""
+    #     else
+    #       block_name = ":#{block_name}"
+    #     end
+    #     description << "Block Name: #{block_name}"
+    #   end
+    #
+    #   if render_item.is_a?(String)
+    #     description << "Renders with partial \"#{render_item}\""
+    #   elsif render_item.is_a?(Proc)
+    #     description << "Renders with block defined at #{render_item.source_location}"
+    #   elsif render_item.is_a?(Method)
+    #     description << "Renders with method defined at #{render_item.source_location}"
+    #   end
+    #
+    #
+    #   CONTROL_VARIABLES.each do |control_variable, *|
+    #     if value = send(control_variable)
+    #       # description << "#{control_variable}: #{value} [#{callers[control_variable]}]"
+    #     end
+    #   end
+    #
+    #   description << super
+    #   description.join("\n")
+    # end
 
     private
 
-    def convert_render_options(render_options)
-      if !render_options.is_a?(HashWithIndifferentAccess)
-        render_options = render_options.with_indifferent_access
+    def ordered_option_sets(render_options, parent_runtime_context=nil)
+      render_options_set = compute_render_options_set(render_options)
+
+      all_options_sets = [
+        render_options_set,
+        block_options_set,
+        (OptionsSet.new("Runtime Method", with: self.block_name) if self.block_name && builder.respond_to?(block_name)),
+        (OptionsSet.new("Runtime Block", block: self.runtime_block) if self.runtime_block),
+      ]
+
+      if parent_runtime_context
+        all_options_sets << parent_runtime_context.merged_options_set.clone
+      else
+        all_options_sets << builder_options_set
+        all_options_sets << Blocks.global_options_set
       end
-      self.parent_runtime_context = render_options.delete(:parent_runtime_context)
-      self.render_options_set = OptionsSet.new(
+
+      all_options_sets.compact
+    end
+
+    def compute_render_options_set(render_options)
+      OptionsSet.new(
         "Render Options",
         defaults: render_options.delete(:defaults),
         runtime: render_options
@@ -122,7 +149,7 @@ module Blocks
       end
     end
 
-    def add_proxy_options(proxy_block_name)
+    def add_proxy_options(proxy_options_set, proxy_block_name)
       if block_defined?(proxy_block_name)
         proxy_block = block_definitions[proxy_block_name]
 
@@ -131,7 +158,7 @@ module Blocks
         render_strategy, render_item = proxy_block.current_render_strategy_and_item
 
         if render_strategy == RENDER_WITH_PROXY
-          add_proxy_options render_item
+          add_proxy_options proxy_options_set, render_item
         elsif render_item.nil? && builder.respond_to?(proxy_block_name)
           builder.method(proxy_block_name)
         else
@@ -143,24 +170,8 @@ module Blocks
       end
     end
 
-    def merge_options_and_identify_render_item
+    def merge_options_and_identify_render_item(all_options_sets)
       determined_render_item = false
-
-      all_options_sets = [
-        render_options_set,
-        block_options_set,
-        (OptionsSet.new("Runtime Method", with: self.block_name) if self.block_name && builder.respond_to?(block_name)),
-        parent_runtime_context.try(:render_options_set).try(:clone),
-        parent_runtime_context.try(:block_options_set).try(:clone),
-
-        # TODO: figure out how to deal with these - they don't technically belong here
-        parent_runtime_context.try(:proxy_options_set).try(:clone),
-
-        # TODO: consider having the runtime_block be merged into the
-        OptionsSet.new("Runtime Block", block: self.runtime_block),
-        builder_options_set,
-        Blocks.global_options_set
-      ].compact
 
       options_set_with_render_strategy_index = nil
       all_options_sets.
@@ -176,22 +187,19 @@ module Blocks
         end
 
       if self.render_strategy == RENDER_WITH_PROXY
-        self.render_item = add_proxy_options render_item
-      elsif self.render_strategy.nil? && block_name.present?
-        self.render_item = add_proxy_options block_name
+        proxy_options_set = OptionsSet.new("Proxy Options Set")
+        self.render_item = add_proxy_options proxy_options_set, render_item
+        all_options_sets.insert(options_set_with_render_strategy_index + 1, proxy_options_set)
       end
 
-      [:runtime_options, :standard_options, :default_options].each do |option_level|
-        all_options_sets.each_with_index do |options_set, index|
-          options_for_level = options_set.send(option_level)
-          add_options options_for_level
-
-          if index == options_set_with_render_strategy_index
-            options_for_level = proxy_options_set.send(option_level)
-            add_options options_for_level
-          end
-        end
+      self.merged_options_set = OptionsSet.new("Merged Options for #{self.block_name}")
+      all_options_sets.each do |options_set|
+        merged_options_set.add_options options_set
       end
+
+      add_options merged_options_set.runtime_options
+      add_options merged_options_set.standard_options
+      add_options merged_options_set.default_options
 
       if render_item.blank?
         self.render_item = runtime_block

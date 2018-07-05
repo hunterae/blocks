@@ -25,27 +25,27 @@ module Blocks
       self.standard_options = original.standard_options.clone.except(*control_fields)
     end
 
-    def to_s
-      description = []
-      description << "Block Name: #{name}"
-      description << "------------------------------"
-      description << "Runtime Options:"
-      description << runtime_options.to_s
-      description << "------------------------------"
-      description << "Standard Options:"
-      description << standard_options.to_s
-      description << "------------------------------"
-      description << "Default Options:"
-      description << default_options.to_s
-      description.join("\n")
-    end
-
-    def inspect
-      hash = standard_options.to_hash
-      hash[:defaults] = default_options if default_options.present?
-      hash[:runtime] = runtime_options if runtime_options.present?
-      hash
-    end
+    # def to_s
+    #   description = []
+    #   description << "Block Name: #{name}"
+    #   description << "------------------------------"
+    #   description << "Runtime Options:"
+    #   description << runtime_options.to_s
+    #   description << "------------------------------"
+    #   description << "Standard Options:"
+    #   description << standard_options.to_s
+    #   description << "------------------------------"
+    #   description << "Default Options:"
+    #   description << default_options.to_s
+    #   description.join("\n")
+    # end
+    #
+    # def inspect
+    #   hash = standard_options.to_hash
+    #   hash[:defaults] = default_options if default_options.present?
+    #   hash[:runtime] = runtime_options if runtime_options.present?
+    #   hash
+    # end
 
     def add_options(*args, &block)
       options = args.extract_options!

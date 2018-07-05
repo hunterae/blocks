@@ -1,4 +1,4 @@
-# Introduction
+# Features
 
 **VERSION {% gem_version %}**
 

@@ -3,25 +3,25 @@ require 'spec_helper'
 feature "Rendering Option Merging" do
   TEST_BLOCK = :test_block
 
-  let(:runtime_context) { Blocks::RuntimeContext.new(builder, TEST_BLOCK) }
+  let(:runtime_context) { Blocks::RuntimeContext.build(builder, TEST_BLOCK) }
 
   it 'should merge and give precedence to render options over block runtime options' do
     builder.define TEST_BLOCK, runtime: { shared: 1, a: 1 }
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, shared: 2, b: 2
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK, shared: 2, b: 2
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to block runtime options over builder runtime options' do
     builder = Blocks::Builder.new(view, runtime: { shared: 1, a: 1 })
     builder.define TEST_BLOCK, runtime: { shared: 2, b: 2 }
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to builder runtime options over global runtime options' do
     Blocks.global_options_set.add_options runtime: { shared: 1, a: 1 }
     builder = Blocks::Builder.new(view, runtime: { shared: 2, b: 2 })
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
@@ -34,40 +34,40 @@ feature "Rendering Option Merging" do
   it 'should merge and give precedence to block standard options over builder standard options' do
     builder = Blocks::Builder.new(view, shared: 1, a: 1)
     builder.define TEST_BLOCK, shared: 2, b: 2
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to builder standard options over global standard options' do
     Blocks.global_options_set.add_options shared: 1, a: 1
     builder = Blocks::Builder.new(view, shared: 2, b: 2)
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to global standard options over render default options' do
     Blocks.global_options_set.add_options shared: 1, a: 1
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
     expect(runtime_context).to eql({ shared: 1, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to render default options over block default options' do
     builder.define TEST_BLOCK, defaults: { shared: 1, a: 1 }
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK, defaults: { shared: 2, b: 2}
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to block default options over builder default options' do
     builder = Blocks::Builder.new(view, defaults: { shared: 1, a: 1 })
     builder.define TEST_BLOCK, defaults: { shared: 2, b: 2 }
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
   it 'should merge and give precedence to builder default options over global default options' do
     Blocks.global_options_set.add_options defaults: { shared: 1, a: 1 }
     builder = Blocks::Builder.new(view, defaults: { shared: 2, b: 2 })
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK
     expect(runtime_context).to eql({ shared: 2, a: 1, b: 2 })
   end
 
@@ -91,7 +91,7 @@ feature "Rendering Option Merging" do
       shared: 9, i: 9, def: 3
     }
 
-    runtime_context = Blocks::RuntimeContext.new builder, TEST_BLOCK,
+    runtime_context = Blocks::RuntimeContext.build builder, TEST_BLOCK,
       shared: 10, j: 10, run: 4, defaults: {
         shared: 11, k: 11, def: 4
       }

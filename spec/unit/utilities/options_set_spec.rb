@@ -35,14 +35,6 @@ describe Blocks::OptionsSet do
     end
   end
 
-  context '#to_s' do
-    xit 'TODO'
-  end
-
-  context '#inspect' do
-    xit 'TODO'
-  end
-
   context '#add_options' do
     xit 'TODO'
   end

@@ -7,10 +7,6 @@ describe Blocks::HashWithCaller do
     xit 'should call super without a block, even when one is passed in'
   end
 
-  context '#to_s' do
-    xit "todo"
-  end
-
   context '#add_options' do
     xit "todo"
   end

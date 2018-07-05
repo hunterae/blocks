@@ -10,8 +10,9 @@ toc_footers:
   - <a href='https://github.com/tripit/slate'>Documentation Powered by Slate</a>
 
 includes:
-  - introduction
+  - features
   - installation
+  - overview
   - defining
   - rendering
   - hooks
