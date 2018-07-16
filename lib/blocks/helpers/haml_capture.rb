@@ -13,6 +13,16 @@
 #  This workaround accomplishes that.
 module Blocks
   module HamlCapture
+    def initialize(view, *)
+      super
+      if defined?(::Haml) && !view.instance_variables.include?(:@haml_buffer)
+        class << view
+          include Haml::Helpers
+        end
+        view.init_haml_helpers
+      end
+    end
+
     def capture(*)
       old_haml_buffer = view.instance_variable_get(:@haml_buffer)
       if old_haml_buffer

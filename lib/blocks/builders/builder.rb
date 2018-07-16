@@ -5,6 +5,10 @@ module Blocks
     include CallWithParams
     prepend LegacyBuilders
 
+    if defined?(Haml)
+      prepend HamlCapture
+    end
+
     # A pointer to the view context
     attr_accessor :view
 
@@ -47,6 +51,15 @@ module Blocks
 
     def hooks_for(block_name, hook_name)
       block_for(block_name).try(:hooks_for, hook_name) || []
+    end
+
+    def capture(*args, &block)
+      if block.arity >= 0
+        args = args[0, block.arity]
+      end
+      with_output_buffer do
+        output_buffer << view.capture(*args, &block)
+      end
     end
 
     def block_defined?(block_name)
