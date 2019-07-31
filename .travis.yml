@@ -4,7 +4,7 @@ cache: bundler
 before_install:
   - gem install "rubygems-update:<3.0.0" --no-document
   - update_rubygems
-  - gem install bundler
+  - gem install bundler -v 1.17.3
 
 rvm:
   - 2.0.0
