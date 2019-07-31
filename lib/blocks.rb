@@ -1,6 +1,7 @@
 require 'active_support/core_ext/hash'
 require 'active_support/hash_with_indifferent_access'
 require 'blocks/helpers/view_extensions'
+require 'blocks/helpers/controller_extensions'
 
 module Blocks
   extend ActiveSupport::Autoload

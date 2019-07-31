@@ -1,3 +1,6 @@
+3.1.1
+* Injecting blocks method into controller to be able to define blocks from the controller that the view will use.
+
 3.1.0
 * Added content_tag utility block, wrapping around Rails' content_tag method, which
   may be used directly or indirectly (such as via a wrapper or hook)
@@ -19,6 +22,7 @@
   on global configuration
 * Switched Blocks::HashWithRenderStrategy to use symbols for hash keys instead of string,
   allowing it to be extracted as hash keyword arguments to methods
+* Removed blocks.define :collection functionality
 
 
 3.0.0 (September 27, 2017)
