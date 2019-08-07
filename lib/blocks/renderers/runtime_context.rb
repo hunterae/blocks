@@ -44,6 +44,7 @@ module Blocks
       render_options = runtime_args.extract_options!.with_indifferent_access
 
       identify_block(runtime_args.shift)
+
       if runtime_args.first.is_a?(RuntimeContext)
         parent_runtime_context = runtime_args.shift
       end
@@ -121,11 +122,18 @@ module Blocks
     end
 
     def compute_render_options_set(render_options)
-      OptionsSet.new(
-        "Render Options",
-        defaults: render_options.delete(:defaults),
-        runtime: render_options
-      )
+      if render_options.is_a?(OptionsSet)
+        # cloning the render options ensures we do not maintain
+        #  its render_item, which could cause other blocks to render
+        #  the wrong item
+        render_options.clone
+      else
+        OptionsSet.new(
+          "Render Options",
+          defaults: render_options.delete(:defaults),
+          runtime: render_options
+        )
+      end
     end
 
     def identify_block(identifier)

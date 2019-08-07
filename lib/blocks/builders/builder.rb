@@ -155,7 +155,7 @@ module Blocks
         if options[:wrapper_type]
           wrapper_prefix = options[:wrapper_type]
 
-          html_option = options["#{wrapper_prefix}_html_option"]
+          html_option = options["#{wrapper_prefix}_html_option"] || options[:html_option]
           wrapper_html = if html_option.is_a?(Array)
             html_option.map do |html_attribute|
               options[html_attribute]
@@ -165,9 +165,9 @@ module Blocks
             options[html_option]
           end
 
-          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"], wrapper_html, options)
+          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"] || options[:html], wrapper_html, *args, options)
 
-          wrapper_tag = options["#{wrapper_prefix}_tag"]
+          wrapper_tag = options["#{wrapper_prefix}_tag"] || options[:tag]
 
         else
           wrapper_html = call_each_hash_value_with_params(options[:html], options)
