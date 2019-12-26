@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'call_with_params'
 
 module Blocks

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class Renderer
     attr_accessor :builder

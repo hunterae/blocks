@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   # TODO: Make this render order customizable
   class BlockWithHooksRenderer < AbstractRenderer

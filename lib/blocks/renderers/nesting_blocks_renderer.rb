@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class NestingBlocksRenderer < AbstractRenderer
     def render(hook, runtime_context)

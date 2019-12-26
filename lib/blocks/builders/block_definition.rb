@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class BlockDefinition < OptionsSet
     attr_accessor :skip_content,

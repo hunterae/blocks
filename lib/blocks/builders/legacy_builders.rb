@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   module LegacyBuilders
     CONTENT_TAG_WRAPPER_BLOCK = :content_tag_wrapper

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class WrapperRenderer < AbstractRenderer
     def render(wrapper, wrapper_type, runtime_context)

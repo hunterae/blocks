@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # Complete hack to get around issues with Haml
 #  Haml does some hacking to ActionView's with_output_buffer and
 #  output_buffer. In doing so, they make certain assumptions about

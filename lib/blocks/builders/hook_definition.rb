@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class HookDefinition < HashWithRenderStrategy
     BEFORE_ALL = :before_all

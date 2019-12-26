@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class HashWithRenderStrategy < HashWithIndifferentAccess
     attr_accessor :render_strategy

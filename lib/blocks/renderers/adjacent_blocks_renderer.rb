@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class AdjacentBlocksRenderer < AbstractRenderer
     def render(hook, runtime_context)

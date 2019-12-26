@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class PartialRenderer < AbstractRenderer
     def render(partial, options={}, &block)

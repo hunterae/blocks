@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   module Configurator
     extend ActiveSupport::Concern

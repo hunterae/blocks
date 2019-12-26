@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class BlockRenderer < AbstractRenderer
     def render(runtime_context)

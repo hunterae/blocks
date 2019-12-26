@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   module HashWithCaller
     attr_accessor :callers

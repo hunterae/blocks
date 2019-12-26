@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class OptionsSet < HashWithIndifferentAccess
     attr_accessor :name
