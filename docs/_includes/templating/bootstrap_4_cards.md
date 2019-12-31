@@ -215,7 +215,7 @@ Because all of :block_wrapper's options are default options, they are easily ove
 
 :card_block, :card_title, and :card_text each follow the same paradigm. Notice that :card_text overrides the :wrapper_tag to :p and :card_title overrides it to :h4.
 
-<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag_wrapper (also accessible as the constant Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references to :block_wrapper to Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK.</aside>
+<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag (purposely named to match the ActionView method). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references of :block_wrapper to :content_tag.</aside>
 
 <aside class="notice">The only two blocks that are not using the :block_wrapper are :card_image and :card_action. While both could utilize the :block_wrapper wrapper, it makes more sense not to do so. This will enable us to utilize Rails' link_to and image_tag helper methods instead, since links and images need a bit more fine-tuning than regular HTML elements.</aside>
 

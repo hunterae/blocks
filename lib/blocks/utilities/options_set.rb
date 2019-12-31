@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Blocks
-  class OptionsSet < HashWithIndifferentAccess
+  class OptionsSet < Hash
     attr_accessor :name
 
     attr_accessor :runtime_options
@@ -11,7 +11,9 @@ module Blocks
     def initialize(*args, &block)
       options = args.extract_options!
       self.name = args.first
-      reset
+      self.runtime_options = HashWithRenderStrategy.new "#{name} Runtime Options"
+      self.standard_options = HashWithRenderStrategy.new "#{name} Standard Options"
+      self.default_options = HashWithRenderStrategy.new "#{name} Default Options"
       add_options options, &block
       super(&nil)
     end
@@ -42,12 +44,12 @@ module Blocks
     #   description.join("\n")
     # end
     #
-    # def inspect
-    #   hash = standard_options.to_hash
-    #   hash[:defaults] = default_options if default_options.present?
-    #   hash[:runtime] = runtime_options if runtime_options.present?
-    #   hash
-    # end
+    def inspect
+      hash = standard_options.to_hash.dup
+      hash[:defaults] = default_options if default_options.present?
+      hash[:runtime] = runtime_options if runtime_options.present?
+      hash
+    end
 
     def add_options(*args, &block)
       options = args.extract_options!
@@ -57,9 +59,6 @@ module Blocks
         caller_id ||= options.name
         [options.runtime_options, options.default_options, options.standard_options]
       else
-        if !options.is_a?(HashWithIndifferentAccess)
-          options = options.with_indifferent_access
-        end
         [options.delete(:runtime), options.delete(:defaults), options]
       end
 
@@ -70,12 +69,6 @@ module Blocks
       default_options.add_options caller_id, defaults
 
       self
-    end
-
-    def reset
-      self.runtime_options = HashWithRenderStrategy.new "#{name} Runtime Options"
-      self.standard_options = HashWithRenderStrategy.new "#{name} Standard Options"
-      self.default_options = HashWithRenderStrategy.new "#{name} Default Options"
     end
 
     def current_render_strategy_and_item
@@ -90,11 +83,13 @@ module Blocks
       ]
     end
 
-    def nested_under_indifferent_access
-      self
+    # Returns +true+ so that <tt>Array#extract_options!</tt> finds members of
+    # this class.
+    def extractable_options?
+      true
     end
 
-    def with_indifferent_access
+    def nested_under_indifferent_access
       self
     end
   end

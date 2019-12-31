@@ -18,42 +18,40 @@ feature "Rendering Proxies Option Merging" do
   let(:expected_partial) { "expected" }
   let(:unexpected_partial) { "unexpected" }
 
-  context "when render options specify a proxy" do
-    [:runtime, :defaults].each do |option_level|
-      context "at the #{option_level} level" do
-        let(:base_options) do
-          if option_level == :runtime
-            { with: proxy_block_1_name }
-          else
-            { defaults: { with: proxy_block_1_name } }
-          end
+  [:runtime, :defaults].each do |option_level|
+    context "when render options specify a proxy at the #{option_level} level" do
+      let(:base_options) do
+        if option_level == :runtime
+          { with: proxy_block_1_name }
+        else
+          { defaults: { with: proxy_block_1_name } }
         end
-        let(:render_options) { base_options }
+      end
+      let(:render_options) { base_options }
 
-        it "should merge and give precedence to the render options over the proxy runtime options" do
-          let(:render_options) { base_options.deep_merge(shared: 1, run: 1, a: 1, defaults: { b: 2, c: 3, def: 1 }) }
+      it "should merge and give precedence to the render options over the proxy runtime options" do
+        render_options =  base_options.deep_merge(shared: 1, run: 1, a: 1, defaults: { b: 2, c: 3, def: 1 })
 
-          builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
-          builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
-          builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
-          expect(runtime_context).to eql({ shared: 1, run: 1, std: 2, def: 1, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
-        end
+        builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
+        builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
+        builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
+        expect(Blocks::RuntimeContext.build(builder, block_name, render_options)).to eql({ shared: 1, run: 1, std: 2, def: 1, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
+      end
 
-        it "should merge and give precedence to the proxy options over the block options" do
-          builder.define block_name, runtime: { shared: 1, a: 1, run: 1 }, shared: 2, b: 2, std: 1, defaults: { shared: 3, c: 3, def: 1 }
-          builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
-          builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
-          builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
-          expect(runtime_context).to eql({ shared: 4, run: 2, std: 2, def: 2, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
-        end
+      it "should merge and give precedence to the proxy options over the block options" do
+        builder.define block_name, runtime: { shared: 1, a: 1, run: 1 }, shared: 2, b: 2, std: 1, defaults: { shared: 3, c: 3, def: 1 }
+        builder.define proxy_block_1_name, runtime: { shared: 4, d: 4, run: 2 }, with: proxy_block_2_name, shared: 5, e: 5, std: 2, defaults: { shared: 6, f: 6, def: 2 }
+        builder.define proxy_block_2_name, runtime: { shared: 6, g: 7, run: 3 }, with: proxy_block_3_name, shared: 7, h: 8, std: 3, defaults: { shared: 8, i: 9, def: 3 }
+        builder.define proxy_block_3_name, runtime: { shared: 9, j: 10, run: 4 }, shared: 10, k: 11, std: 4, defaults: { shared: 11, l: 12, def: 4 }
+        expect(runtime_context).to eql({ shared: 4, run: 2, std: 2, def: 2, a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8, i: 9, j: 10, k: 11, l: 12 })
+      end
 
-        it "should give precedence to the proxy render item over the block render item" do
-          builder.define block_name, option_level => { partial: unexpected_partial }
-          builder.define proxy_block_1_name, with: proxy_block_2_name
-          builder.define proxy_block_2_name, with: proxy_block_3_name
-          builder.define proxy_block_3_name, option_level => { partial: expected_partial }
-          expect(runtime_context.render_item).to eql expected_partial
-        end
+      it "should give precedence to the proxy render item over the block render item" do
+        builder.define block_name, option_level => { partial: unexpected_partial } # ignored
+        builder.define proxy_block_1_name, with: proxy_block_2_name
+        builder.define proxy_block_2_name, with: proxy_block_3_name
+        builder.define proxy_block_3_name, option_level => { partial: expected_partial }
+        expect(runtime_context.render_item).to eql expected_partial
       end
     end
   end

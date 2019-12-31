@@ -19,6 +19,7 @@ includes:
   - wrappers
   - skipping
   - reserved-keywords
+  - helper-blocks
   - templating
   - configuration
   - custom-builders

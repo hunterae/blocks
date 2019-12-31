@@ -9,7 +9,7 @@ module Blocks
     end
 
     def render_with_overrides(*args, &block)
-      options = args.extract_options!.with_indifferent_access
+      options = args.extract_options!
       partial = options.delete(:partial) || options.delete(:template) || args.first
       if builder = options.delete(:builder)
         builder.view = self

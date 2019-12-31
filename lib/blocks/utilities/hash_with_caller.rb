@@ -5,7 +5,7 @@ module Blocks
     attr_accessor :callers
 
     def initialize(*args)
-      self.callers = HashWithIndifferentAccess.new
+      self.callers = {}
       super
     end
 

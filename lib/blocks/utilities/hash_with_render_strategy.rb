@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Blocks
-  class HashWithRenderStrategy < HashWithIndifferentAccess
+  class HashWithRenderStrategy < Hash
     attr_accessor :render_strategy
 
     RENDER_WITH_PROXY = :with
@@ -16,18 +16,17 @@ module Blocks
       super &nil
     end
 
-    def initialize_copy(original)
-      super
-      self.render_strategy = nil
-      RENDERING_STRATEGIES.each do |rs|
-        self.delete(rs)
-      end
+    def clone
+      except(*RENDERING_STRATEGIES)
     end
-
     alias_method :dup, :clone
 
-    def [](key)
-      super convert_key(key)
+    def to_hash
+      {}.update(except(RENDERING_STRATEGIES))
+    end
+
+    def slice(*keys)
+      self.class.new(super)
     end
 
     def reverse_merge(options)
@@ -35,11 +34,8 @@ module Blocks
     end
 
     # TODO: need to implement either merge or update to update
-    def add_options(*args, &block)
+    def reverse_merge!(*args, &block)
       options = args.extract_options!
-      if !options.is_a?(HashWithIndifferentAccess)
-        options = options.with_indifferent_access
-      end
       options[:block] = block if block
       if render_strategy.nil?
         self.render_strategy = if options.is_a?(HashWithRenderStrategy)
@@ -60,21 +56,20 @@ module Blocks
         end
       end
     end
+    alias_method :add_options, :reverse_merge!
 
     def render_strategy_and_item
       [render_strategy, self[render_strategy]] if render_strategy
-    end
-
-    def with_indifferent_access
-      self
     end
 
     def nested_under_indifferent_access
       self
     end
 
-    def convert_key(key) # :doc:
-      key.kind_of?(Symbol) || key.nil? ? key : key.to_sym
+    # Returns +true+ so that <tt>Array#extract_options!</tt> finds members of
+    # this class.
+    def extractable_options?
+      true
     end
 
     def to_s

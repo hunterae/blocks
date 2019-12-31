@@ -20,7 +20,7 @@ class TestBuilder < Blocks::Builder
   end
 
   define_method SOMETHING_WRAPPING do |*args, options, &content_block|
-    content_tag :div, class: options["#{options[:wrapper_type]}_label"], &content_block
+    content_tag :div, class: options["#{options[:wrapper_type]}_label".to_sym], &content_block
   end
 
   def apply_wrappers_to_block(block_name)

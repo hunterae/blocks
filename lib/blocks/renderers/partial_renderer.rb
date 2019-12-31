@@ -5,9 +5,9 @@ module Blocks
     def render(partial, options={}, &block)
       # TODO: need to check if partial responds to #to_partial_path and call it if it does
       if options.is_a?(RuntimeContext)
-        options = options.to_hash.with_indifferent_access
+        options = options.to_hash
       else
-        options = RuntimeContext.build(builder, options).to_hash.with_indifferent_access
+        options = RuntimeContext.build(builder, options).to_hash
       end
       overrides_and_provided_content = capture(builder, options, &block) if block_given?
       locals = options.merge(

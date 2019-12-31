@@ -84,16 +84,17 @@ module Blocks
     def define(*args, &block)
       options = args.extract_options!
 
-      name, anonymous = if args.first
-        [args.shift, false]
+      name = if args.first
+        args.shift
       else
+        anonymous = true
         self.anonymous_block_number += 1
-        ["anonymous_block_#{anonymous_block_number}", true]
+        "anonymous_block_#{anonymous_block_number}"
       end
 
       block_definitions[name].tap do |block_definition|
         block_definition.add_options options, &block
-        block_definition.anonymous = anonymous
+        block_definition.anonymous = !!anonymous
       end
     end
 
@@ -151,13 +152,12 @@ module Blocks
     #  while also not requiring the content tag name (defaults to :div).
     def content_tag(*args, &block)
       options = args.extract_options!
-      options = options.with_indifferent_access if !options.is_a?(HashWithIndifferentAccess)
       escape = options.key?(:escape) ? options.delete(:escape) : true
       if options.is_a?(RuntimeContext)
         if options[:wrapper_type]
           wrapper_prefix = options[:wrapper_type]
 
-          html_option = options["#{wrapper_prefix}_html_option"] || options[:html_option]
+          html_option = options["#{wrapper_prefix}_html_option".to_sym] || options[:html_option]
           wrapper_html = if html_option.is_a?(Array)
             html_option.map do |html_attribute|
               options[html_attribute]
@@ -167,9 +167,9 @@ module Blocks
             options[html_option]
           end
 
-          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html"] || options[:html], wrapper_html, *args, options)
+          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html".to_sym] || options[:html], wrapper_html, *args, options)
 
-          wrapper_tag = options["#{wrapper_prefix}_tag"] || options[:tag]
+          wrapper_tag = options["#{wrapper_prefix}_tag".to_sym] || options[:tag]
 
         else
           wrapper_html = call_each_hash_value_with_params(options[:html], options)
@@ -195,7 +195,7 @@ module Blocks
 
       content_tag_args = [wrapper_tag]
       if !block_given?
-        content_tag_args << (wrapper_html.delete("content") || options[:content] || args.shift)
+        content_tag_args << (wrapper_html.delete(:content) || options[:content] || args.shift)
       end
       content_tag_args << wrapper_html
       content_tag_args << escape

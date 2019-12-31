@@ -228,11 +228,11 @@ shared_examples CAN_BE_RENDERED_AS_A_SURROUNDING_BLOCK do |template: nil, block_
       outer_html: { id: "wrap-all" },
       middle_html: { id: "wrap-each" },
       inner_html: { id: "wrapper" }
-    }.with_indifferent_access
+    }
     options.each do |key, value|
-      wrapper_options["wrap_all_#{key}"] = value
-      wrapper_options["wrap_each_#{key}"] = value
-      wrapper_options["wrapper_#{key}"] = value
+      wrapper_options["wrap_all_#{key}".to_sym] = value
+      wrapper_options["wrap_each_#{key}".to_sym] = value
+      wrapper_options["wrapper_#{key}".to_sym] = value
     end
     expected_content = expected_content.gsub("HTML_OPTIONS", "id=\"wrapper\"")
     expected_content = template.gsub("CONTENT", expected_content)
@@ -251,14 +251,14 @@ shared_examples CAN_BE_RENDERED_AS_A_SURROUNDING_BLOCK do |template: nil, block_
       wrap_all: block_identifier,
       wrap_each: block_identifier,
       wrapper: block_identifier,
-      "wrap_all_#{html_option}" => { id: "wrap-all" },
-      "wrap_each_#{html_option}" => { id: "wrap-each" },
-      "wrapper_#{html_option}" => { id: "wrapper" }
-    }.with_indifferent_access
+      "wrap_all_#{html_option}".to_sym => { id: "wrap-all" },
+      "wrap_each_#{html_option}".to_sym => { id: "wrap-each" },
+      "wrapper_#{html_option}".to_sym => { id: "wrapper" }
+    }
     options.each do |key, value|
-      wrapper_options["wrap_all_#{key}"] = value
-      wrapper_options["wrap_each_#{key}"] = value
-      wrapper_options["wrapper_#{key}"] = value
+      wrapper_options["wrap_all_#{key}".to_sym] = value
+      wrapper_options["wrap_each_#{key}".to_sym] = value
+      wrapper_options["wrapper_#{key}".to_sym] = value
     end
     expected_content = expected_content.gsub("HTML_OPTIONS", "id=\"wrapper\"")
     expected_content = template.gsub("CONTENT", expected_content)

@@ -16,7 +16,7 @@ describe Blocks::Builder do
       expect(subject.block_defined?(Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK)).to be true
     end
     it "should setup the block_definitions hash to initialize BlockDefinition objects when not present" do
-      expect(subject.block_definitions).to be_a HashWithIndifferentAccess
+      expect(subject.block_definitions).to be_a Hash
       expect(subject.block_definitions[:test_block]).to be_a Blocks::BlockDefinition
     end
   end

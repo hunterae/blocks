@@ -43,7 +43,7 @@ module Blocks
     end
 
     def compute(*runtime_args)
-      render_options = runtime_args.extract_options!.with_indifferent_access
+      render_options = runtime_args.extract_options!
 
       identify_block(runtime_args.shift)
 
@@ -108,10 +108,19 @@ module Blocks
 
       all_options_sets = [
         render_options_set,
-        block_options_set,
-        (OptionsSet.new("Runtime Method", with: self.block_name) if self.block_name && builder.respond_to?(block_name)),
-        (OptionsSet.new("Runtime Block", block: self.runtime_block) if self.runtime_block),
+        block_options_set
       ]
+      # TODO: only if a flag is turned on for this
+      if self.block_name && builder.respond_to?(block_name)
+        all_options_sets << OptionsSet.new("Runtime Method", with: self.block_name)
+      end
+
+      # TODO: should this not be OptionsSet.new("Runtime Block", defaults: { block: self.runtime_block }). Should it be last?
+      #  Is this even necessary
+      if self.runtime_block
+        all_options_sets << OptionsSet.new("Runtime Block", block: self.runtime_block)
+      end
+
 
       if parent_runtime_context
         all_options_sets << parent_runtime_context.merged_options_set.clone
@@ -184,6 +193,12 @@ module Blocks
       determined_render_item = false
 
       options_set_with_render_strategy_index = nil
+      # Take all of the options sets (runtime, block, proxy, builder, global),
+      #  grab the render strategy and render item for each of their runtime, standard, and default
+      #  options, then transpose them so that we have groups consisting of all the runtime
+      #  render strategies and items, standard render strategy and items, and default render
+      #  strategy and items, then finally detect which option group is providing the highest
+      #  precedence render strategy and item
       all_options_sets.
         map(&:render_strategies_and_items).
         transpose.
@@ -196,6 +211,9 @@ module Blocks
           end
         end
 
+      # If we detect that the render strategy is a proxy (i.e. was defined with the :with option),
+      #  we need to inject the corresponding proxy options into our full list of option sets at the 
+      #  appropriate position (as detected above)
       if self.render_strategy == RENDER_WITH_PROXY
         proxy_options_set = OptionsSet.new("Proxy Options Set")
         self.render_item = add_proxy_options proxy_options_set, render_item

@@ -28,7 +28,7 @@ describe Blocks::OptionsSet do
       expect(subject).to match({})
     end
 
-    # Passing a block to HashWithIndifferentAccess would
+    # Passing a block to Hash would
     #  be evaluated as a default proc for the Hash, which we don't want
     it "should not pass a block to the parent class" do
       expect(subject.default_proc).to be_nil
@@ -37,18 +37,6 @@ describe Blocks::OptionsSet do
 
   context '#add_options' do
     xit 'TODO'
-  end
-
-  context '#reset' do
-    before do
-      subject.reset
-    end
-    its(:runtime_options) { is_expected.to be_a(Blocks::HashWithRenderStrategy) }
-    its(:runtime_options) { is_expected.to match({}) }
-    its(:default_options) { is_expected.to be_a(Blocks::HashWithRenderStrategy) }
-    its(:default_options) { is_expected.to match({}) }
-    its(:standard_options) { is_expected.to be_a(Blocks::HashWithRenderStrategy) }
-    its(:standard_options) { is_expected.to match({}) }
   end
 
   context '#current_render_strategy_and_item' do

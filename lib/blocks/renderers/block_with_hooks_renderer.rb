@@ -4,6 +4,7 @@ module Blocks
   # TODO: Make this render order customizable
   class BlockWithHooksRenderer < AbstractRenderer
     def render(*args, &default_definition)
+      # TODO: skip nesting if no hooks or wrappers defined
       with_output_buffer do
         options = args.extract_options!
         runtime_context = if !options.is_a?(RuntimeContext)
