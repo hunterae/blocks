@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe Blocks::Renderer do
-  let(:view) { ActionView::Base.new }
   let(:builder) { Blocks::Builder.new(view) }
   let(:block_with_hooks_renderer) { builder.block_with_hooks_renderer }
 

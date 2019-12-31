@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Blocks::ViewExtensions do
-  subject { ActionView::Base.new }
+  subject { view }
 
   context '#blocks' do
     it "should return an instance of a Blocks.builder_class" do

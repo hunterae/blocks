@@ -3,7 +3,6 @@ RENDERABLE = 'renderable'
 module RenderingSupport
   extend RSpec::SharedContext
 
-  let(:view) { ActionView::Base.new("spec/fixtures") }
   let(:builder) { TestBuilder.new(view) }
 end
 

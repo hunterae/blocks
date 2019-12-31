@@ -1,12 +1,5 @@
 def view
-  # if @view
-  #   @view
-  # else
-    @view ||= ActionView::Base.new("spec/fixtures")
-  #   class << @view
-  #
-  #   end
-  # end
+  @view ||= Class.new(ActionView::Base).with_view_paths(["spec/fixtures"])
 end
 
 def render_template_and_compare_to_fixture(partial, locals={})
