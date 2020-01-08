@@ -5,18 +5,17 @@ describe Blocks::Configurator do
     subject { Blocks }
     its(:builder_class) { is_expected.to eql Blocks::Builder }
     its(:renderer_class) { is_expected.to eql Blocks::Renderer }
-    its(:global_options_set) { is_expected.to be_a Blocks::OptionsSet }
-    its(:global_options_set) { is_expected.to match({}) }
+    its(:global_options) { is_expected.to eql nil }
     its(:lookup_caller_location) { is_expected.to eql false }
     its(:track_caller) { is_expected.to eql false }
   end
-  context '#configure' do
+  describe '#configure' do
     subject { Blocks }
     before do
       Blocks.configure do |config|
         config.builder_class = String
         config.renderer_class = String
-        config.global_options_set.add_options(a: 1)
+        config.global_options = { a: 1 }
         config.lookup_caller_location = true
         config.track_caller = true
       end
@@ -24,8 +23,8 @@ describe Blocks::Configurator do
 
     its(:builder_class) { is_expected.to eql String }
     its(:renderer_class) { is_expected.to eql String }
-    it 'should allow the global_options_set to be modified' do
-      expect(Blocks.global_options_set.standard_options).to match(a: 1)
+    it 'should allow the global_options to be modified' do
+      expect(Blocks.global_options).to match(a: 1)
     end
     its(:lookup_caller_location) { is_expected.to eql true }
     its(:track_caller) { is_expected.to eql true }
@@ -36,8 +35,7 @@ describe Blocks::Configurator do
       end
       its(:builder_class) { is_expected.to eql Blocks::Builder }
       its(:renderer_class) { is_expected.to eql Blocks::Renderer }
-      its(:global_options_set) { is_expected.to be_a Blocks::OptionsSet }
-      its(:global_options_set) { is_expected.to match({}) }
+      its(:global_options) { is_expected.to eql nil }
       its(:lookup_caller_location) { is_expected.to eql false }
       its(:track_caller) { is_expected.to eql false }
     end

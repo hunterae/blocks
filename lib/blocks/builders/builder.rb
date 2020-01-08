@@ -1,12 +1,7 @@
 # frozen_string_literal: true
 
-require 'call_with_params'
-
 module Blocks
   class Builder
-    include CallWithParams
-    prepend LegacyBuilders
-
     if defined?(Haml)
       prepend HamlCapture
     end
@@ -18,33 +13,32 @@ module Blocks
     attr_accessor :block_definitions
 
     # Options provided during initialization of builder
-    attr_accessor :options_set
+    attr_accessor :options
 
     attr_accessor :anonymous_block_number
 
-    delegate :render,
-             :render_with_overrides,
-             :deferred_render,
-             to: :renderer
-
-    delegate :runtime_options,
-             :standard_options,
-             :default_options,
-             to: :options_set
-
     delegate :with_output_buffer, :output_buffer, to: :view
 
-    def initialize(view, options={})
+    def initialize(view, options=nil)
       self.view = view
       self.block_definitions = HashWithIndifferentAccess.new do |hash, key|
         hash[key] = BlockDefinition.new(key); hash[key]
       end
       self.anonymous_block_number = 0
-      self.options_set = OptionsSet.new("Builder Options", options)
+      self.options = options
     end
 
-    def renderer
-      @renderer ||= Blocks.renderer_class.new(self)
+    def render(*args, &block)
+      renderer_class.render(self, *args, &block)
+    end
+
+    def render_with_overrides(*args, &block)
+      warn "[DEPRECATION] `render_with_overrides` is deprecated.  Please use `render` instead."
+      render(*args, &block)
+    end
+
+    def deferred_render(*args, &block)
+      renderer_class.deferred_render(self, *args, &block)
     end
 
     def block_for(block_name)
@@ -93,7 +87,7 @@ module Blocks
       end
 
       block_definitions[name].tap do |block_definition|
-        block_definition.add_options options, &block
+        block_definition.reverse_merge! options, &block
         block_definition.anonymous = !!anonymous
       end
     end
@@ -138,7 +132,7 @@ module Blocks
       options = call_each_hash_value_with_params(options, *args) || {}
       options2 = call_each_hash_value_with_params(options2, *args) || {}
 
-      options.symbolize_keys.merge(options2.symbolize_keys) do |key, v1, v2|
+      options.merge(options2) do |key, v1, v2|
         if v1.is_a?(String) && v2.is_a?(String)
           "#{v1} #{v2}"
         else
@@ -153,43 +147,28 @@ module Blocks
     def content_tag(*args, &block)
       options = args.extract_options!
       escape = options.key?(:escape) ? options.delete(:escape) : true
-      if options.is_a?(RuntimeContext)
-        if options[:wrapper_type]
-          wrapper_prefix = options[:wrapper_type]
+      if wrapper_type = options.delete(:wrapper_type)
 
-          html_option = options["#{wrapper_prefix}_html_option".to_sym] || options[:html_option]
-          wrapper_html = if html_option.is_a?(Array)
-            html_option.map do |html_attribute|
-              options[html_attribute]
-            end.compact.first
-
-          elsif html_option.present?
-            options[html_option]
-          end
-
-          wrapper_html = concatenating_merge(options["#{wrapper_prefix}_html".to_sym] || options[:html], wrapper_html, *args, options)
-
-          wrapper_tag = options["#{wrapper_prefix}_tag".to_sym] || options[:tag]
-
-        else
-          wrapper_html = call_each_hash_value_with_params(options[:html], options)
-          wrapper_tag = options[:tag]
+        html_option = options["#{wrapper_type}_html_option".to_sym] || options[:html_option]
+        wrapper_html = if html_option.is_a?(Array)
+          html_option.map { |html_attribute| options[html_attribute] }.compact.first
+        elsif html_option.present?
+          options[html_option]
         end
 
-        wrapper_html ||= {}
-        wrapper_tag ||= :div
+        wrapper_html = concatenating_merge(options["#{wrapper_type}_html".to_sym] || options[:html], wrapper_html, *args, options)
 
-      else
-        wrapper_tag = options.delete(:tag)
-        wrapper_html = options.to_hash
+        wrapper_tag = options["#{wrapper_type}_tag".to_sym]
+      end
+      wrapper_html ||= call_each_hash_value_with_params(options[:html], options).presence || options
+      wrapper_tag ||= options.delete(:tag)
 
-        if !wrapper_tag
-          first_arg = args.first
-          wrapper_tag = if first_arg.is_a?(String) || first_arg.is_a?(Symbol)
-            args.shift
-          else
-            :div
-          end
+      if !wrapper_tag
+        first_arg = args.first
+        wrapper_tag = if first_arg.is_a?(String) || first_arg.is_a?(Symbol)
+          args.shift
+        else
+          :div
         end
       end
 
@@ -201,6 +180,28 @@ module Blocks
       content_tag_args << escape
 
       view.content_tag *content_tag_args, &block
+    end
+
+    protected
+    def renderer_class
+      @renderer_class ||= Blocks.renderer_class
+    end
+
+    def call_with_params(*args)
+      return nil if args.empty?
+      v = args.shift
+      v.is_a?(Proc) ? v.call(*(args[0, v.arity.abs])) : v
+    end
+  
+    def call_each_hash_value_with_params(*args)
+      return {} if args.empty?
+  
+      options = args.shift || {}
+      if options.is_a?(Proc)
+        call_with_params(options, *args)
+      else
+        options.inject(Hash.new) { |hash, (k, v)| hash[k] = call_with_params(v, *args); hash}
+      end
     end
   end
 end

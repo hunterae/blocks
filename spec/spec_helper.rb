@@ -1,14 +1,5 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 
-# >= Ruby 2.5 patch
-if !Object.respond_to?(:yaml_as)
-  class Object
-    def self.yaml_as(*args)
-      yaml_tag(*args)
-    end
-  end
-end
-
 # https://github.com/colszowka/simplecov/issues/429
 #  Disables SimpleCov unless entire test suite is being run
 if (RSpec.configuration.instance_variable_get :@files_or_directories_to_run) == ['spec']
@@ -48,6 +39,17 @@ require 'rspec'
 require 'rspec/its'
 require 'capybara/rspec'
 require 'shoulda/matchers'
+
+begin
+  Shoulda::Matchers.configure do |config|
+    config.integrate do |with|
+      with.test_framework :rspec
+      with.library :rails
+    end
+  end
+rescue
+  # not necessary in older versions of shoulda-matchers
+end
 
 module Blocks
   class Application < Rails::Application

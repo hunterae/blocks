@@ -10,61 +10,54 @@ module Blocks
       as: []
     }
 
-    attr_accessor(*CONTROL_VARIABLES.keys)
-    attr_accessor :block_name,
-                  :runtime_block,
-                  :builder,
-                  :render_item,
-                  :runtime_args,
-                  :block_options_set,
-                  :merged_options_set
+    PROTECTED_OPTIONS = RENDERING_STRATEGIES +
+      (CONTROL_VARIABLES.keys + CONTROL_VARIABLES.values).flatten.compact
 
-    delegate :skip_content, :skip_completely, to: :block_options_set, allow_nil: true
+    attr_accessor *CONTROL_VARIABLES.keys,
+      :block_name,
+      :runtime_block,
+      :builder,
+      :render_item,
+      :runtime_args,
+      :merged_block_options,
+      :collection_item,
+      :collection_item_index,
+      :skip_completely,
+      :skip_content,
+      :hooks
 
-    delegate :block_definitions, :block_defined?, :block_for, to: :builder
-
-    delegate :runtime_options,
-             :standard_options,
-             :default_options,
-             :options_set,
-             prefix: :builder,
-             to: :builder
+    delegate :block_defined?,
+      :block_for,
+      :output_buffer,
+      :with_output_buffer,
+      :capture,
+      to: :builder
 
     def self.build(builder, *runtime_args, &runtime_block)
-      new(builder).tap do |runtime_context|
+      new.tap do |runtime_context|
+        runtime_context.builder = builder
         runtime_context.runtime_block = runtime_block
         runtime_context.compute(*runtime_args)
       end
     end
 
-    def initialize(builder)
-      self.builder = builder
-      super
-    end
-
+    # TODO: change the method signature of this method to def compute(block_identifier, options={}, &runtime_block)
+    #  Get rid of most uses of the *
     def compute(*runtime_args)
       render_options = runtime_args.extract_options!
-
-      identify_block(runtime_args.shift)
-
-      if runtime_args.first.is_a?(RuntimeContext)
-        parent_runtime_context = runtime_args.shift
-      end
-
+      build_block_context(runtime_args.shift, render_options)
+      # TODO: runtime args should be specified as a reserved keyword in the hash
       self.runtime_args = runtime_args
-
-      all_options_sets = ordered_option_sets(render_options, parent_runtime_context)
-      merge_options_and_identify_render_item(all_options_sets)
       extract_control_options
     end
 
-    def extend_from_definition(block_identifier, options={}, &runtime_block)
+    def extend_from_definition(definition, options={}, &runtime_block)
       RuntimeContext.build(
         builder,
-        block_identifier,
-        self,
+        definition,
+        # TODO: don't pass runtime args here?
         *runtime_args,
-        options,
+        options.merge(parent_runtime_context: self),
         &runtime_block
       )
     end
@@ -101,150 +94,141 @@ module Blocks
     #   description.join("\n")
     # end
 
+    def hooks_or_wrappers_present?
+      hooks.present? || wrap_all || wrap_each || wrap_with || collection.present?
+    end
+
+    def hooks_for(hook_name)
+      hooks[hook_name] if hooks.try(:key?, hook_name)
+    end
+
+    def to_hash
+      hash = super
+      if collection_item_index
+        object_name = as || :object
+        hash.merge!(object_name => collection_item, current_index: collection_item_index)
+      end
+      hash
+    end
+
     private
 
-    def ordered_option_sets(render_options, parent_runtime_context=nil)
-      render_options_set = compute_render_options_set(render_options)
+    def add_hooks(block_definition)
+      if block_definition.hooks.present?
+        self.hooks = Hash.new {|hash, key| hash[key] = [] } if !hooks
+        block_definition.hooks.each do |hook_name, hooks|
+          self.hooks[hook_name].concat hooks
+        end
+      end
+    end
 
-      all_options_sets = [
-        render_options_set,
-        block_options_set
-      ]
-      # TODO: only if a flag is turned on for this
-      if self.block_name && builder.respond_to?(block_name)
-        all_options_sets << OptionsSet.new("Runtime Method", with: self.block_name)
+    def build_block_context(identifier, render_options)
+      parent_runtime_context = render_options.delete(:parent_runtime_context)
+
+      self.block_name = identifier if identifier.is_a?(String) || identifier.is_a?(Symbol)
+
+      # Support legacy behavior - i.e. in versions 3.1 and earlier of Blocks,
+      #  default render options were given precedence over block-level defaults
+      if !Blocks.default_render_options_take_precedence_over_block_defaults
+        default_render_options = render_options.delete(:defaults)
       end
 
-      # TODO: should this not be OptionsSet.new("Runtime Block", defaults: { block: self.runtime_block }). Should it be last?
-      #  Is this even necessary
-      if self.runtime_block
-        all_options_sets << OptionsSet.new("Runtime Block", block: self.runtime_block)
-      end
-
-
+      default_options = merge_definition render_options, description: 'Render Options'
+      merge_definition identifier, default_options: default_options, merge_default_options: true
+      merge_definition default_render_options, description: 'Default Render Options', merge_default_options: true
+      merge_definition({ block: runtime_block }, description: 'Runtime Block') if runtime_block
       if parent_runtime_context
-        all_options_sets << parent_runtime_context.merged_options_set.clone
-      else
-        all_options_sets << builder_options_set
-        all_options_sets << Blocks.global_options_set
-      end
-
-      all_options_sets.compact
-    end
-
-    def compute_render_options_set(render_options)
-      if render_options.is_a?(OptionsSet)
-        # cloning the render options ensures we do not maintain
-        #  its render_item, which could cause other blocks to render
-        #  the wrong item
-        render_options.clone
-      else
-        OptionsSet.new(
-          "Render Options",
-          defaults: render_options.delete(:defaults),
-          runtime: render_options
-        )
-      end
-    end
-
-    def identify_block(identifier)
-      self.block_name, self.block_options_set = if identifier.is_a?(HookDefinition)
-        definition = BlockDefinition.new(identifier.name, runtime: identifier)
-        original_definition = block_for(identifier.name)
-        if original_definition
-          definition.add_options(original_definition)
-          definition.skip_content = original_definition.skip_content
-          definition.skip_completely = original_definition.skip_completely
+        merge_definition parent_runtime_context.merged_block_options, description: "Parent Runtime Context"
+        # TODO: setup a configuration to only pull in parent collection item if flag on
+        if parent_runtime_context.collection_item_index
+          object_name = parent_runtime_context.as || :object
+          merge_definition({ 
+              object_name => parent_runtime_context.collection_item,
+              current_index: parent_runtime_context.collection_item_index
+            }, description: "Parent Collection Item")
         end
-        [definition.name, definition]
-      elsif identifier.is_a?(OptionsSet)
-        [identifier.name, identifier]
-      elsif block_defined?(identifier)
-        [identifier, block_definitions[identifier]]
-      elsif identifier.is_a?(Proc)
-        # TODO: figure out how to do this
-      else
-        [identifier, nil]
       end
+
+      # Store the options as a hash  usable in child runtime contexts.
+      #  We do this before merging builder and global options as child runtime contexts will themselves merge in builder and global options
+      self.merged_block_options = to_hash.except!(*PROTECTED_OPTIONS)
+
+      merge_definition builder.options, description: 'Builder Options', merge_default_options: true
+      merge_definition Blocks.global_options, description: 'Global Options', merge_default_options: true
     end
 
-    def add_proxy_options(proxy_options_set, proxy_block_name)
-      if block_defined?(proxy_block_name)
-        proxy_block = block_definitions[proxy_block_name]
+    def merge_definition(definition, description: nil, default_options: [], follow_recursion: false, merge_default_options: false)
+      had_render_strategy = render_strategy_item.present?
+      follow_recursion ||= !had_render_strategy
 
-        proxy_options_set.add_options(proxy_block)
+      if definition.present?
 
-        render_strategy, render_item = proxy_block.current_render_strategy_and_item
+        if definition.is_a?(Hash)
+          default_options << definition.delete(:defaults) if definition.key?(:defaults)
+          
+          self.block_name = definition.block_to_render if definition.is_a?(HookDefinition)
+          reverse_merge! description, definition
 
-        if render_strategy == RENDER_WITH_PROXY
-          add_proxy_options proxy_options_set, render_item
-        elsif render_item.nil? && builder.respond_to?(proxy_block_name)
-          builder.method(proxy_block_name)
-        else
-          render_item
-        end
-
-      elsif builder.respond_to?(proxy_block_name)
-        builder.method(proxy_block_name)
-      end
-    end
-
-    def merge_options_and_identify_render_item(all_options_sets)
-      determined_render_item = false
-
-      options_set_with_render_strategy_index = nil
-      # Take all of the options sets (runtime, block, proxy, builder, global),
-      #  grab the render strategy and render item for each of their runtime, standard, and default
-      #  options, then transpose them so that we have groups consisting of all the runtime
-      #  render strategies and items, standard render strategy and items, and default render
-      #  strategy and items, then finally detect which option group is providing the highest
-      #  precedence render strategy and item
-      all_options_sets.
-        map(&:render_strategies_and_items).
-        transpose.
-        detect do |options_for_level|
-          options_set_with_render_strategy_index = options_for_level.index(&:present?)
-          if options_set_with_render_strategy_index.present?
-            self.render_strategy, self.render_item =
-              options_for_level[options_set_with_render_strategy_index]
-            true
+          if follow_recursion && renders_with_proxy?
+            merge_definition(render_strategy_item, default_options: default_options, follow_recursion: true)
           end
+
+        elsif block_defined?(definition)
+          proxy_block = block_for(definition)
+
+          self.skip_content = true if proxy_block.skip_content
+          self.skip_completely = true if proxy_block.skip_completely
+
+          add_hooks proxy_block
+          reverse_merge! proxy_block
+
+          if proxy_block.default_options
+            default_options << proxy_block.default_options
+          end
+
+          proxy_render_item = proxy_block.render_strategy_item
+
+          if proxy_block.renders_with_proxy?
+            merge_definition proxy_render_item, default_options: default_options, follow_recursion: true if follow_recursion
+          elsif follow_recursion
+            # reverse_merge! default_options
+            # TODO: this should be based on a configuration - whether to use methods
+            if proxy_render_item.nil? && builder.respond_to?(definition)
+              self.render_item = builder.method(definition)
+
+            else
+              self.render_item = proxy_render_item
+            end
+
+          end
+
+        elsif builder.respond_to?(definition)
+          # TODO: is ||= necessary here?
+          self.render_item ||= builder.method(definition)
+
         end
 
-      # If we detect that the render strategy is a proxy (i.e. was defined with the :with option),
-      #  we need to inject the corresponding proxy options into our full list of option sets at the 
-      #  appropriate position (as detected above)
-      if self.render_strategy == RENDER_WITH_PROXY
-        proxy_options_set = OptionsSet.new("Proxy Options Set")
-        self.render_item = add_proxy_options proxy_options_set, render_item
-        all_options_sets.insert(options_set_with_render_strategy_index + 1, proxy_options_set)
+        # TODO: is this line necessary? Should it be the else clause above
+        self.render_item ||= render_strategy_item if !renders_with_proxy?
       end
 
-      self.merged_options_set = OptionsSet.new("Merged Options for #{self.block_name}")
-      all_options_sets.each do |options_set|
-        merged_options_set.add_options options_set
+      if merge_default_options
+        default_options.each do |options|
+          merge_definition options, merge_default_options: true
+        end
       end
 
-      add_options merged_options_set.runtime_options
-      add_options merged_options_set.standard_options
-      add_options merged_options_set.default_options
-
-      if render_item.blank?
-        self.render_item = runtime_block
-      end
+      default_options
     end
 
     def extract_control_options
       CONTROL_VARIABLES.each do |control_variable, synonyms|
         variant = (Array(synonyms) + Array(control_variable)).detect {|variant| key?(variant)}
-        if variant
-          value = delete(variant)
-          # callers[control_variable] = callers[variant] if value
-        end
+        value = delete(variant) if variant
         self.send("#{control_variable}=", value)
       end
 
-      RENDERING_STRATEGIES.each {|rs| delete(rs) }
+      except!(*RENDERING_STRATEGIES)
     end
   end
 end

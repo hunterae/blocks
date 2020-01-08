@@ -9,7 +9,7 @@ describe Blocks::BlockPlaceholder do
     end
   end
 
-  context '#to_s' do
+  describe '#to_s' do
     it "should output some text including the name of the block_definition" do
       d = double(name: "something")
       placeholder = Blocks::BlockPlaceholder.new(d)

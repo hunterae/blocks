@@ -24,7 +24,6 @@ module Blocks
 
   autoload_under 'renderers' do
     autoload :Renderer
-    autoload :AbstractRenderer
     autoload :PartialRenderer
     autoload :BlockWithHooksRenderer
     autoload :AdjacentBlocksRenderer
@@ -37,7 +36,6 @@ module Blocks
   autoload_under 'builders' do
     autoload :Builder
     autoload :HookDefinition
-    autoload :LegacyBuilders
   end
 
   autoload_under 'utilities' do

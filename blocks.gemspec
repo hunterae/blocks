@@ -27,9 +27,10 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "call_with_params"
   spec.add_dependency "rails", ">= 3.0.0"
 
   spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "memory_profiler"
+  if RUBY_VERSION >= "2.1"
+    spec.add_development_dependency "memory_profiler"
+  end
 end

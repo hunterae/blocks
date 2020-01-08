@@ -11,10 +11,12 @@ feature "Rendering with Hooks and Wrappers" do
     options
   end
 
+  # [[1, 2]].each do |collection|
   [[1, 2], nil].each do |collection|
     collection_message = collection.present? ? "a collection of blocks" : "a single block"
     context "when rendering #{collection_message}" do
       truth_variations = [true, false].repeated_permutation(2)
+      # truth_variations = [[false, false]]
 
       truth_variations.each do |hooks, wrappers|
         message_variant = { true => "using", false => "not using" }

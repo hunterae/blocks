@@ -16,8 +16,7 @@ Global Options are merged into the set of options generated when rendering a blo
 {% highlight erb %}
 Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options runtime: {
+    set_global_options runtime: {
       a: 1, b: 2
     }
 end
@@ -27,8 +26,7 @@ end
 {% highlight erb %}
 Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options a: 1, b: 2
+    set_global_options a: 1, b: 2
 end
 {% endhighlight %}
 
@@ -36,8 +34,7 @@ end
 {% highlight erb %}
 Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options defaults: {
+    set_global_options defaults: {
       a: 1, b: 2
     }
 end

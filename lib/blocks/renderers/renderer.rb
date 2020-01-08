@@ -2,33 +2,22 @@
 
 module Blocks
   class Renderer
-    attr_accessor :builder
-    delegate :render, to: :block_with_hooks_renderer
-    delegate :view, to: :builder
-    delegate :with_output_buffer, :output_buffer, to: :view
+    def self.render(builder, *args, &default_definition)
+      options = args.extract_options!
+      runtime_context = if !options.is_a?(RuntimeContext)
+        RuntimeContext.build(builder, *args, options, &default_definition)
+      else
+        options
+      end
 
-    def initialize(builder)
-      self.builder = builder
-    end
-
-    # <b>DEPRECATED:</b> Please use <tt>render</tt> instead.
-    def render_with_overrides(*args, &block)
-      warn "[DEPRECATION] `render_with_overrides` is deprecated.  Please use `render` instead."
-      render(*args, &block)
+      BlockWithHooksRenderer.render(runtime_context)
     end
 
     # TODO: this needs to be handled by a new renderer
     #  TODO: also get rid of BlockPlaceholder
-    def deferred_render(*args, &block)
+    def self.deferred_render(builder, *args, &block)
       block_definition = builder.define(*args, &block)
       Blocks::BlockPlaceholder.new(block_definition)
-    end
-
-    AbstractRenderer::RENDERERS.each do |klass|
-      name = klass.to_s.demodulize.underscore.to_sym
-      define_method name do
-        klass.new(self)
-      end
     end
   end
 end

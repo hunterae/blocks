@@ -38,7 +38,7 @@ module Blocks
     #   description.join("\n")
     # end
 
-    def add_options(*args)
+    def reverse_merge!(*args)
       options = args.extract_options!
 
       caller_id = args.first.to_s.presence || ""

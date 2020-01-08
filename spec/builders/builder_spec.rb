@@ -5,15 +5,9 @@ describe Blocks::Builder do
   subject { Blocks::Builder.new(view) }
 
   context 'Initialization' do
-    it "should convert init options into an OptionsSet" do
-      builder = Blocks::Builder.new(view, a: 1, runtime: { b: 2 }, defaults: { c: 3 })
-      expect(builder.options_set).to be_a Blocks::OptionsSet
-      expect(builder.standard_options).to eq :a => 1
-      expect(builder.runtime_options).to eq :b => 2
-      expect(builder.default_options).to eq :c => 3
-    end
-    it "should define a utility wrapper block Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK" do
-      expect(subject.block_defined?(Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK)).to be true
+    it "should store the init optionst" do
+      builder = Blocks::Builder.new(view, a: 1)
+      expect(builder.options).to match :a => 1
     end
     it "should setup the block_definitions hash to initialize BlockDefinition objects when not present" do
       expect(subject.block_definitions).to be_a Hash
@@ -22,25 +16,49 @@ describe Blocks::Builder do
   end
 
   context 'Delegation' do
-    [:render, :render_with_overrides, :deferred_render].each do |field|
-      it { should delegate_method(field).to(:renderer) }
-    end
-
-    [:runtime_options, :standard_options, :default_options].each do |field|
-      it { should delegate_method(field).to(:options_set) }
+    [:with_output_buffer, :output_buffer].each do |field|
+      it { should delegate_method(field).to(:view) }
     end
   end
 
-  context '#renderer' do
-    it "should instantiate a new Renderer instance" do
-      expect(subject.renderer).to be_a Blocks::Renderer
-    end
-    it "should memoize the Renderer instance" do
-      expect(subject.renderer).to eql subject.renderer
+  describe '#render_with_overrides' do
+    it 'should issue a warning and call render' do
+      expect(subject).to receive(:warn)
+      expect(subject).to receive(:render).with(:a, :b, :c, :d) do |*args, &block|
+        expect(block).to be_present
+      end
+      subject.render_with_overrides(:a, :b, :c, :d) do
+      end
     end
   end
 
-  context '#block_for' do
+  describe '#render' do
+    it 'should forward the call to the renderer class' do
+      renderer = double(Blocks::Renderer)
+      args = [:a, 'b', :c, 'd', {}]
+      expect(subject).to receive(:renderer_class).and_return(renderer)
+      block = Proc.new {}
+      expect(renderer).to receive(:render).with(subject, *args) do |*args, &b|
+        expect(b).to eql block
+      end
+      subject.render(*args, &block)
+    end
+  end
+
+  describe '#deferred_render' do
+    it 'should forward the call to the renderer class' do
+      renderer = double(Blocks::Renderer)
+      args = [:a, 'b', :c, 'd', {}]
+      expect(subject).to receive(:renderer_class).and_return(renderer)
+      block = Proc.new {}
+      expect(renderer).to receive(:deferred_render).with(subject, *args) do |*args, &b|
+        expect(b).to eql block
+      end
+      subject.deferred_render(*args, &block)
+    end
+  end
+
+  describe '#block_for' do
     it 'should return nil if #block_defined? returns false' do
       expect(subject).to receive(:block_defined?).and_return false
       expect(subject.block_for(:some_block)).to be nil
@@ -51,7 +69,7 @@ describe Blocks::Builder do
     end
   end
 
-  context '#block_defined?' do
+  describe '#block_defined?' do
     it "should check if a block has previously been defined" do
       expect(subject.block_defined?(:test_block)).to be false
       subject.define :test_block, a: 1
@@ -62,13 +80,13 @@ describe Blocks::Builder do
     end
   end
 
-  context '#define' do
+  describe '#define' do
     it "should build a Blocks::BlockDefinition" do
       hash = { a: 1 }
       block = Proc.new {}
       block_definition = subject.define(:test_block, hash, &block)
       expect(block_definition).to be_a Blocks::BlockDefinition
-      expect(block_definition.standard_options).to eq hash.merge(block: block)
+      expect(block_definition).to match hash.merge(block: block)
       expect(block_definition.name).to eq "test_block"
     end
 
@@ -78,7 +96,7 @@ describe Blocks::Builder do
       block_definition1 = subject.define :test_block, hash1
       block_definition2 = subject.define :test_block, hash2
 
-      expect(block_definition1.standard_options).to eq hash1.reverse_merge(hash2)
+      expect(block_definition1).to match hash1.reverse_merge(hash2)
     end
 
     it "should only use the first definition provided for a block" do
@@ -86,35 +104,35 @@ describe Blocks::Builder do
       block2 = Proc.new {}
       subject.define :test_block, &block1
       block_definition = subject.define :test_block, &block2
-      expect(block_definition.standard_options[:block].object_id).not_to eq block2.object_id
-      expect(block_definition.standard_options[:block].object_id).to eq block1.object_id
+      expect(block_definition[:block].object_id).not_to eq block2.object_id
+      expect(block_definition[:block].object_id).to eq block1.object_id
     end
 
     it "should be able to define a block without a name" do
       block1 = Proc.new {}
       block_definition = subject.define a: 1, b: 2, &block1
       expect(block_definition.name).to eql "anonymous_block_1"
-      expect(block_definition.standard_options).to eq :a => 1, :b => 2, :block => block1
+      expect(block_definition).to match :a => 1, :b => 2, :block => block1
     end
   end
 
-  context '#replace' do
+  describe '#replace' do
     it 'should completely replace an existing block definition' do
       subject.define :test_block, a: 1 do
         "hello"
       end
       subject.replace :test_block, b: 1, partial: "some_partial"
       test_block = subject.block_definitions[:test_block]
-      expect(test_block.standard_options).to eql :b => 1, :partial => "some_partial"
+      expect(test_block).to match :b => 1, :partial => "some_partial"
     end
     it 'should not fail if a block is not defined' do
       subject.replace :test_block, a: 1, b: 2
       test_block = subject.block_definitions[:test_block]
-      expect(test_block.standard_options).to eql :a => 1, :b => 2
+      expect(test_block).to match :a => 1, :b => 2
     end
   end
 
-  context '#skip' do
+  describe '#skip' do
     it 'should call #skip on the block_definition' do
       block_definition = subject.define :test_block, a: 1 do
         "hello"
@@ -134,7 +152,7 @@ describe Blocks::Builder do
     end
   end
 
-  context '#skip_completely' do
+  describe '#skip_completely' do
     it 'should call #skip with the completely flag set to true' do
       expect(subject).to receive(:skip).with :test_block, true
       subject.skip_completely :test_block
@@ -142,7 +160,7 @@ describe Blocks::Builder do
   end
 
   Blocks::HookDefinition::HOOKS.each do |hook|
-    context "##{hook}" do
+    describe "##{hook}" do
       it "call #{hook} on the block definition" do
         d = subject.define :test_block
         expect(d).to receive(hook).with(a: 1, b: 2)
@@ -157,7 +175,7 @@ describe Blocks::Builder do
   end
 
   # TODO: Move this method somewhere else
-  context '#concatenating_merge' do
+  describe '#concatenating_merge' do
     it "should merge two hashes together" do
       h = subject.concatenating_merge({ a: 3 }, { b: 2, a: 1 })
       expect(h).to eq a: 1, b: 2
@@ -174,14 +192,9 @@ describe Blocks::Builder do
       h = subject.concatenating_merge({a: 1, class: "hello"}, { b: 2, class: "world" })
       expect(h).to eq a: 1, b: 2, class: "hello world"
     end
-
-    it "should treat strings and symbols for keys as the same" do
-      h = subject.concatenating_merge({a: 1, class: "hello" }, { "a" => 2, "class" => "world" })
-      expect(h).to eq a: 2, class: "hello world"
-    end
   end
 
-  context '#hooks_for' do
+  describe '#hooks_for' do
     it "should return all hooks of a given type for a given block" do
       hook1 = subject.around :a, with: :something
       hook2 = subject.around :a, with: :something2
@@ -198,7 +211,7 @@ describe Blocks::Builder do
     end
   end
 
-  context '#capture' do
+  describe '#capture' do
     before do
       expect(subject).to receive(:output_buffer).and_return("")
       expect(subject).to receive(:with_output_buffer) do |&block|

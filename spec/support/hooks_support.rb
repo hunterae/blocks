@@ -95,7 +95,7 @@ shared_examples CAN_BE_RENDERED_AS_A_SPECIFIC_HOOK do |hook_type: nil, template:
     end
 
     context "when provided a rendering alias" do
-      it "will render a different hooks and wrappers using the alias as its name" do
+      xit "will render a different hooks and wrappers using the alias as its name" do
         options = options.merge(render: :hello_world)
 
         html = { id: "block-#{hook_type}" }
@@ -130,7 +130,7 @@ shared_examples CAN_BE_RENDERED_AS_A_SPECIFIC_HOOK do |hook_type: nil, template:
         end
       end
 
-      it "ignores any hooks applied to #{block_identifier}" do
+      xit "ignores any hooks applied to #{block_identifier}" do
         builder.apply_hooks_to_block(block_identifier)
         options = options.merge(render: :hello_world)
 
@@ -163,7 +163,7 @@ shared_examples CAN_BE_RENDERED_AS_A_SPECIFIC_HOOK do |hook_type: nil, template:
         expect(content).to eql sanitize_html(expected_block_content)
       end
 
-      it "should fallback to wrappers specified for #{block_identifier} if unspecified for the alias block" do
+      xit "should fallback to wrappers specified for #{block_identifier} if unspecified for the alias block" do
         options = options.merge(render: :hello_world)
 
         html = { id: "block-#{hook_type}" }

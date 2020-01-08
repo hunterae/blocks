@@ -3,7 +3,7 @@ require 'spec_helper'
 describe Blocks::ControllerExtensions do
   subject { ActionController::Base.new }
 
-  context '#blocks' do
+  describe '#blocks' do
     it "should return an instance of a Blocks.builder_class" do
       view_context = double
       expect(subject).to receive(:view_context).and_return(view_context)

@@ -8,8 +8,8 @@ feature "The :content_tag Block" do
       "Some Block"
     end
 
-    builder.define :some_item do |item|
-      "My Item #{item}"
+    builder.define :some_item do |options|
+      "My Item #{options[:object]}"
     end
   end
 

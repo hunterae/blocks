@@ -10,30 +10,24 @@ module Blocks
 
     RENDERING_STRATEGIES = [RENDER_WITH_PROXY, RENDER_WITH_PARTIAL, RENDER_WITH_BLOCK]
 
-    def initialize(*args)
-      options = args.extract_options!
-      add_options(args.first, options)
+    def initialize(*args, &block)
       super &nil
+      options = args.extract_options!
+      reverse_merge!(args.first, options, &block)
     end
-
-    def clone
-      except(*RENDERING_STRATEGIES)
-    end
-    alias_method :dup, :clone
 
     def to_hash
-      {}.update(except(RENDERING_STRATEGIES))
+      {}.update(self)
     end
 
     def slice(*keys)
       self.class.new(super)
     end
 
-    def reverse_merge(options)
-      self.clone.tap {|cloned| cloned.add_options(options) }
+    def except(*keys)
+      slice(*self.keys - keys)
     end
 
-    # TODO: need to implement either merge or update to update
     def reverse_merge!(*args, &block)
       options = args.extract_options!
       options[:block] = block if block
@@ -56,10 +50,17 @@ module Blocks
         end
       end
     end
-    alias_method :add_options, :reverse_merge!
 
     def render_strategy_and_item
       [render_strategy, self[render_strategy]] if render_strategy
+    end
+
+    def render_strategy_item
+      self[render_strategy] if render_strategy
+    end
+
+    def renders_with_proxy?
+      render_strategy == RENDER_WITH_PROXY
     end
 
     def nested_under_indifferent_access
