@@ -13,8 +13,7 @@ module Blocks
           runtime_context.collection_item_index = index
 
           if Blocks.collection_item_passed_to_block_as_first_arg
-            runtime_context.runtime_args = runtime_context.runtime_args.try(:clone) || []
-            runtime_context.runtime_args = [item] + Array(runtime_context.runtime_args)
+            runtime_context.runtime_args = [item, *original_runtime_args]
           end
 
           yield runtime_context
