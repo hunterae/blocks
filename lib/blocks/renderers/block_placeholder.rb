@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Blocks
   class BlockPlaceholder
     attr_accessor :block_definition

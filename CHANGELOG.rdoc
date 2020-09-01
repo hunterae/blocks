@@ -1,3 +1,30 @@
+3.1.1
+* Injecting blocks method into controller to be able to define blocks from the controller that the view will use.
+
+3.1.0
+* Added content_tag utility block, wrapping around Rails' content_tag method, which
+  may be used directly or indirectly (such as via a wrapper or hook)
+* Removed dead / outdated experimental code
+* Removed dynamic configurator (which was really just an almost copy of Rails' class_attribute)
+  of Blocks in favor of mattr_accessor
+* Removed Ruby 1.9.3 support, now requires >= 2.0
+* Added Extensive Test coverage
+* Deprecated Blocks::Builder#render_with_overrides and made it an alias for Blocks::Builder#render
+* Added GTM to documentation
+* Added a Rails Engine for autoconfiguration of eager_loading options
+* Moved and deprecated content_tag_wrapper utility block into Blocks::LegacyBuilders
+* Hooks and Wrappers now may render with their own sets of Hooks and Wrappers
+* Cleaned and fixed logic around generation / merging of options for hooks and
+  and wrappers of a block
+* Moved Haml Extensions into a separate module that only executes if Haml is defined
+* Deprecated with_template method injected into ActionView::Base
+* Moved Blocks::HashWithCaller into a module and now conditionally inject based
+  on global configuration
+* Switched Blocks::HashWithRenderStrategy to use symbols for hash keys instead of string,
+  allowing it to be extracted as hash keyword arguments to methods
+* Removed blocks.define :collection functionality
+
+
 3.0.0 (September 27, 2017)
 * Complete rewrite of the blocks gem
 * Extensive test coverage added

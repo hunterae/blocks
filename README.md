@@ -21,6 +21,8 @@ Please checkout the documentation for the Blocks gem here: http://hunterae.githu
 
 ## Installation
 
+Blocks requires Rails 3.0 or greater and Ruby 2.0 or greater.
+
 Add this line to your application's Gemfile:
 
 ```ruby

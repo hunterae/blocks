@@ -1,0 +1,6 @@
+- builder.define :partial_block do
+  = options[:partial_block_content] || "PARTIAL_BLOCK_CONTENT"
+
+= options[:before_partial_content] || "BEFORE_PARTIAL_CONTENT"
+= options[:partial_content] || "PARTIAL_CONTENT"
+= options[:after_partial_content] || "AFTER_PARTIAL_CONTENT"

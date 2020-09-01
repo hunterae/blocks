@@ -2,15 +2,26 @@ language: ruby
 cache: bundler
 
 before_install:
-  - gem update bundler
-
+  - function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; };
+    if [ $(version $TRAVIS_RUBY_VERSION) -ge $(version '2.7.0') ]; 
+    then
+      gem install "rubygems-update" --no-document;
+      update_rubygems;
+      gem install bundler -v 1.17.3;
+    else
+      gem install "rubygems-update:<3.0.0" --no-document;
+      update_rubygems;
+      gem install bundler -v 1.17.3;
+    fi
 rvm:
-  - 1.9.3
   - 2.0.0
   - 2.1.10
-  - 2.2.7
-  - 2.3.4
-  - 2.4.1
+  - 2.2.10
+  - 2.3.8
+  - 2.4.9
+  - 2.5.6
+  - 2.6.5
+  - 2.7.0
 
 gemfile:
   - gemfiles/Gemfile.rails-3-0-stable
@@ -21,36 +32,69 @@ gemfile:
   - gemfiles/Gemfile.rails-4-2-stable
   - gemfiles/Gemfile.rails-5-0-stable
   - gemfiles/Gemfile.rails-5-1-stable
+  - gemfiles/Gemfile.rails-5-2-stable
   - Gemfile
 matrix:
-  allow_failures:
-    - rvm: ruby-head
   exclude:
-    - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile.rails-5-1-stable
-    - rvm: 1.9.3
-      gemfile: gemfiles/Gemfile.rails-5-0-stable
-    - rvm: 1.9.3
-      gemfile: Gemfile
+    # Exclude Rails 5 from Ruby < 2.3
+    - rvm: 2.0.0
+      gemfile: gemfiles/Gemfile.rails-5-2-stable
     - rvm: 2.0.0
       gemfile: gemfiles/Gemfile.rails-5-1-stable
     - rvm: 2.0.0
       gemfile: gemfiles/Gemfile.rails-5-0-stable
-    - rvm: 2.0.0
-      gemfile: Gemfile
+    - rvm: 2.1.10
+      gemfile: gemfiles/Gemfile.rails-5-2-stable
     - rvm: 2.1.10
       gemfile: gemfiles/Gemfile.rails-5-1-stable
     - rvm: 2.1.10
       gemfile: gemfiles/Gemfile.rails-5-0-stable
+    - rvm: 2.2.10
+      gemfile: gemfiles/Gemfile.rails-5-2-stable
+    - rvm: 2.2.10
+      gemfile: gemfiles/Gemfile.rails-5-1-stable
+    - rvm: 2.2.10
+      gemfile: gemfiles/Gemfile.rails-5-0-stable
+    # Exclude Rails 6 from Ruby < 2.5
+    - rvm: 2.0.0
+      gemfile: Gemfile
     - rvm: 2.1.10
       gemfile: Gemfile
+    - rvm: 2.2.10
+      gemfile: Gemfile
+    - rvm: 2.3.8
+      gemfile: Gemfile
+    - rvm: 2.4.9
+      gemfile: Gemfile
+    # Exclude Rails 3.0 from Ruby => 2.5
+    - rvm: 2.5.6
+      gemfile: gemfiles/Gemfile.rails-3-0-stable
+    - rvm: 2.6.5
+      gemfile: gemfiles/Gemfile.rails-3-0-stable
+    #  Exclude Rails 3 and 4 from Ruby 2.7, as they require 
+    #   Bunder < 2, and Ruby 2.7 ships with Bundler 2.1.2, and
+    #   I can't seem to force it to use an earlier version
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-3-0-stable
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-3-1-stable
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-3-2-stable
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-4-0-stable
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-4-1-stable
+    - rvm: 2.7.0
+      gemfile: gemfiles/Gemfile.rails-4-2-stable
+
 script: 'bundle exec rake'
 
 jobs:
   include:
+    # ./bin/deploy_docs will exit if the current branch is not master
     - stage: documentation
       script: './bin/deploy_docs'
-      rvm: 2.4.1
+      rvm: 2.6.5
       gemfile: Gemfile
 
 notifications:

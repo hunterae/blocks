@@ -55,7 +55,7 @@ Templating is best demonstrated through example. In the following set of iterati
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial: "shared/card"
+builder.render partial: "shared/card"
 # Since no overrides block is provided, this
 #  call is synonymous with:
 builder.render partial: "shared/card"
@@ -215,7 +215,7 @@ Because all of :block_wrapper's options are default options, they are easily ove
 
 :card_block, :card_title, and :card_text each follow the same paradigm. Notice that :card_text overrides the :wrapper_tag to :p and :card_title overrides it to :h4.
 
-<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag_wrapper (also accessible as the constant Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references to :block_wrapper to Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK.</aside>
+<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag (purposely named to match the ActionView method). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references of :block_wrapper to :content_tag.</aside>
 
 <aside class="notice">The only two blocks that are not using the :block_wrapper are :card_image and :card_action. While both could utilize the :block_wrapper wrapper, it makes more sense not to do so. This will enable us to utilize Rails' link_to and image_tag helper methods instead, since links and images need a bit more fine-tuning than regular HTML elements.</aside>
 
@@ -348,7 +348,7 @@ builder = Blocks::Builder.new(view_context,
   card_text: "My Text",
   card_action_path: 'http://mobilecause.com',
   card_image: "my-image.png")
-builder.render_with_overrides partial: "shared/card"
+builder.render partial: "shared/card"
 ```
 
 > The above code will output the following:
@@ -439,7 +439,7 @@ Now that the template is defined, we can start rendering it with actual override
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-text = builder.render_with_overrides partial:
+text = builder.render partial:
   "shared/card" do |builder|
   builder.define :card do
     "I am a complete replacement for the card"
@@ -447,7 +447,7 @@ text = builder.render_with_overrides partial:
 end
 
 builder = Blocks::Builder.new(view_context)
-text2 = builder.render_with_overrides partial:
+text2 = builder.render partial:
   "shared/card" do |builder|
   # Change card_title's tag to h2
   builder.define :card_title,
@@ -607,7 +607,7 @@ Finding the option overrides aren't enough? There's always block overrides. Any 
 
 ```ruby
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial:
+builder.render partial:
   "shared/card" do |builder|
   builder.skip :card_image
   builder.after :card_title do
@@ -662,7 +662,7 @@ We also have access to the full arsenal of hooks, wrapper with relation to the v
 > Assume the following partial exists in /app/views/shared/\_team_card.html.erb:
 
 {% highlight erb %}
-<%= builder.render_with_overrides partial:
+<%= builder.render partial:
   "shared/card" do |builder| %>
   <% builder.define :card_title,
     card_title: team.name %>
@@ -708,7 +708,7 @@ team = OpenStruct.new(
   description: "Donate money"
 )
 builder = Blocks::Builder.new(view_context)
-builder.render_with_overrides partial:
+builder.render partial:
   "shared/team_card",
   team: team do |builder|
     builder.after :card_title do
@@ -749,5 +749,5 @@ An example might be create new templates that render different versions of a car
 In the example to the right, a team-specific version of card is created as a template. Code then renders this new template with some overrides of if its own. The overrides have been kept very basic in order to clearly demonstrate how to setup a template that extends another template.
 
 <aside class="warning">
-  Take note that with the team_card template, builder.render_with_overrides is used instead of just render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
+  Take note that with the team_card template, builder.render is used instead of render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
 </aside>

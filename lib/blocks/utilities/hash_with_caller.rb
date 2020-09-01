@@ -1,41 +1,49 @@
+# frozen_string_literal: true
+
 module Blocks
-  class HashWithCaller < HashWithIndifferentAccess
+  module HashWithCaller
     attr_accessor :callers
 
     def initialize(*args)
-      self.callers = HashWithIndifferentAccess.new
-      options = args.extract_options!
-      add_options(args.first, options)
-      super &nil
+      self.callers = {}
+      super
     end
 
-    def to_s
-      description = []
-
-      description << "{"
-      description << map do |key, value|
-        value_display = case value
-        when Symbol
-          ":#{value}"
-        when String
-          "\"#{value}\""
-        when Proc
-          "Proc"
-        else
-          value
-        end
-        "\"#{key}\" => #{value_display}, # [#{callers[key]}]"
-      end.join(",\n")
-      description << "}"
-      description.join("\n")
+    def initialize_copy(original)
+      super
+      self.callers = original.callers.clone
     end
 
-    def add_options(*args)
+    # TODO: implement inspect
+
+    # TODO: fix and test this implementation
+    # def to_s
+    #   description = []
+    #
+    #   description << "{"
+    #   description << map do |key, value|
+    #     value_display = case value
+    #     when Symbol
+    #       ":#{value}"
+    #     when String
+    #       "\"#{value}\""
+    #     when Proc
+    #       "Proc"
+    #     else
+    #       value
+    #     end
+    #     "\"#{key}\" => #{value_display}, # [#{callers[key]}]"
+    #   end.join(",\n")
+    #   description << "}"
+    #   description.join("\n")
+    # end
+
+    def reverse_merge!(*args)
       options = args.extract_options!
 
       caller_id = args.first.to_s.presence || ""
 
-      if !options.is_a?(HashWithCaller) && Blocks.lookup_caller_location?
+      if !options.is_a?(HashWithCaller) && Blocks.lookup_caller_location
         caller_location = caller.detect do |c|
           !c.include?("/lib/blocks") &&
           !c.include?("/lib/ruby") &&
@@ -55,19 +63,15 @@ module Blocks
         end
 
         if !self.key?(key)
-          self[key] = value
           callers[key] = setter
 
         elsif current_value.is_a?(Hash) && value.is_a?(Hash)
-          self[key] = value.deep_merge(current_value)
+          # self[key] = value.deep_merge(current_value)
           callers[key] = "#{callers[key]}, #{setter}"
-          # TODO: handle attribute merges here
         end
       end
-    end
 
-    def nested_under_indifferent_access
-      self
+      super options
     end
   end
 end
