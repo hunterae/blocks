@@ -7,3 +7,4 @@ coverage/
 _site/
 .sass-cache/
 .idea/
+docs/.jekyll-cache

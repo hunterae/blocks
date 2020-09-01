@@ -34,7 +34,7 @@ gemfile:
   - gemfiles/Gemfile.rails-5-1-stable
   - gemfiles/Gemfile.rails-5-2-stable
   - Gemfile
-matrix:
+jobs:
   exclude:
     # Exclude Rails 5 from Ruby < 2.3
     - rvm: 2.0.0
@@ -86,16 +86,14 @@ matrix:
       gemfile: gemfiles/Gemfile.rails-4-1-stable
     - rvm: 2.7.0
       gemfile: gemfiles/Gemfile.rails-4-2-stable
-
-script: 'bundle exec rake'
-
-jobs:
   include:
     # ./bin/deploy_docs will exit if the current branch is not master
     - stage: documentation
       script: './bin/deploy_docs'
       rvm: 2.6.5
       gemfile: Gemfile
+
+script: 'bundle exec rake'
 
 notifications:
   email:
