@@ -1,9 +1,0 @@
-/pkg/*
-.bundle
-.ruby-gemset
-Gemfile.lock
-.byebug_history
-coverage/
-_site/
-.sass-cache/
-.idea/

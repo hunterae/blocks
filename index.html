@@ -5,15 +5,13 @@
 
 <html>
   <head>
-    <!-- Global Site Tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-104699666-1"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments)};
-      gtag('js', new Date());
-
-      gtag('config', 'UA-104699666-1');
-    </script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KG9MQ69');</script>
+    <!-- End Google Tag Manager -->
 
     <meta charset="utf-8">
     <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
@@ -58,6 +56,10 @@
   </head>
 
   <body class="" data-languages='["erb","haml","ruby"]'>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KG9MQ69"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <a href="#" id="nav-button">
       <span>
         NAV
@@ -107,9 +109,9 @@
 
         
           
-            <h1 id="introduction">Introduction</h1>
+            <h1 id="features">Features</h1>
 
-<p><strong>VERSION 3.0.4</strong></p>
+<p><strong>VERSION 4.0.0</strong></p>
 
 <p>The <a href="http://github.com/hunterae/blocks">blocks gem</a> is many things.</p>
 
@@ -117,7 +119,7 @@
 
 <ul>
   <li>a container for reusable blocks of code and options</li>
-  <li>a common interface for rendering code, whether the code was defined previously in Ruby blocks, Rails partials, or proxies to other blocks of code</li>
+  <li>a common interface for rendering code, whether the code was defined previously in Ruby blocks, Ruby Methods, Rails partials, or proxies to other blocks of code</li>
   <li>a series of hooks and wrappers that can be utilized to render code before, after, and around other blocks of code, as well as before each, after each, and around each item in a collection</li>
   <li>a templating utility for easily building reusable and highly customizable UI components</li>
   <li>a means for DRYing up oft-repeated code in your layouts and views</li>
@@ -131,11 +133,11 @@
           
             <h1 id="installation--prerequisites">Installation &amp; Prerequisites</h1>
 
-<p>Blocks requires Rails 3.0 or greater.</p>
+<p>Blocks requires Rails 3.0 or greater and Ruby 2.0 or greater.</p>
 
-<p>It has been tested with Ruby 1.9.3 through 2.4.1, and Rails 3.0 - 5.1 (as well as Edge Rails)</p>
+<p>It has been tested with Ruby 2.0.0 through 2.5.1 (as well as ruby-head), and Rails 3.0 - 5.2 (as well as Edge Rails)</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gem 'blocks'
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gem 'blocks'
 </code></pre></div></div>
 
 <aside class="notice">
@@ -153,29 +155,68 @@ Then run this from your project directory command line:
 In most cases, this will be all you need to do. The "blocks" helper method is now available within your Rails views
 </aside>
 
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">!</span><span class="no">Object</span><span class="p">.</span><span class="nf">respond_to?</span><span class="p">(</span><span class="ss">:yaml_as</span><span class="p">)</span>
+  <span class="k">class</span> <span class="nc">Object</span>
+    <span class="k">def</span> <span class="nc">self</span><span class="o">.</span><span class="nf">yaml_as</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+      <span class="n">yaml_tag</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></div>
+
+<aside class="warning">
+To get Blocks working for Rails 3.0 with a Ruby version of 2.5 or greater, use the following patch:
+</aside>
+
+          
+            <h1 id="overview">Overview</h1>
+
+<p>There are many ways to render content to the screen in web applications. Ruby on Rails offers a couple of default strategies right off the bat through its combination of ActionController, ActionView, and ERB templating language:</p>
+
+<ul>
+  <li>Rendering content within an ActionView template (the controller action) and layout</li>
+  <li>Pulling in additional content through rendering partials</li>
+  <li>Capturing content from a block and outputting that content at some later point</li>
+  <li>Calling a different method from the controller action which determines what and how to render</li>
+</ul>
+
+<p>There are obviously additional means to render output, such as the redirect methods in a controller and rendering inline code, but generally speaking, most generated output come about through one of those above methods.</p>
+
+<p>The approaches listed above can essentially be generalized as follows</p>
+
+<ul>
+  <li>Rendering using a method</li>
+  <li>Rendering fragments (using a Rails’ partial)</li>
+  <li>Storing content for later rendering (using a Ruby Block)</li>
+  <li>Proxying to another source that knows what to / how to render</li>
+</ul>
+
+<p>The Blocks gem attempts to take these four concepts and provide one common interface.</p>
+
+<p>The reasoning behind this is simple.</p>
+
           
             <h1 id="defining-blocks">Defining Blocks</h1>
 
+<p>With Blocks, you can define a block of code for later rendering using Ruby blocks, Rails partials, and proxies to other blocks or methods.</p>
+
+<p>A block consists of a name, an optional hash of options, and a rendering strategy (also called its definition).</p>
+
 <div class="language-erb highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;%</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:my_block</span> <span class="cp">%&gt;</span>
-<span class="c">&lt;!-- OR --&gt;</span>
+<span class="c">&lt;!-- SAME AS --&gt;</span>
 <span class="cp">&lt;%</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="s2">"my_block"</span> <span class="cp">%&gt;</span>
 </code></pre></div></div>
 
 <div class="language-haml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">-</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:my_block</span>
-<span class="nf">#-</span> OR
+<span class="nf">#-</span> SAME AS
 <span class="p">-</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="s2">"my_block"</span>
 </code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># where builder is an instance</span>
 <span class="c1">#  of Blocks::Builder</span>
 <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:my_block</span>
-<span class="c1"># OR</span>
+<span class="c1"># SAME AS</span>
 <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="s2">"my_block"</span>
 </code></pre></div></div>
-
-<p>With Blocks, you can define a block of code for later rendering using Ruby blocks, Rails partials, and proxies to other blocks.</p>
-
-<p>A block consists of a name, a hash of options, and a rendering strategy (also called its definition).</p>
 
 <p>A block’s name can be a symbol or a string. The underlying system treats symbols and strings the same. Therefore, any block that is defined with a String name can be accessed with its corresponding symbol name and vice-versa.</p>
 
@@ -694,7 +735,7 @@ Additionally, “current_index” will also be a variable that can be accessed w
   <p>If this block were rendered, the output would be:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>My options are { a: 1 }
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>My options are { a: 1 }
 </code></pre></div></div>
 
 <p>Every block that is defined with a Ruby block - or a proxy to a Block that is defined with a Ruby block, etc. - can optionally receive the merged options as a parameter.</p>
@@ -820,7 +861,7 @@ The default definition is not stored. It is used for the render call to which it
   <p>After running the above code, the output will be:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>content
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>content
 </code></pre></div></div>
 
 <p>The default definition can be specified as a Ruby block:</p>
@@ -912,9 +953,9 @@ The default definition is not stored. It is used for the render call to which it
 </blockquote>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"a"</span><span class="p">:</span><span class="s2">"runtime"</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"c"</span><span class="p">:</span><span class="s2">"runtime"</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"b"</span><span class="p">:</span><span class="s2">"defaults"</span><span class="w">
+  </span><span class="nl">"a"</span><span class="p">:</span><span class="s2">"runtime"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"c"</span><span class="p">:</span><span class="s2">"runtime"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"b"</span><span class="p">:</span><span class="s2">"defaults"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
@@ -961,8 +1002,8 @@ The default definition is not stored. It is used for the render call to which it
 </blockquote>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"a"</span><span class="p">:</span><span class="s2">"Runtime Symbol"</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"b"</span><span class="p">:</span><span class="s2">"Block Symbol"</span><span class="w">
+  </span><span class="nl">"a"</span><span class="p">:</span><span class="s2">"Runtime Symbol"</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"b"</span><span class="p">:</span><span class="s2">"Block Symbol"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
@@ -1024,13 +1065,13 @@ The default definition is not stored. It is used for the render call to which it
 </blockquote>
 
 <div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"b"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"shared_key"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"a"</span><span class="p">:</span><span class="s2">"a2"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"c"</span><span class="p">:</span><span class="s2">"c1"</span><span class="p">,</span><span class="w">
-    </span><span class="s2">"b"</span><span class="p">:</span><span class="s2">"b1"</span><span class="w">
+  </span><span class="nl">"b"</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="nl">"shared_key"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"a"</span><span class="p">:</span><span class="s2">"a2"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"c"</span><span class="p">:</span><span class="s2">"c1"</span><span class="p">,</span><span class="w">
+    </span><span class="nl">"b"</span><span class="p">:</span><span class="s2">"b1"</span><span class="w">
   </span><span class="p">},</span><span class="w">
-  </span><span class="s2">"a"</span><span class="p">:</span><span class="mi">1</span><span class="w">
+  </span><span class="nl">"a"</span><span class="p">:</span><span class="mi">1</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre></div></div>
 
@@ -1111,7 +1152,7 @@ With a Collection:
   <p>This will produce the following output</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Without a Collection:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Without a Collection:
 Param 1: "foo"
 Param 2: "bar"
 Param 3: {"a"=&gt;1, "b"=&gt;2}
@@ -1434,7 +1475,7 @@ Additionally, “current_index” will also be a variable that can be accessed w
           
             <h1 id="hooking-blocks">Hooking Blocks</h1>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"before_all" hooks
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>"before_all" hooks
 "around_all" hooks
   "around" hooks
     "before" hooks
@@ -2573,7 +2614,7 @@ Additionally, “current_index” will also be a variable that can be accessed w
   <p>When rendered, this will produce the following output:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Options are {
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Options are {
   "a"=&gt;"Hook def",
   "c"=&gt;"Hook def",
   "b"=&gt;"Block def"
@@ -2791,7 +2832,7 @@ No Collection:
   <p>The above code will output the following:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
 Around All Start
 Wrap All Start
 Wrap Each Start a
@@ -2972,7 +3013,7 @@ No Collection:
   <p>The above code will output the following:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
 Wrap All Start
 Wrap Each Start a
 Around Start
@@ -3168,7 +3209,7 @@ No Collection:
   <p>The above code will output the following:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>With Collection:
 Before a
 Wrap With Start a
 Surround Start a
@@ -3464,7 +3505,7 @@ After
   <p>The above code will output the following:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Render Before Skip:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Render Before Skip:
 
 "before_all" Hook
 "around_all" Hook Before
@@ -3549,7 +3590,7 @@ wrap_all Wrapper After
   <p>The above code will output the following:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Render Before Skip:
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Render Before Skip:
 
 "before_all" Hook
 "around_all" Hook Before
@@ -3703,6 +3744,56 @@ wrap_all Wrapper After
 <p>Passed internally within the Blocks gem as a parent Blocks::RuntimeContext when calculating the Blocks::RuntimeContext for a hook or wrapper for a block.</p>
 
           
+            <h1 id="helper-blocks">Helper Blocks</h1>
+
+<p>Blocks comes with some prebuilt utility blocks to aid in your development efforts.</p>
+
+<h2 id="the-content_tag-block">The :content_tag Block</h2>
+
+<blockquote>
+  <p>According to Bootstrap’s documentation, a standard card has the following markup:</p>
+</blockquote>
+
+<p>The :content_tag block is more or less a direct wrapper around <a href="https://apidock.com/rails/ActionView/Helpers/TagHelper/content_tag">ActionView’s content_tag method</a>.
+However, by defining it as a block, it may be used in several useful ways.</p>
+
+<h3 id="as-the-definition-for-a-block">As the definition for a block</h3>
+
+<div class="language-erb highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;%</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">with: :content_tag</span><span class="p">,</span> <span class="ss">tag: :h1</span><span class="p">,</span> <span class="ss">html: </span><span class="p">{</span> <span class="ss">style: </span><span class="s2">"color: red"</span> <span class="p">}</span> <span class="cp">%&gt;</span>
+<span class="cp">&lt;%=</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">render</span> <span class="ss">:title</span> <span class="k">do</span> <span class="cp">%&gt;</span>
+  My Title
+<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+</code></pre></div></div>
+
+<div class="language-haml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">-</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">with: :content_tag</span><span class="p">,</span> <span class="ss">tag: :h1</span><span class="p">,</span> <span class="ss">html: </span><span class="p">{</span> <span class="ss">style: </span><span class="s2">"color: red"</span> <span class="p">}</span>
+<span class="p">=</span> <span class="n">blocks</span><span class="p">.</span><span class="nf">render</span> <span class="ss">:title</span> <span class="k">do</span>
+  My Title
+</code></pre></div></div>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
+<span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">with: :content_tag</span><span class="p">,</span> <span class="ss">tag: :h1</span><span class="p">,</span> <span class="ss">html: </span><span class="p">{</span> <span class="ss">style: </span><span class="s2">"color: red"</span> <span class="p">}</span>
+<span class="c1"># Since no overrides block is provided, this</span>
+<span class="c1">#  call is synonymous with:</span>
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">:title</span> <span class="k">do</span>
+  <span class="s2">"My Title"</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>The output from running the code will be:</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;h1</span> <span class="na">style=</span><span class="s">"color: red"</span><span class="nt">&gt;</span>
+  My Title
+<span class="nt">&lt;/h1&gt;</span></code></pre></div>
+
+<p>When used as the definition for a block (using the with keyword), you may choose to specify the tag to use or any html options to be applied to the tag.
+Then, you can either provide the definition a block of its own or supply as a render option when calling render.</p>
+
+<h3 id="as-a-wrapper-or-a-surrounding-hook-for-a-block">As a wrapper or a surrounding hook for a block</h3>
+
+
+          
             <h1 id="templating">Templating</h1>
 
 <blockquote>
@@ -3724,7 +3815,7 @@ wrap_all Wrapper After
 </code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"PATH_TO_PARTIAL"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
   <span class="c1"># Perform overrides here</span>
   <span class="c1">#  using the builder.</span>
@@ -3806,7 +3897,7 @@ wrap_all Wrapper After
 </code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span>
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span>
 <span class="c1"># Since no overrides block is provided, this</span>
 <span class="c1">#  call is synonymous with:</span>
 <span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span>
@@ -3978,7 +4069,7 @@ wrap_all Wrapper After
 
 <p>:card_block, :card_title, and :card_text each follow the same paradigm. Notice that :card_text overrides the :wrapper_tag to :p and :card_title overrides it to :h4.</p>
 
-<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag_wrapper (also accessible as the constant Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references to :block_wrapper to Blocks::Builder::CONTENT_TAG_WRAPPER_BLOCK.</aside>
+<aside class="notice">This paradigm of using a block wrapper that wraps a block within an HTML element is so common, that Blocks provides a similar block by default called :content_tag (purposely named to match the ActionView method). If this automatically defined block is used instead, the code to the right would only need to change by removing the :block_wrapper definition and changing all references of :block_wrapper to :content_tag.</aside>
 
 <aside class="notice">The only two blocks that are not using the :block_wrapper are :card_image and :card_action. While both could utilize the :block_wrapper wrapper, it makes more sense not to do so. This will enable us to utilize Rails' link_to and image_tag helper methods instead, since links and images need a bit more fine-tuning than regular HTML elements.</aside>
 
@@ -4109,7 +4200,7 @@ wrap_all Wrapper After
   <span class="ss">card_text: </span><span class="s2">"My Text"</span><span class="p">,</span>
   <span class="ss">card_action_path: </span><span class="s1">'http://mobilecause.com'</span><span class="p">,</span>
   <span class="ss">card_image: </span><span class="s2">"my-image.png"</span><span class="p">)</span>
-<span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span>
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span>
 </code></pre></div></div>
 
 <blockquote>
@@ -4157,23 +4248,23 @@ wrap_all Wrapper After
 
 <span class="cp">&lt;%=</span> <span class="n">render_with_overrides</span> <span class="ss">partial:
   </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span> <span class="cp">%&gt;</span>
-  <span class="c">&lt;%# Change card_title's tag to h2 %&gt;
-  &lt;% builder.define :card_title,
-    wrapper_tag: :h2,
-    card_title: "I had my wrapper tag changed" %&gt;
+  <span class="c">&lt;%# Change card_title's tag to h2 %&gt;</span>
+  <span class="cp">&lt;%</span> <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card_title</span><span class="p">,</span>
+    <span class="ss">wrapper_tag: :h2</span><span class="p">,</span>
+    <span class="ss">card_title: </span><span class="s2">"I had my wrapper tag changed"</span> <span class="cp">%&gt;</span>
 
-  &lt;%# Change card_action's definition completely %&gt;
-  &lt;% builder.define :card_action do |options| %&gt;
-    &lt;button onclick="alert('clicked');"&gt;
-      &lt;%= options[:card_action_text] %&gt;
-    &lt;/button&gt;
-  &lt;% end %&gt;
-  &lt;%# turn off card_text's wrapper %&gt;
-  &lt;%#  and change it's definition %&gt;
-  &lt;% builder.define :card_text, wrapper: nil do %&gt;
+  <span class="c">&lt;%# Change card_action's definition completely %&gt;</span>
+  <span class="cp">&lt;%</span> <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card_action</span> <span class="k">do</span> <span class="o">|</span><span class="n">options</span><span class="o">|</span> <span class="cp">%&gt;</span>
+    <span class="nt">&lt;button</span> <span class="na">onclick=</span><span class="s">"alert('clicked');"</span><span class="nt">&gt;</span>
+      <span class="cp">&lt;%=</span> <span class="n">options</span><span class="p">[</span><span class="ss">:card_action_text</span><span class="p">]</span> <span class="cp">%&gt;</span>
+    <span class="nt">&lt;/button&gt;</span>
+  <span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+  <span class="c">&lt;%# turn off card_text's wrapper %&gt;</span>
+  <span class="c">&lt;%#  and change it's definition %&gt;</span>
+  <span class="cp">&lt;%</span> <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card_text</span><span class="p">,</span> <span class="ss">wrapper: </span><span class="kp">nil</span> <span class="k">do</span> <span class="cp">%&gt;</span>
     This is custom card text.
-  &lt;% end %&gt;
-&lt;% end %&gt;</span>
+  <span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
+<span class="cp">&lt;%</span> <span class="k">end</span> <span class="cp">%&gt;</span>
 </code></pre></div></div>
 
 <div class="language-haml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">=</span> <span class="n">render_with_overrides</span> <span class="ss">partial: </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
@@ -4198,7 +4289,7 @@ wrap_all Wrapper After
 </code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">text</span> <span class="o">=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<span class="n">text</span> <span class="o">=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
   <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card</span> <span class="k">do</span>
     <span class="s2">"I am a complete replacement for the card"</span>
@@ -4206,7 +4297,7 @@ wrap_all Wrapper After
 <span class="k">end</span>
 
 <span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">text2</span> <span class="o">=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<span class="n">text2</span> <span class="o">=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
   <span class="c1"># Change card_title's tag to h2</span>
   <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card_title</span><span class="p">,</span>
@@ -4364,7 +4455,7 @@ wrap_all Wrapper After
 </code></pre></div></div>
 
 <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
   <span class="n">builder</span><span class="p">.</span><span class="nf">skip</span> <span class="ss">:card_image</span>
   <span class="n">builder</span><span class="p">.</span><span class="nf">after</span> <span class="ss">:card_title</span> <span class="k">do</span>
@@ -4421,7 +4512,7 @@ wrap_all Wrapper After
   <p>Assume the following partial exists in /app/views/shared/_team_card.html.erb:</p>
 </blockquote>
 
-<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;%=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">&lt;%=</span> <span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"shared/card"</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span> <span class="cp">%&gt;</span>
   <span class="cp">&lt;%</span> <span class="n">builder</span><span class="p">.</span><span class="nf">define</span> <span class="ss">:card_title</span><span class="p">,</span>
     <span class="ss">card_title: </span><span class="n">team</span><span class="p">.</span><span class="nf">name</span> <span class="cp">%&gt;</span>
@@ -4465,7 +4556,7 @@ wrap_all Wrapper After
   <span class="ss">description: </span><span class="s2">"Donate money"</span>
 <span class="p">)</span>
 <span class="n">builder</span> <span class="o">=</span> <span class="no">Blocks</span><span class="o">::</span><span class="no">Builder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="n">view_context</span><span class="p">)</span>
-<span class="n">builder</span><span class="p">.</span><span class="nf">render_with_overrides</span> <span class="ss">partial:
+<span class="n">builder</span><span class="p">.</span><span class="nf">render</span> <span class="ss">partial:
   </span><span class="s2">"shared/team_card"</span><span class="p">,</span>
   <span class="ss">team: </span><span class="n">team</span> <span class="k">do</span> <span class="o">|</span><span class="n">builder</span><span class="o">|</span>
     <span class="n">builder</span><span class="p">.</span><span class="nf">after</span> <span class="ss">:card_title</span> <span class="k">do</span>
@@ -4507,7 +4598,7 @@ wrap_all Wrapper After
 <p>In the example to the right, a team-specific version of card is created as a template. Code then renders this new template with some overrides of if its own. The overrides have been kept very basic in order to clearly demonstrate how to setup a template that extends another template.</p>
 
 <aside class="warning">
-  Take note that with the team_card template, builder.render_with_overrides is used instead of just render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
+  Take note that with the team_card template, builder.render is used instead of render_with_overrides. This is forcing the two templates to render using the same Blocks::Builder instance, i.e. to share a Blocks namespace. This is what allows the overrides block for the team_card template to affect the defaults in card template.
 </aside>
 
           
@@ -4527,8 +4618,7 @@ end</code></pre></div>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options runtime: {
+    set_global_options runtime: {
       a: 1, b: 2
     }
 end</code></pre></div>
@@ -4537,16 +4627,14 @@ end</code></pre></div>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options a: 1, b: 2
+    set_global_options a: 1, b: 2
 end</code></pre></div>
 
 <h3 id="global-default-options">Global Default Options</h3>
 
 <div class="highlighter-rouge"><pre class="highlight"><code>Blocks.configure do |config|
   config.
-    global_options_set.
-    add_options defaults: {
+    set_global_options defaults: {
       a: 1, b: 2
     }
 end</code></pre></div>

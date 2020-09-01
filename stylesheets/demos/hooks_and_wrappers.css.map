@@ -1,0 +1,12 @@
+{
+	"version": 3,
+	"file": "hooks_and_wrappers.css",
+	"sources": [
+		"hooks_and_wrappers.scss"
+	],
+	"sourcesContent": [
+		".bg-primary, .bg-warning, .bg-info, .bg-success, .bg-danger {\n  border: 3px solid black;\n  margin: 10px;\n  padding: 5px;\n  font-size: 14px !important;\n  line-height: 20px !important;\n}\n\n#blocks div:not(.bg-primary, .bg-warning, .bg-info, .bg-success, .bg-danger, #actual_block) {\n  margin: 0;\n  padding: 0;\n  border: 0;\n  font-size: 0;\n  line-height: 0;\n}\n\n#blocks div:not(#actual_block) {\n  font-size: 0;\n  /*border: 0;*/\n  /*margin: 0;*/\n  /*padding: 0;*/\n  /*background-color: white;*/\n  /*line-height: 0;*/\n}\n\n#actual_block {\n  font-size: 14px;\n  /*background-color: inherit;*/\n}"
+	],
+	"names": [],
+	"mappings": "AAAA,AAAA,WAAW,CAAE,WAAW,CAAE,QAAQ,CAAE,WAAW,CAAE,UAAU,AAAC,CAC1D,MAAM,CAAE,eAAe,CACvB,MAAM,CAAE,IAAI,CACZ,OAAO,CAAE,GAAG,CACZ,SAAS,CAAE,eAAe,CAC1B,WAAW,CAAE,eAAe,CAC7B,AAED,AAAA,OAAO,CAAC,GAAG,CAAA,GAAK,CAAA,WAAW,CAAE,WAAW,CAAE,QAAQ,CAAE,WAAW,CAAE,UAAU,CAAE,aAAa,CAAE,CAC1F,MAAM,CAAE,CAAC,CACT,OAAO,CAAE,CAAC,CACV,MAAM,CAAE,CAAC,CACT,SAAS,CAAE,CAAC,CACZ,WAAW,CAAE,CAAC,CACf,AAED,AAAA,OAAO,CAAC,GAAG,CAAC,GAAI,CAAA,aAAa,CAAE,CAC7B,SAAS,CAAE,CAAC,CAMb,AAED,AAAA,aAAa,AAAC,CACZ,SAAS,CAAE,IAAI,CAEhB"
+}
