@@ -4,7 +4,7 @@ gemspec path: ".."
 
 # Requires min Ruby version 2.3
 
-gem "nokogiri", "1.10.7"
+gem "nokogiri", "1.10.8"
 gem "capybara"
 gem "rspec", "~> 3.6.0"
 gem "rspec-its", "~> 1.2.0"
