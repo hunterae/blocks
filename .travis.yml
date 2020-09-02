@@ -87,8 +87,8 @@ jobs:
     - rvm: 2.7.0
       gemfile: gemfiles/Gemfile.rails-4-2-stable
   include:
-    # ./bin/deploy_docs will exit if the current branch is not master
-    - script: bundle exec jekyll build
+    - name: Documentation
+      script: bundle exec jekyll build
       rvm: 2.6.5
       gemfile: Gemfile
       deploy:
