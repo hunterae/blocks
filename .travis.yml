@@ -1,18 +1,6 @@
 language: ruby
 cache: bundler
 
-before_install:
-  - function version { echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; };
-    if [ $(version $TRAVIS_RUBY_VERSION) -ge $(version '2.7.0') ]; 
-    then
-      gem install "rubygems-update" --no-document;
-      update_rubygems;
-      gem install bundler -v 1.17.3;
-    else
-      gem install "rubygems-update:<3.0.0" --no-document;
-      update_rubygems;
-      gem install bundler -v 1.17.3;
-    fi
 rvm:
   - 2.0.0
   - 2.1.10
@@ -91,14 +79,13 @@ jobs:
       script: bundle exec jekyll build
       rvm: 2.6.5
       gemfile: Gemfile
+      if: branch = master AND type = push
       deploy:
         local_dir: _site
         provider: pages
         skip_cleanup: true
         github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
         keep_history: true
-        on:
-          branch: master
 
 script: 'bundle exec rake'
 
