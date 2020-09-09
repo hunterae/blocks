@@ -79,15 +79,13 @@ jobs:
       script: bundle exec jekyll build
       rvm: 2.6.5
       gemfile: Gemfile
-      if: branch = master
+      if: branch = master AND type = push
       deploy:
         local_dir: _site
         provider: pages
         skip_cleanup: true
         github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
         keep_history: true
-        on:
-          branch: master
 
 script: 'bundle exec rake'
 
