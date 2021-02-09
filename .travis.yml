@@ -59,7 +59,7 @@ jobs:
       gemfile: gemfiles/Gemfile.rails-3-0-stable
     - rvm: 2.6.5
       gemfile: gemfiles/Gemfile.rails-3-0-stable
-    #  Exclude Rails 3 and 4 from Ruby 2.7, as they require 
+    #  Exclude Rails 3 and 4 from Ruby 2.7, as they require
     #   Bunder < 2, and Ruby 2.7 ships with Bundler 2.1.2, and
     #   I can't seem to force it to use an earlier version
     - rvm: 2.7.0
@@ -79,14 +79,14 @@ jobs:
       script: bundle exec jekyll build
       rvm: 2.6.5
       gemfile: Gemfile
-      if: branch = master AND type = push
       deploy:
         local_dir: _site
         provider: pages
         skip_cleanup: true
         github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
         keep_history: true
-
+    - name: Test Script
+      script: echo 'TESTING SECURITY';
 script: 'bundle exec rake'
 
 notifications:
