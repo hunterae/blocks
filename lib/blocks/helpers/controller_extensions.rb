@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'action_controller'
+require 'active_support/dependencies'
 
 module Blocks
   module ControllerExtensions
@@ -10,4 +10,6 @@ module Blocks
   end
 end
 
-ActionController::Base.send :include, Blocks::ControllerExtensions
+ActiveSupport.on_load(:action_controller) do
+  include Blocks::ControllerExtensions
+end
